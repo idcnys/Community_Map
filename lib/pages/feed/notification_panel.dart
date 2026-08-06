@@ -1,6 +1,6 @@
 
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import '../../core/utils/time_ago.dart';
 import '../../services/community_post_service.dart';
 import '../../models/notification_model.dart';
 
@@ -123,7 +123,7 @@ class NotificationPanel extends StatelessWidget {
         ),
       ),
       subtitle: Text(
-        _timeAgo(notif.createdAt),
+        timeAgo(notif.createdAt ?? DateTime.now()),
         style: TextStyle(
           fontSize: 12,
           color: Colors.grey.shade500,
@@ -143,11 +143,5 @@ class NotificationPanel extends StatelessWidget {
     );
   }
 
-  String _timeAgo(DateTime date) {
-    final diff = DateTime.now().difference(date);
-    if (diff.inMinutes < 1) return 'Just now';
-    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
-    if (diff.inHours < 24) return '${diff.inHours}h ago';
-    return DateFormat('MMM d, h:mm a').format(date);
-  }
+
 }

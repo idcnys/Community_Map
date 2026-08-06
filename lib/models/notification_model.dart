@@ -1,28 +1,24 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 
-class AppNotificationModel {
-  final String id;
-  final String type; // 'new_post', 'comment', 'like'
-  final String targetUserId; // who receives this notification
-  final String actorId; // who triggered it
-  final String actorName;
-  final String postId;
-  final String postTitle;
-  final String message;
-  final bool read;
-  final DateTime createdAt;
+part 'notification_model.freezed.dart';
 
-  AppNotificationModel({
-    required this.id,
-    required this.type,
-    required this.targetUserId,
-    required this.actorId,
-    required this.actorName,
-    required this.postId,
-    this.postTitle = '',
-    this.message = '',
-    this.read = false,
-    required this.createdAt,
-  });
+@freezed
+abstract class AppNotificationModel with _$AppNotificationModel {
+  const AppNotificationModel._();
+
+  const factory AppNotificationModel({
+    @Default('') String id,
+    @Default('') String type,
+    @Default('') String targetUserId,
+    @Default('') String actorId,
+    @Default('') String actorName,
+    @Default('') String postId,
+    @Default('') String postTitle,
+    @Default('') String message,
+    @Default(false) bool read,
+    @Default(null) DateTime? createdAt,
+  }) = _AppNotificationModel;
 
   factory AppNotificationModel.fromMap(String id, Map<String, dynamic> map) {
     return AppNotificationModel(
@@ -35,7 +31,7 @@ class AppNotificationModel {
       postTitle: map['postTitle'] ?? '',
       message: map['message'] ?? '',
       read: map['read'] ?? false,
-      createdAt: (map['createdAt'] as dynamic)?.toDate() ?? DateTime.now(),
+      createdAt: (map['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
   }
 
@@ -49,7 +45,7 @@ class AppNotificationModel {
       'postTitle': postTitle,
       'message': message,
       'read': read,
-      'createdAt': createdAt,
+      'createdAt': createdAt != null ? Timestamp.fromDate(createdAt!) : FieldValue.serverTimestamp(),
     };
   }
 }

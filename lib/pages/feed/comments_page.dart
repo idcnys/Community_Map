@@ -81,7 +81,7 @@ class _CommentsPageState extends State<CommentsPage> {
                                 ),
                               ),
                               Text(
-                                DateFormat('MMM d, h:mm a').format(post.createdAt),
+                                DateFormat('MMM d, h:mm a').format(post.createdAt ?? DateTime.now()),
                                 style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
                               ),
                             ],
@@ -163,7 +163,7 @@ class _CommentsPageState extends State<CommentsPage> {
                             const SizedBox(height: 4),
                             Text(
                               DateFormat('MMM d, h:mm a')
-                                  .format(comment.createdAt),
+                                  .format(comment.createdAt ?? DateTime.now()),
                               style: TextStyle(
                                 fontSize: 11,
                                 color: Colors.grey.shade500,

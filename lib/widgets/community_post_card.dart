@@ -1,12 +1,18 @@
 
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../core/utils/time_ago.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/community_post_model.dart';
-import '../services/community_post_service.dart';
-import '../services/group_service.dart';
+import '../providers/service_providers.dart';
 
-class CommunityPostCard extends StatefulWidget {
+/// Provider that checks if the current user liked a specific post.
+final hasLikedProvider = FutureProvider.family<bool, String>((ref, postId) async {
+  final service = ref.read(communityPostServiceProvider);
+  return service.hasLiked(postId);
+});
+
+class CommunityPostCard extends ConsumerStatefulWidget {
   final CommunityPostModel post;
   final VoidCallback? onCommentTap;
 
@@ -17,11 +23,10 @@ class CommunityPostCard extends StatefulWidget {
   });
 
   @override
-  State<CommunityPostCard> createState() => _CommunityPostCardState();
+  ConsumerState<CommunityPostCard> createState() => _CommunityPostCardState();
 }
 
-class _CommunityPostCardState extends State<CommunityPostCard> {
-  final _service = CommunityPostService();
+class _CommunityPostCardState extends ConsumerState<CommunityPostCard> {
   bool _isLiked = false;
   bool _loadingLike = false;
 
@@ -33,7 +38,8 @@ class _CommunityPostCardState extends State<CommunityPostCard> {
 
   Future<void> _checkLiked() async {
     try {
-      final liked = await _service.hasLiked(widget.post.id);
+      final service = ref.read(communityPostServiceProvider);
+      final liked = await service.hasLiked(widget.post.id);
       if (mounted) setState(() => _isLiked = liked);
     } catch (_) {}
   }
@@ -95,7 +101,7 @@ class _CommunityPostCardState extends State<CommunityPostCard> {
                         ),
                       ),
                       Text(
-                        _timeAgo(widget.post.createdAt),
+                        timeAgo(widget.post.createdAt ?? DateTime.now()),
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.grey.shade500,
@@ -104,7 +110,6 @@ class _CommunityPostCardState extends State<CommunityPostCard> {
                     ],
                   ),
                 ),
-                // Origin tag
                 if (widget.post.isPublic)
                   Container(
                     padding: const EdgeInsets.symmetric(
@@ -143,7 +148,6 @@ class _CommunityPostCardState extends State<CommunityPostCard> {
             ),
             const SizedBox(height: 12),
 
-            // Title
             Text(
               widget.post.title,
               style: theme.textTheme.titleMedium
@@ -151,7 +155,6 @@ class _CommunityPostCardState extends State<CommunityPostCard> {
             ),
             const SizedBox(height: 6),
 
-            // Description
             Text(
               widget.post.description,
               style: TextStyle(
@@ -164,31 +167,27 @@ class _CommunityPostCardState extends State<CommunityPostCard> {
             const Divider(height: 1),
             const SizedBox(height: 8),
 
-            // Actions: Like + Comment + Views + Repost
+            // Actions row
             Row(
               children: [
-                // Like button
                 _actionButton(
                   icon: _isLiked ? Icons.thumb_up : Icons.thumb_up_outlined,
                   count: widget.post.likeCount,
                   color: _isLiked ? theme.colorScheme.primary : Colors.grey.shade600,
                   onTap: _loadingLike ? null : _toggleLike,
                 ),
-                // Comment button
                 _actionButton(
                   icon: Icons.comment_outlined,
                   count: widget.post.commentCount,
                   color: Colors.grey.shade600,
                   onTap: widget.onCommentTap,
                 ),
-                // Repost button (disabled on own posts and on reposts to prevent chains)
                 _actionButton(
                   icon: Icons.repeat,
                   count: widget.post.repostCount,
                   color: widget.post.isRepost ? Colors.grey.shade300 : Colors.grey.shade600,
                   onTap: (isOwn || widget.post.isRepost) ? null : _repost,
                 ),
-                // View count (display only)
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   child: Row(
@@ -203,7 +202,6 @@ class _CommunityPostCardState extends State<CommunityPostCard> {
                   ),
                 ),
                 const Spacer(),
-                // Delete own post
                 if (isOwn)
                   IconButton(
                     icon: const Icon(Icons.delete_outline,
@@ -222,7 +220,8 @@ class _CommunityPostCardState extends State<CommunityPostCard> {
 
   Future<void> _toggleLike() async {
     setState(() => _loadingLike = true);
-    await _service.toggleLike(widget.post.id, widget.post.authorId);
+    final service = ref.read(communityPostServiceProvider);
+    await service.toggleLike(widget.post.id, widget.post.authorId);
     setState(() {
       _isLiked = !_isLiked;
       _loadingLike = false;
@@ -244,7 +243,8 @@ class _CommunityPostCardState extends State<CommunityPostCard> {
             style: FilledButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () async {
               Navigator.of(ctx).pop();
-              await _service.deletePost(widget.post.id);
+              final service = ref.read(communityPostServiceProvider);
+              await service.deletePost(widget.post.id);
             },
             child: const Text('Delete'),
           ),
@@ -279,8 +279,7 @@ class _CommunityPostCardState extends State<CommunityPostCard> {
   }
 
   Future<void> _repost() async {
-    // Fetch user's groups for the selection dialog
-    final groupService = GroupService();
+    final groupService = ref.read(groupServiceProvider);
     final groups = await groupService.getMyJoinedGroups().first;
 
     if (!mounted) return;
@@ -296,62 +295,37 @@ class _CommunityPostCardState extends State<CommunityPostCard> {
                 padding: const EdgeInsets.all(16),
                 child: Text(
                   'Repost to...',
-                  style: Theme.of(ctx).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                  style: Theme.of(ctx).textTheme.titleMedium,
                 ),
               ),
               ListTile(
                 leading: const Icon(Icons.public),
-                title: const Text('Public Feed'),
-                subtitle: const Text('Visible to everyone'),
-                onTap: () {
+                title: const Text('Public'),
+                onTap: () async {
                   Navigator.of(ctx).pop();
-                  _doRepost(originType: 'public', groupId: '', groupName: 'Public');
+                  final service = ref.read(communityPostServiceProvider);
+                  await service.repost(widget.post.id);
                 },
               ),
-              if (groups.isNotEmpty) const Divider(),
               ...groups.map((g) => ListTile(
                     leading: const Icon(Icons.group),
                     title: Text(g.name),
-                    subtitle: Text('${g.memberCount} members'),
-                    onTap: () {
+                    onTap: () async {
                       Navigator.of(ctx).pop();
-                      _doRepost(originType: 'group', groupId: g.id, groupName: g.name);
+                      final service = ref.read(communityPostServiceProvider);
+                      await service.repost(
+                        widget.post.id,
+                        originType: 'group',
+                        groupId: g.id,
+                        groupName: g.name,
+                      );
                     },
                   )),
-              const SizedBox(height: 8),
+              const SizedBox(height: 16),
             ],
           ),
         );
       },
     );
-  }
-
-  Future<void> _doRepost({
-    required String originType,
-    required String groupId,
-    required String groupName,
-  }) async {
-    final error = await _service.repost(
-      widget.post.id,
-      originType: originType,
-      groupId: groupId,
-      groupName: groupName,
-    );
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(error ?? 'Reposted to ${groupName == 'Public' ? 'public feed' : groupName}!'),
-          backgroundColor: error != null ? Colors.red : null,
-        ),
-      );
-    }
-  }
-
-  String _timeAgo(DateTime date) {
-    final diff = DateTime.now().difference(date);
-    if (diff.inMinutes < 1) return 'Just now';
-    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
-    if (diff.inHours < 24) return '${diff.inHours}h ago';
-    return DateFormat('MMM d, h:mm a').format(date);
   }
 }

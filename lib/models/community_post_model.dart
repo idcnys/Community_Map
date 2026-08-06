@@ -1,38 +1,40 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 
-class CommunityPostModel {
-  final String id;
-  final String title;
-  final String description;
-  final String authorId;
-  final String authorName;
-  final String originType; // 'group' or 'public'
-  final String groupId; // empty if public
-  final String groupName; // 'Public' if public
-  final int likeCount;
-  final int commentCount;
-  final int viewCount;
-  final int repostCount;
-  final String originalPostId; // non-empty if this is a repost
-  final String originalAuthorName; // original author if repost
-  final DateTime createdAt;
+part 'community_post_model.freezed.dart';
 
-  CommunityPostModel({
-    required this.id,
-    required this.title,
-    required this.description,
-    required this.authorId,
-    required this.authorName,
-    required this.originType,
-    this.groupId = '',
-    this.groupName = 'Public',
-    this.likeCount = 0,
-    this.commentCount = 0,
-    this.viewCount = 0,
-    this.repostCount = 0,
-    this.originalPostId = '',
-    this.originalAuthorName = '',
-    required this.createdAt,
-  });
+/// Nullable timestamp converter for Firestore.
+class NullableTimestampConverter implements JsonConverter<DateTime, Timestamp?> {
+  const NullableTimestampConverter();
+
+  @override
+  DateTime fromJson(Timestamp? timestamp) => timestamp?.toDate() ?? DateTime.now();
+
+  @override
+  Timestamp toJson(DateTime date) => Timestamp.fromDate(date);
+}
+
+@freezed
+abstract class CommunityPostModel with _$CommunityPostModel {
+  const CommunityPostModel._();
+
+  const factory CommunityPostModel({
+    @Default('') String id,
+    @Default('') String title,
+    @Default('') String description,
+    @Default('') String authorId,
+    @Default('') String authorName,
+    @Default('public') String originType,
+    @Default('') String groupId,
+    @Default('Public') String groupName,
+    @Default(0) int likeCount,
+    @Default(0) int commentCount,
+    @Default(0) int viewCount,
+    @Default(0) int repostCount,
+    @Default('') String originalPostId,
+    @Default('') String originalAuthorName,
+    @Default(null) DateTime? createdAt,
+  }) = _CommunityPostModel;
 
   bool get isPublic => originType == 'public';
   bool get isRepost => originalPostId.isNotEmpty;
@@ -53,7 +55,7 @@ class CommunityPostModel {
       repostCount: map['repostCount'] ?? 0,
       originalPostId: map['originalPostId'] ?? '',
       originalAuthorName: map['originalAuthorName'] ?? '',
-      createdAt: (map['createdAt'] as dynamic)?.toDate() ?? DateTime.now(),
+      createdAt: (map['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
   }
 
@@ -72,25 +74,22 @@ class CommunityPostModel {
       'repostCount': repostCount,
       'originalPostId': originalPostId,
       'originalAuthorName': originalAuthorName,
-      'createdAt': createdAt,
+      'createdAt': createdAt != null ? Timestamp.fromDate(createdAt!) : FieldValue.serverTimestamp(),
     };
   }
 }
 
-class CommunityCommentModel {
-  final String id;
-  final String content;
-  final String authorId;
-  final String authorName;
-  final DateTime createdAt;
+@freezed
+abstract class CommunityCommentModel with _$CommunityCommentModel {
+  const CommunityCommentModel._();
 
-  CommunityCommentModel({
-    required this.id,
-    required this.content,
-    required this.authorId,
-    required this.authorName,
-    required this.createdAt,
-  });
+  const factory CommunityCommentModel({
+    @Default('') String id,
+    @Default('') String content,
+    @Default('') String authorId,
+    @Default('') String authorName,
+    @Default(null) DateTime? createdAt,
+  }) = _CommunityCommentModel;
 
   factory CommunityCommentModel.fromMap(String id, Map<String, dynamic> map) {
     return CommunityCommentModel(
@@ -98,7 +97,7 @@ class CommunityCommentModel {
       content: map['content'] ?? '',
       authorId: map['authorId'] ?? '',
       authorName: map['authorName'] ?? '',
-      createdAt: (map['createdAt'] as dynamic)?.toDate() ?? DateTime.now(),
+      createdAt: (map['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
   }
 }

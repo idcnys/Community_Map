@@ -3,10 +3,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:geolocator/geolocator.dart';
 import '../models/report_post_model.dart';
+import '../shared/services/user_group_service.dart';
 
 class ReportPostService {
   final _firestore = FirebaseFirestore.instance;
   final _auth = FirebaseAuth.instance;
+  final _userGroupService = UserGroupService();
 
   String get currentUid => _auth.currentUser!.uid;
   String get currentName => _auth.currentUser?.displayName ?? 'User';
@@ -141,24 +143,8 @@ class ReportPostService {
   }
 
   // ─── GET USER'S GROUP IDS ────────────────────────────────────────
-  Future<List<String>> getMyGroupIds() async {
-    final created = await _firestore
-        .collection('groups')
-        .where('createdBy', isEqualTo: currentUid)
-        .get();
-    final joined = await _firestore
-        .collection('groups')
-        .where('members', arrayContains: currentUid)
-        .get();
-
-    final ids = <String>{};
-    for (final doc in created.docs) {
-      ids.add(doc.id);
-    }
-    for (final doc in joined.docs) {
-      ids.add(doc.id);
-    }
-    return ids.toList();
+  Future<List<String>> getMyGroupIds({bool forceRefresh = false}) {
+    return _userGroupService.getMyGroupIds(forceRefresh: forceRefresh);
   }
 
   // ─── LOCATION HELPERS ────────────────────────────────────────────

@@ -2,6 +2,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:go_router/go_router.dart';
+import '../core/utils/validators.dart';
+import '../core/utils/snackbar_helper.dart';
 
 
 class SignUpPage extends StatefulWidget {
@@ -81,13 +84,8 @@ class _SignUpPageState extends State<SignUpPage> {
       await FirebaseAuth.instance.signOut();
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Account created successfully! Please sign in.'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        Navigator.of(context).pop();
+        context.showSuccess('Account created successfully! Please sign in.');
+        context.pop();
       }
     } on FirebaseAuthException catch (e) {
       String message;
@@ -105,9 +103,7 @@ class _SignUpPageState extends State<SignUpPage> {
       }
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message), backgroundColor: Colors.red),
-        );
+        context.showError(message);
       }
     } catch (e) {
       if (mounted) {
@@ -173,15 +169,7 @@ class _SignUpPageState extends State<SignUpPage> {
                     hintText: 'John Doe',
                     prefixIcon: Icon(Icons.person_outline),
                   ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your full name';
-                    }
-                    if (value.trim().length < 3) {
-                      return 'Name must be at least 3 characters';
-                    }
-                    return null;
-                  },
+                  validator: validateName,
                 ),
                 const SizedBox(height: 16),
 
@@ -215,15 +203,7 @@ class _SignUpPageState extends State<SignUpPage> {
                     hintText: 'you@example.com',
                     prefixIcon: Icon(Icons.email_outlined),
                   ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your email';
-                    }
-                    if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
-                      return 'Please enter a valid email';
-                    }
-                    return null;
-                  },
+                  validator: validateEmail,
                 ),
                 const SizedBox(height: 16),
 

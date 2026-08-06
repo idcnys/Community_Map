@@ -1,24 +1,23 @@
 
 import 'package:flutter/material.dart';
-import '../../services/community_post_service.dart';
-import '../../models/group_model.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import '../../providers/feed_providers.dart';
+import '../../providers/service_providers.dart';
 
-class CommunityPostForm extends StatefulWidget {
-  final List<GroupModel> myGroups;
-
-  const CommunityPostForm({super.key, required this.myGroups});
+class CommunityPostForm extends ConsumerStatefulWidget {
+  const CommunityPostForm({super.key});
 
   @override
-  State<CommunityPostForm> createState() => _CommunityPostFormState();
+  ConsumerState<CommunityPostForm> createState() => _CommunityPostFormState();
 }
 
-class _CommunityPostFormState extends State<CommunityPostForm> {
+class _CommunityPostFormState extends ConsumerState<CommunityPostForm> {
   final _formKey = GlobalKey<FormState>();
   final _titleCtrl = TextEditingController();
   final _descCtrl = TextEditingController();
-  final _service = CommunityPostService();
 
-  String _originType = 'public'; // 'public' or 'group'
+  String _originType = 'public';
   String? _selectedGroupId;
   bool _submitting = false;
 
@@ -32,6 +31,7 @@ class _CommunityPostFormState extends State<CommunityPostForm> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final myGroups = ref.watch(myJoinedGroupsProvider).value ?? [];
 
     return Scaffold(
       appBar: AppBar(title: const Text('Create Community Post')),
@@ -42,7 +42,6 @@ class _CommunityPostFormState extends State<CommunityPostForm> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Title
               TextFormField(
                 controller: _titleCtrl,
                 decoration: const InputDecoration(
@@ -54,7 +53,6 @@ class _CommunityPostFormState extends State<CommunityPostForm> {
               ),
               const SizedBox(height: 16),
 
-              // Description
               TextFormField(
                 controller: _descCtrl,
                 maxLines: 5,
@@ -70,7 +68,6 @@ class _CommunityPostFormState extends State<CommunityPostForm> {
               ),
               const SizedBox(height: 24),
 
-              // Origin selector
               Text(
                 'Post Origin',
                 style: theme.textTheme.titleMedium
@@ -78,7 +75,6 @@ class _CommunityPostFormState extends State<CommunityPostForm> {
               ),
               const SizedBox(height: 12),
 
-              // Public option
               RadioListTile<String>(
                 title: const Text('Public'),
                 subtitle: const Text('Visible to everyone'),
@@ -90,7 +86,6 @@ class _CommunityPostFormState extends State<CommunityPostForm> {
                 }),
               ),
 
-              // Group option
               RadioListTile<String>(
                 title: const Text('Group'),
                 subtitle: const Text('Visible to group members only'),
@@ -99,10 +94,9 @@ class _CommunityPostFormState extends State<CommunityPostForm> {
                 onChanged: (v) => setState(() => _originType = v!),
               ),
 
-              // Group dropdown (shown when group is selected)
               if (_originType == 'group') ...[
                 const SizedBox(height: 12),
-                if (widget.myGroups.isEmpty)
+                if (myGroups.isEmpty)
                   Padding(
                     padding: const EdgeInsets.all(12),
                     child: Text(
@@ -117,7 +111,7 @@ class _CommunityPostFormState extends State<CommunityPostForm> {
                       labelText: 'Select Group',
                       prefixIcon: Icon(Icons.group),
                     ),
-                    items: widget.myGroups.map((g) {
+                    items: myGroups.map((g) {
                       return DropdownMenuItem(value: g.id, child: Text(g.name));
                     }).toList(),
                     onChanged: (v) => setState(() => _selectedGroupId = v),
@@ -129,7 +123,6 @@ class _CommunityPostFormState extends State<CommunityPostForm> {
 
               const SizedBox(height: 32),
 
-              // Submit button
               FilledButton.icon(
                 onPressed: _submitting ? null : _submit,
                 icon: _submitting
@@ -156,16 +149,18 @@ class _CommunityPostFormState extends State<CommunityPostForm> {
 
     setState(() => _submitting = true);
 
+    final myGroups = ref.read(myJoinedGroupsProvider).value ?? [];
     String groupId = '';
     String groupName = 'Public';
 
     if (_originType == 'group' && _selectedGroupId != null) {
       groupId = _selectedGroupId!;
-      final group = widget.myGroups.firstWhere((g) => g.id == groupId);
+      final group = myGroups.firstWhere((g) => g.id == groupId);
       groupName = group.name;
     }
 
-    final error = await _service.createPost(
+    final service = ref.read(communityPostServiceProvider);
+    final error = await service.createPost(
       title: _titleCtrl.text.trim(),
       description: _descCtrl.text.trim(),
       originType: _originType,
@@ -184,7 +179,9 @@ class _CommunityPostFormState extends State<CommunityPostForm> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Post published!')),
         );
-        Navigator.of(context).pop();
+        // Invalidate feed to show new post
+        ref.invalidate(paginatedFeedProvider);
+        context.pop();
       }
     }
   }

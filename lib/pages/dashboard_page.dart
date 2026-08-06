@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'feed/feed_page.dart';
 import 'map/map_page.dart';
@@ -14,23 +13,37 @@ class DashboardPage extends StatefulWidget {
 class _DashboardPageState extends State<DashboardPage> {
   int _currentIndex = 0;
 
-  final List<Widget> _pages = const [
-    FeedPage(),
-    MapPage(),
-    ManagePage(),
-  ];
+  // Lazy-loaded pages: only build when first visited, then keep alive.
+  final List<bool> _pageInitialized = [true, false, false];
+  final List<Widget?> _pages = [const FeedPage(), null, null];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
-        children: _pages,
+        children: [
+          _pages[0]!,
+          _pages[1] ?? const SizedBox.shrink(),
+          _pages[2] ?? const SizedBox.shrink(),
+        ],
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,
         onDestinationSelected: (index) {
-          setState(() => _currentIndex = index);
+          setState(() {
+            _currentIndex = index;
+            // Lazy init: build page on first visit
+            if (!_pageInitialized[index]) {
+              _pageInitialized[index] = true;
+              switch (index) {
+                case 1:
+                  _pages[1] = const MapPage();
+                case 2:
+                  _pages[2] = const ManagePage();
+              }
+            }
+          });
         },
         destinations: const [
           NavigationDestination(

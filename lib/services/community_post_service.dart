@@ -1,12 +1,30 @@
 
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/community_post_model.dart';
 import '../models/notification_model.dart';
+import '../shared/services/user_group_service.dart';
+
+/// Result of a paginated query: items + cursor for next page.
+class PaginatedResult<T> {
+  final List<T> items;
+  final DocumentSnapshot? lastDoc;
+  final bool hasMore;
+
+  const PaginatedResult({
+    required this.items,
+    this.lastDoc,
+    required this.hasMore,
+  });
+}
 
 class CommunityPostService {
   final _firestore = FirebaseFirestore.instance;
   final _auth = FirebaseAuth.instance;
+  final _userGroupService = UserGroupService();
+
+  static const int pageSize = 20;
 
   String get currentUid => _auth.currentUser!.uid;
   String get currentName => _auth.currentUser?.displayName ?? 'User';
@@ -15,7 +33,7 @@ class CommunityPostService {
   Future<String?> createPost({
     required String title,
     required String description,
-    required String originType, // 'group' or 'public'
+    required String originType,
     String groupId = '',
     String groupName = 'Public',
   }) async {
@@ -30,10 +48,11 @@ class CommunityPostService {
         'groupName': groupName,
         'likeCount': 0,
         'commentCount': 0,
+        'viewCount': 0,
+        'repostCount': 0,
         'createdAt': FieldValue.serverTimestamp(),
       });
 
-      // Notify group members if posted in a group
       if (originType == 'group' && groupId.isNotEmpty) {
         await _notifyGroupMembers(
           groupId: groupId,
@@ -49,39 +68,137 @@ class CommunityPostService {
     }
   }
 
-  // ─── FEED: ALL COMMUNITY POSTS (client-side filtered) ─────────────
-  /// Fetches all posts ordered by time. Filtering is done client-side
-  /// to avoid Firestore composite index requirements.
-  Stream<List<CommunityPostModel>> getAllPosts() {
+  // ─── SERVER-SIDE FEED QUERIES (no client-side filtering) ─────────
+
+  /// Public posts only — uses composite index (originType, createdAt).
+  Query<Map<String, dynamic>> _publicQuery() {
     return _firestore
         .collection('community_posts')
-        .orderBy('createdAt', descending: true)
-        .limit(100)
-        .snapshots()
-        .map((snap) => snap.docs
-            .map((d) => CommunityPostModel.fromMap(d.id, d.data()))
-            .toList());
+        .where('originType', isEqualTo: 'public')
+        .orderBy('createdAt', descending: true);
   }
 
-  /// "All" feed: public posts + posts from user's groups
-  Stream<List<CommunityPostModel>> getFeed(List<String> myGroupIds) {
-    return getAllPosts().map((posts) => posts
-        .where((p) => p.isPublic || myGroupIds.contains(p.groupId))
-        .toList());
+  /// Posts from a specific group — uses composite index (groupId, createdAt).
+  Query<Map<String, dynamic>> _groupQuery(String groupId) {
+    return _firestore
+        .collection('community_posts')
+        .where('groupId', isEqualTo: groupId)
+        .orderBy('createdAt', descending: true);
   }
 
-  /// Feed filtered by a specific group
-  Stream<List<CommunityPostModel>> getFeedByGroup(String groupId) {
-    return getAllPosts().map((posts) => posts
-        .where((p) => p.groupId == groupId)
-        .toList());
+
+
+  // ─── PAGINATED FEED (cursor-based) ───────────────────────────────
+
+  /// Load first page of public feed.
+  Future<PaginatedResult<CommunityPostModel>> getPublicFeedPage({
+    DocumentSnapshot? startAfter,
+  }) async {
+    var query = _publicQuery().limit(pageSize);
+    if (startAfter != null) {
+      query = query.startAfterDocument(startAfter);
+    }
+    final snap = await query.get();
+    return _buildResult(snap);
   }
 
-  /// All public posts
-  Stream<List<CommunityPostModel>> getPublicFeed() {
-    return getAllPosts().map((posts) => posts
-        .where((p) => p.isPublic)
-        .toList());
+  /// Load first page of a specific group's feed.
+  Future<PaginatedResult<CommunityPostModel>> getGroupFeedPage(
+    String groupId, {
+    DocumentSnapshot? startAfter,
+  }) async {
+    var query = _groupQuery(groupId).limit(pageSize);
+    if (startAfter != null) {
+      query = query.startAfterDocument(startAfter);
+    }
+    final snap = await query.get();
+    return _buildResult(snap);
+  }
+
+  /// Load "all" feed page: merges public + group posts.
+  /// Fetches from both sources and merges by createdAt descending.
+  Future<PaginatedResult<CommunityPostModel>> getAllFeedPage(
+    List<String> myGroupIds, {
+    DocumentSnapshot? publicCursor,
+    DocumentSnapshot? groupCursor,
+  }) async {
+    // Fetch public posts
+    var pubQuery = _publicQuery().limit(pageSize);
+    if (publicCursor != null) {
+      pubQuery = pubQuery.startAfterDocument(publicCursor);
+    }
+
+    // Fetch group posts (whereIn limited to 30)
+    final feedGroupIds = myGroupIds.take(29).toList();
+    Query<Map<String, dynamic>>? grpQuery;
+    if (feedGroupIds.isNotEmpty) {
+      grpQuery = _firestore
+          .collection('community_posts')
+          .where('groupId', whereIn: feedGroupIds)
+          .orderBy('createdAt', descending: true)
+          .limit(pageSize);
+      if (groupCursor != null) {
+        grpQuery = grpQuery.startAfterDocument(groupCursor);
+      }
+    }
+
+    // Execute queries in parallel
+    final results = await Future.wait([
+      pubQuery.get(),
+      if (grpQuery != null) grpQuery.get(),
+    ]);
+
+    final pubSnap = results[0];
+    final grpSnap = results.length > 1 ? results[1] : null;
+
+    // Merge and sort by createdAt descending
+    final allDocs = <QueryDocumentSnapshot<Map<String, dynamic>>>[
+      ...pubSnap.docs,
+      if (grpSnap != null) ...grpSnap.docs,
+    ];
+    allDocs.sort((a, b) {
+      final aTime = (a.data()['createdAt'] as Timestamp?)?.toDate() ?? DateTime(1970);
+      final bTime = (b.data()['createdAt'] as Timestamp?)?.toDate() ?? DateTime(1970);
+      return bTime.compareTo(aTime);
+    });
+
+    // Take only pageSize items
+    final trimmed = allDocs.take(pageSize).toList();
+    final items = trimmed
+        .map((d) => CommunityPostModel.fromMap(d.id, d.data()))
+        .toList();
+
+    return PaginatedResult(
+      items: items,
+      lastDoc: trimmed.isNotEmpty ? trimmed.last : null,
+      hasMore: pubSnap.docs.length == pageSize ||
+          (grpSnap != null && grpSnap.docs.length == pageSize),
+    );
+  }
+
+  PaginatedResult<CommunityPostModel> _buildResult(
+    QuerySnapshot<Map<String, dynamic>> snap,
+  ) {
+    final items = snap.docs
+        .map((d) => CommunityPostModel.fromMap(d.id, d.data()))
+        .toList();
+    return PaginatedResult(
+      items: items,
+      lastDoc: snap.docs.isNotEmpty ? snap.docs.last : null,
+      hasMore: snap.docs.length == pageSize,
+    );
+  }
+
+  // ─── REALTIME STREAM (for live updates on current page) ──────────
+
+  Stream<List<CommunityPostModel>> streamPublicFeed({int limit = 20}) {
+    return _publicQuery().limit(limit).snapshots().map((snap) =>
+        snap.docs.map((d) => CommunityPostModel.fromMap(d.id, d.data())).toList());
+  }
+
+  Stream<List<CommunityPostModel>> streamGroupFeed(String groupId, {int limit = 20}) {
+    return _groupQuery(groupId).limit(limit).snapshots().map((snap) =>
+        snap.docs.map((d) => CommunityPostModel.fromMap(d.id, d.data())).toList());
   }
 
   // ─── GET SINGLE POST ──────────────────────────────────────────────
@@ -94,13 +211,17 @@ class CommunityPostService {
             snap.exists ? CommunityPostModel.fromMap(snap.id, snap.data()!) : null);
   }
 
-  // ─── INCREMENT VIEW COUNT ─────────────────────────────────────────
-  Future<void> incrementView(String postId) async {
-    try {
-      await _firestore.collection('community_posts').doc(postId).update({
-        'viewCount': FieldValue.increment(1),
-      });
-    } catch (_) {}
+  // ─── VIEW COUNT (batched via ViewCountBatcher) ────────────────────
+  Future<void> incrementViews(List<String> postIds) async {
+    if (postIds.isEmpty) return;
+    final batch = _firestore.batch();
+    for (final id in postIds) {
+      batch.update(
+        _firestore.collection('community_posts').doc(id),
+        {'viewCount': FieldValue.increment(1)},
+      );
+    }
+    await batch.commit();
   }
 
   // ─── REPOST ───────────────────────────────────────────────────────
@@ -111,12 +232,10 @@ class CommunityPostService {
     String groupName = 'Public',
   }) async {
     try {
-      // Fetch original post
       final doc = await _firestore.collection('community_posts').doc(postId).get();
       if (!doc.exists) return 'Post not found';
       final original = doc.data()!;
 
-      // Create repost as a new community post
       await _firestore.collection('community_posts').add({
         'title': original['title'] ?? '',
         'description': original['description'] ?? '',
@@ -134,7 +253,6 @@ class CommunityPostService {
         'createdAt': FieldValue.serverTimestamp(),
       });
 
-      // Increment repost count on original
       await _firestore.collection('community_posts').doc(postId).update({
         'repostCount': FieldValue.increment(1),
       });
@@ -176,7 +294,6 @@ class CommunityPostService {
         'likeCount': FieldValue.increment(1),
       });
 
-      // Notify post author
       if (postAuthorId != currentUid) {
         await _sendNotification(
           targetUserId: postAuthorId,
@@ -188,7 +305,6 @@ class CommunityPostService {
     }
   }
 
-  /// Check if current user liked a post
   Future<bool> hasLiked(String postId) async {
     final snap = await _firestore
         .collection('community_posts')
@@ -229,7 +345,6 @@ class CommunityPostService {
         'commentCount': FieldValue.increment(1),
       });
 
-      // Notify post author
       if (postAuthorId != currentUid) {
         await _sendNotification(
           targetUserId: postAuthorId,
@@ -266,14 +381,12 @@ class CommunityPostService {
     return _firestore
         .collection('notifications')
         .where('targetUserId', isEqualTo: currentUid)
+        .orderBy('createdAt', descending: true)
+        .limit(50)
         .snapshots()
-        .map((snap) {
-          final notifs = snap.docs
-              .map((d) => AppNotificationModel.fromMap(d.id, d.data()))
-              .toList();
-          notifs.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-          return notifs.take(50).toList();
-        });
+        .map((snap) => snap.docs
+            .map((d) => AppNotificationModel.fromMap(d.id, d.data()))
+            .toList());
   }
 
   Stream<int> getUnreadCount() {
@@ -340,7 +453,7 @@ class CommunityPostService {
 
       final batch = _firestore.batch();
       for (final memberId in members) {
-        if (memberId == currentUid) continue; // skip self
+        if (memberId == currentUid) continue;
         final ref = _firestore.collection('notifications').doc();
         batch.set(ref, {
           'type': type,
@@ -358,24 +471,7 @@ class CommunityPostService {
     } catch (_) {}
   }
 
-  // ─── GET USER'S GROUP IDS ────────────────────────────────────────
-  Future<List<String>> getMyGroupIds() async {
-    final created = await _firestore
-        .collection('groups')
-        .where('createdBy', isEqualTo: currentUid)
-        .get();
-    final joined = await _firestore
-        .collection('groups')
-        .where('members', arrayContains: currentUid)
-        .get();
-
-    final ids = <String>{};
-    for (final doc in created.docs) {
-      ids.add(doc.id);
-    }
-    for (final doc in joined.docs) {
-      ids.add(doc.id);
-    }
-    return ids.toList();
+  Future<List<String>> getMyGroupIds({bool forceRefresh = false}) {
+    return _userGroupService.getMyGroupIds(forceRefresh: forceRefresh);
   }
 }
