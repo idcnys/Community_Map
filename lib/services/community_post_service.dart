@@ -379,12 +379,16 @@ class CommunityPostService {
     return _firestore
         .collection('notifications')
         .where('targetUserId', isEqualTo: currentUid)
-        .orderBy('createdAt', descending: true)
         .limit(50)
         .snapshots()
-        .map((snap) => snap.docs
-            .map((d) => AppNotificationModel.fromMap(d.id, d.data()))
-            .toList());
+        .map((snap) {
+      final items = snap.docs
+          .map((d) => AppNotificationModel.fromMap(d.id, d.data()))
+          .toList();
+      // Sort client-side to avoid composite index requirement
+      items.sort((a, b) => (b.createdAt ?? DateTime(2000)).compareTo(a.createdAt ?? DateTime(2000)));
+      return items;
+    });
   }
 
   Stream<int> getUnreadCount() {

@@ -26,6 +26,23 @@ class NotificationPanel extends StatelessWidget {
               return const Center(child: CircularProgressIndicator());
             }
 
+            if (snapshot.hasError) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(LucideIcons.alertCircle, size: 48, color: theme.colorScheme.error),
+                    const SizedBox(height: 12),
+                    Text('Failed to load notifications',
+                        style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
+                    const SizedBox(height: 8),
+                    Text('${snapshot.error}',
+                        style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant)),
+                  ],
+                ),
+              );
+            }
+
             final notifications = snapshot.data ?? [];
 
             return CustomScrollView(

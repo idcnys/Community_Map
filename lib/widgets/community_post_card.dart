@@ -176,7 +176,7 @@ class _CommunityPostCardState extends ConsumerState<CommunityPostCard> {
                 return Row(
                   children: [
                     _actionButton(
-                      icon: _isLiked ? LucideIcons.thumbsUp : LucideIcons.thumbsUp,
+                      icon: _isLiked ? Icons.thumb_up : LucideIcons.thumbsUp,
                       count: livePost.likeCount,
                       color: _isLiked ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant,
                       onTap: _loadingLike ? null : _toggleLike,
