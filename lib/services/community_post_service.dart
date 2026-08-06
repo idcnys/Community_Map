@@ -313,6 +313,124 @@ class CommunityPostService {
     return snap.exists;
   }
 
+  /// Update a post's title/description
+  Future<void> updatePost(String postId, {String? title, String? description}) async {
+    final updates = <String, dynamic>{};
+    if (title != null) updates['title'] = title;
+    if (description != null) updates['description'] = description;
+    if (updates.isNotEmpty) {
+      await _firestore.collection('community_posts').doc(postId).update(updates);
+    }
+  }
+
+  /// Get current user's own posts (sorted client-side)
+  Stream<List<CommunityPostModel>> getMyCommunityPosts() {
+    return _firestore
+        .collection('community_posts')
+        .where('authorId', isEqualTo: currentUid)
+        .limit(50)
+        .snapshots()
+        .map((snap) {
+      final items = snap.docs
+          .map((d) => CommunityPostModel.fromMap(d.id, d.data()))
+          .toList();
+      items.sort((a, b) => (b.createdAt ?? DateTime(2000)).compareTo(a.createdAt ?? DateTime(2000)));
+      return items;
+    });
+  }
+
+  // ─── POLLS ──────────────────────────────────────────────────────
+  Future<String?> createPollPost({
+    required String title,
+    required String description,
+    required List<String> pollOptions,
+    required String pollType, // 'single' or 'multi'
+    required String originType,
+    String groupId = '',
+    String groupName = 'Public',
+  }) async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return 'Not authenticated';
+
+      final pollVotes = <String, List<String>>{};
+      for (int i = 0; i < pollOptions.length; i++) {
+        pollVotes['$i'] = [];
+      }
+
+      await _firestore.collection('community_posts').add({
+        'title': title,
+        'description': description,
+        'authorId': user.uid,
+        'authorName': user.displayName ?? user.email ?? 'Unknown',
+        'originType': originType,
+        'groupId': groupId,
+        'groupName': groupName,
+        'likeCount': 0,
+        'commentCount': 0,
+        'viewCount': 0,
+        'repostCount': 0,
+        'originalPostId': '',
+        'originalAuthorName': '',
+        'isPoll': true,
+        'pollOptions': pollOptions,
+        'pollType': pollType,
+        'pollVotes': pollVotes,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+      return null;
+    } catch (e) {
+      return 'Failed to create poll: $e';
+    }
+  }
+
+  Future<void> votePoll(String postId, List<String> optionIndexes) async {
+    final postRef = _firestore.collection('community_posts').doc(postId);
+    final snap = await postRef.get();
+    if (!snap.exists) return;
+
+    final data = snap.data()!;
+    final pollVotes = Map<String, List<String>>.from(
+      (data['pollVotes'] as Map<String, dynamic>?)?.map(
+        (k, v) => MapEntry(k, List<String>.from(v ?? [])),
+      ) ?? {},
+    );
+    final pollType = data['pollType'] ?? 'single';
+
+    // Remove user's previous votes
+    for (final key in pollVotes.keys) {
+      pollVotes[key]!.remove(currentUid);
+    }
+
+    // Add new votes
+    if (pollType == 'single') {
+      final idx = optionIndexes.first;
+      pollVotes.putIfAbsent(idx, () => []);
+      pollVotes[idx]!.add(currentUid);
+    } else {
+      for (final idx in optionIndexes) {
+        pollVotes.putIfAbsent(idx, () => []);
+        pollVotes[idx]!.add(currentUid);
+      }
+    }
+
+    await postRef.update({'pollVotes': pollVotes});
+  }
+
+  /// Check which options the current user voted for
+  Future<List<String>> getMyPollVotes(String postId) async {
+    final snap = await _firestore.collection('community_posts').doc(postId).get();
+    if (!snap.exists) return [];
+    final data = snap.data()!;
+    final pollVotes = data['pollVotes'] as Map<String, dynamic>? ?? {};
+    final myVotes = <String>[];
+    for (final entry in pollVotes.entries) {
+      final voters = List<String>.from(entry.value ?? []);
+      if (voters.contains(currentUid)) myVotes.add(entry.key);
+    }
+    return myVotes;
+  }
+
   // ─── COMMENTS ────────────────────────────────────────────────────
   Stream<List<CommunityCommentModel>> getComments(String postId) {
     return _firestore

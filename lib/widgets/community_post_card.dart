@@ -30,11 +30,22 @@ class CommunityPostCard extends ConsumerStatefulWidget {
 class _CommunityPostCardState extends ConsumerState<CommunityPostCard> {
   bool _isLiked = false;
   bool _loadingLike = false;
+  List<String> _myPollVotes = [];
+  bool _loadingVotes = false;
 
   @override
   void initState() {
     super.initState();
     _checkLiked();
+    if (widget.post.isPoll) _checkPollVotes();
+  }
+
+  Future<void> _checkPollVotes() async {
+    try {
+      final service = ref.read(communityPostServiceProvider);
+      final votes = await service.getMyPollVotes(widget.post.id);
+      if (mounted) setState(() => _myPollVotes = votes);
+    } catch (_) {}
   }
 
   Future<void> _checkLiked() async {
@@ -164,6 +175,11 @@ class _CommunityPostCardState extends ConsumerState<CommunityPostCard> {
                 height: 1.4,
               ),
             ),
+            // Poll UI
+            if (widget.post.isPoll) ...[
+              const SizedBox(height: 12),
+              _buildPollUI(theme),
+            ],
             const SizedBox(height: 12),
             const Divider(height: 1),
             const SizedBox(height: 8),
@@ -258,6 +274,134 @@ class _CommunityPostCardState extends ConsumerState<CommunityPostCard> {
         ],
       ),
     );
+  }
+
+  Widget _buildPollUI(ThemeData theme) {
+    final post = widget.post;
+    final totalVotes = post.totalPollVotes;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Poll type badge
+        Row(
+          children: [
+            Icon(
+              post.pollType == 'single' ? LucideIcons.circleDot : LucideIcons.checkSquare,
+              size: 14,
+              color: theme.colorScheme.primary,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              post.pollType == 'single' ? 'Single choice' : 'Multiple choice',
+              style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
+            ),
+            const Spacer(),
+            Text(
+              '$totalVotes vote${totalVotes == 1 ? '' : 's'}',
+              style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        // Options
+        ...List.generate(post.pollOptions.length, (i) {
+          final key = '$i';
+          final voters = post.pollVotes[key] ?? [];
+          final voteCount = voters.length;
+          final percentage = totalVotes > 0 ? (voteCount / totalVotes * 100) : 0.0;
+          final isSelected = _myPollVotes.contains(key);
+
+          return GestureDetector(
+            onTap: _loadingVotes ? null : () => _votePoll(key),
+            child: Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: isSelected ? theme.colorScheme.primary : theme.colorScheme.outline.withAlpha(128),
+                  width: isSelected ? 1.5 : 1,
+                ),
+                color: isSelected ? theme.colorScheme.primary.withAlpha(20) : Colors.transparent,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        isSelected
+                            ? (post.pollType == 'single' ? Icons.radio_button_checked : Icons.check_box)
+                            : (post.pollType == 'single' ? Icons.radio_button_unchecked : Icons.check_box_outline_blank),
+                        size: 18,
+                        color: isSelected ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          post.pollOptions[i],
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                          ),
+                        ),
+                      ),
+                      Text(
+                        '$voteCount',
+                        style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
+                      ),
+                    ],
+                  ),
+                  if (totalVotes > 0) ...[
+                    const SizedBox(height: 6),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(3),
+                      child: LinearProgressIndicator(
+                        value: percentage / 100,
+                        minHeight: 5,
+                        backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                        color: isSelected ? theme.colorScheme.primary : theme.colorScheme.outline,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          );
+        }),
+      ],
+    );
+  }
+
+  Future<void> _votePoll(String optionKey) async {
+    setState(() => _loadingVotes = true);
+
+    List<String> newVotes;
+    if (widget.post.pollType == 'single') {
+      newVotes = [optionKey];
+    } else {
+      newVotes = List.from(_myPollVotes);
+      if (newVotes.contains(optionKey)) {
+        newVotes.remove(optionKey);
+      } else {
+        newVotes.add(optionKey);
+      }
+    }
+
+    if (newVotes.isEmpty) {
+      setState(() => _loadingVotes = false);
+      return;
+    }
+
+    final service = ref.read(communityPostServiceProvider);
+    await service.votePoll(widget.post.id, newVotes);
+    if (mounted) {
+      setState(() {
+        _myPollVotes = newVotes;
+        _loadingVotes = false;
+      });
+    }
   }
 
   Widget _actionButton({
