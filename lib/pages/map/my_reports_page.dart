@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../models/report_post_model.dart';
 import '../../services/report_post_service.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class MyReportsPage extends StatelessWidget {
   const MyReportsPage({super.key});
@@ -11,6 +12,7 @@ class MyReportsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final service = ReportPostService();
+    final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -31,14 +33,14 @@ class MyReportsPage extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.report_off_outlined,
-                      size: 64, color: Colors.grey.shade300),
+                  Icon(LucideIcons.fileX,
+                      size: 64, color: theme.colorScheme.outline),
                   const SizedBox(height: 16),
                   Text(
                     'No reports yet',
                     style: TextStyle(
                       fontSize: 16,
-                      color: Colors.grey.shade500,
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ],
@@ -90,7 +92,7 @@ class _ReportCard extends StatelessWidget {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color:
-                        report.isUrgent ? Colors.red.shade700 : Colors.orange,
+                        report.isUrgent ? theme.colorScheme.error : theme.colorScheme.tertiary,
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -106,13 +108,13 @@ class _ReportCard extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
-                      color: Colors.red.shade50,
+                      color: theme.colorScheme.errorContainer,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
                       'URGENT',
                       style: TextStyle(
-                        color: Colors.red.shade700,
+                        color: theme.colorScheme.error,
                         fontWeight: FontWeight.bold,
                         fontSize: 10,
                       ),
@@ -130,7 +132,7 @@ class _ReportCard extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontSize: 14,
-                  color: Colors.grey.shade700,
+                  color: theme.colorScheme.onSurface,
                   height: 1.4,
                 ),
               ),
@@ -140,19 +142,19 @@ class _ReportCard extends StatelessWidget {
             // Date + location
             Row(
               children: [
-                Icon(Icons.access_time, size: 14, color: Colors.grey.shade500),
+                Icon(LucideIcons.clock, size: 14, color: theme.colorScheme.onSurfaceVariant),
                 const SizedBox(width: 4),
                 Text(
                   DateFormat('MMM d, h:mm a').format(report.createdAt),
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+                  style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
                 ),
                 const Spacer(),
-                Icon(Icons.location_on,
-                    size: 14, color: Colors.grey.shade500),
+                Icon(LucideIcons.mapPin,
+                    size: 14, color: theme.colorScheme.onSurfaceVariant),
                 const SizedBox(width: 4),
                 Text(
                   '${report.latitude.toStringAsFixed(4)}, ${report.longitude.toStringAsFixed(4)}',
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+                  style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
                 ),
               ],
             ),
@@ -165,7 +167,7 @@ class _ReportCard extends StatelessWidget {
                 // Edit description
                 TextButton.icon(
                   onPressed: () => _editDescription(context),
-                  icon: const Icon(Icons.edit_outlined, size: 16),
+                  icon: const Icon(LucideIcons.pencil, size: 16),
                   label: const Text('Edit'),
                   style: TextButton.styleFrom(
                     foregroundColor: theme.colorScheme.primary,
@@ -175,10 +177,10 @@ class _ReportCard extends StatelessWidget {
                 // Delete
                 TextButton.icon(
                   onPressed: () => _confirmDelete(context),
-                  icon: const Icon(Icons.delete_outline, size: 16),
+                  icon: const Icon(LucideIcons.trash2, size: 16),
                   label: const Text('Delete'),
                   style: TextButton.styleFrom(
-                    foregroundColor: Colors.red.shade600,
+                    foregroundColor: theme.colorScheme.error,
                   ),
                 ),
               ],

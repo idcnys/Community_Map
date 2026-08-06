@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/group_providers.dart';
 import '../../providers/service_providers.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class DiscoverGroupsTab extends ConsumerStatefulWidget {
   const DiscoverGroupsTab({super.key});
@@ -22,6 +23,7 @@ class _DiscoverGroupsTabState extends ConsumerState<DiscoverGroupsTab> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final groupsAsync = ref.watch(searchGroupsProvider);
     final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
 
@@ -33,15 +35,15 @@ class _DiscoverGroupsTabState extends ConsumerState<DiscoverGroupsTab> {
             controller: _searchCtrl,
             decoration: InputDecoration(
               hintText: 'Search groups...',
-              prefixIcon: const Icon(Icons.search),
+              prefixIcon: const Icon(LucideIcons.search),
               filled: true,
-              fillColor: Colors.grey.shade100,
+              fillColor: theme.colorScheme.surfaceContainerHighest,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide.none,
               ),
               suffixIcon: IconButton(
-                icon: const Icon(Icons.clear),
+                icon: const Icon(LucideIcons.x),
                 onPressed: () {
                   _searchCtrl.clear();
                   ref.read(groupSearchQueryProvider.notifier).setQuery('');
@@ -66,7 +68,7 @@ class _DiscoverGroupsTabState extends ConsumerState<DiscoverGroupsTab> {
                 return Center(
                   child: Text(
                     'No groups to discover.',
-                    style: TextStyle(color: Colors.grey.shade600),
+                    style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
                   ),
                 );
               }
@@ -81,7 +83,7 @@ class _DiscoverGroupsTabState extends ConsumerState<DiscoverGroupsTab> {
                   return Card(
                     margin: const EdgeInsets.only(bottom: 8),
                     child: ListTile(
-                      leading: const Icon(Icons.explore_outlined),
+                      leading: const Icon(LucideIcons.compass),
                       title: Text(group.name),
                       subtitle: Text(
                         '${group.memberCount} members${group.description.isNotEmpty ? '\n${group.description}' : ''}',

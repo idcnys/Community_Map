@@ -78,17 +78,27 @@ class PaginatedFeedNotifier extends AsyncNotifier<PaginatedFeedState> {
   }
 
   Future<PaginatedFeedState> _loadFirstPage() async {
-    final service = ref.read(communityPostServiceProvider);
-    final filter = ref.watch(feedFilterProvider);
-    final myGroupIds = ref.watch(myGroupIdsProvider).value ?? [];
+    try {
+      final service = ref.read(communityPostServiceProvider);
+      final filter = ref.watch(feedFilterProvider);
+      final myGroupIdsAsync = ref.watch(myGroupIdsProvider);
+      final myGroupIds = myGroupIdsAsync.value ?? [];
 
-    final result = await _fetchPage(service, filter, myGroupIds, null);
+      final result = await _fetchPage(service, filter, myGroupIds, null);
 
-    return PaginatedFeedState(
-      posts: result.items,
-      cursor: result.lastDoc,
-      hasMore: result.hasMore,
-    );
+      return PaginatedFeedState(
+        posts: result.items,
+        cursor: result.lastDoc,
+        hasMore: result.hasMore,
+      );
+    } catch (e) {
+      // Return empty state with error instead of hanging
+      return PaginatedFeedState(
+        posts: [],
+        hasMore: false,
+        error: e.toString(),
+      );
+    }
   }
 
   /// Load the next page and append to existing posts.

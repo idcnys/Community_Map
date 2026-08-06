@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/group_providers.dart';
 import '../../providers/service_providers.dart';
 import 'group_detail_page.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class MyGroupsTab extends ConsumerWidget {
   const MyGroupsTab({super.key});
@@ -25,13 +26,13 @@ class MyGroupsTab extends ConsumerWidget {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.group_outlined, size: 64, color: Colors.grey.shade400),
+                      Icon(LucideIcons.users, size: 64, color: theme.colorScheme.onSurfaceVariant.withAlpha(150)),
                       const SizedBox(height: 12),
                       Text('No groups yet', style: theme.textTheme.titleMedium),
                       const SizedBox(height: 4),
                       Text(
                         'Join or create a group to get started.',
-                        style: TextStyle(color: Colors.grey.shade600),
+                        style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
                       ),
                     ],
                   ),
@@ -48,7 +49,7 @@ class MyGroupsTab extends ConsumerWidget {
                   return Card(
                     margin: const EdgeInsets.only(bottom: 8),
                     child: ListTile(
-                      leading: const Icon(Icons.group),
+                      leading: const Icon(LucideIcons.users),
                       title: Text(group.name),
                       subtitle: Text(
                         '${group.memberCount} members${isAdmin ? ' • Admin' : ''}',
@@ -79,7 +80,7 @@ class MyGroupsTab extends ConsumerWidget {
             width: double.infinity,
             child: OutlinedButton.icon(
               onPressed: () => _showCreateGroupDialog(context, ref),
-              icon: const Icon(Icons.add),
+              icon: const Icon(LucideIcons.plus),
               label: const Text('Create New Group'),
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 14),

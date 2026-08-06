@@ -26,6 +26,11 @@ class CommunityPostService {
 
   static const int pageSize = 20;
 
+  /// Posts older than 2 days are excluded from the feed.
+  static final _feedCutoff = Timestamp.fromDate(
+    DateTime.now().subtract(const Duration(days: 2)),
+  );
+
   String get currentUid => _auth.currentUser!.uid;
   String get currentName => _auth.currentUser?.displayName ?? 'User';
 
@@ -68,38 +73,32 @@ class CommunityPostService {
     }
   }
 
-  // ─── SERVER-SIDE FEED QUERIES (no client-side filtering) ─────────
-
-  /// Public posts only — uses composite index (originType, createdAt).
-  Query<Map<String, dynamic>> _publicQuery() {
-    return _firestore
-        .collection('community_posts')
-        .where('originType', isEqualTo: 'public')
-        .orderBy('createdAt', descending: true);
-  }
-
-  /// Posts from a specific group — uses composite index (groupId, createdAt).
-  Query<Map<String, dynamic>> _groupQuery(String groupId) {
-    return _firestore
-        .collection('community_posts')
-        .where('groupId', isEqualTo: groupId)
-        .orderBy('createdAt', descending: true);
-  }
-
-
-
-  // ─── PAGINATED FEED (cursor-based) ───────────────────────────────
+  // ─── FEED QUERIES (no composite index required) ───────────────────
+  // Uses simple orderBy('createdAt') which works with Firestore's
+  // auto-created single-field index. Composite indexes can be added
+  // later via `firebase deploy --only firestore:indexes` for
+  // server-side filtering optimization.
 
   /// Load first page of public feed.
+  /// Fetches recent posts and filters client-side (no composite index needed).
   Future<PaginatedResult<CommunityPostModel>> getPublicFeedPage({
     DocumentSnapshot? startAfter,
   }) async {
-    var query = _publicQuery().limit(pageSize);
+    var query = _firestore
+        .collection('community_posts')
+        .where('createdAt', isGreaterThanOrEqualTo: _feedCutoff)
+        .orderBy('createdAt', descending: true)
+        .limit(pageSize * 3); // fetch extra to filter
     if (startAfter != null) {
       query = query.startAfterDocument(startAfter);
     }
     final snap = await query.get();
-    return _buildResult(snap);
+    // Client-side filter for public posts
+    final filtered = snap.docs
+        .where((d) => d.data()['originType'] == 'public')
+        .take(pageSize)
+        .toList();
+    return _buildResultFromDocs(filtered, snap.docs.length == pageSize * 3);
   }
 
   /// Load first page of a specific group's feed.
@@ -107,73 +106,41 @@ class CommunityPostService {
     String groupId, {
     DocumentSnapshot? startAfter,
   }) async {
-    var query = _groupQuery(groupId).limit(pageSize);
+    // where + orderBy on different field needs composite index.
+    // Fallback: fetch all recent, filter client-side.
+    var query = _firestore
+        .collection('community_posts')
+        .where('createdAt', isGreaterThanOrEqualTo: _feedCutoff)
+        .orderBy('createdAt', descending: true)
+        .limit(pageSize * 3);
     if (startAfter != null) {
       query = query.startAfterDocument(startAfter);
     }
     final snap = await query.get();
-    return _buildResult(snap);
+    final filtered = snap.docs
+        .where((d) => d.data()['groupId'] == groupId)
+        .take(pageSize)
+        .toList();
+    return _buildResultFromDocs(filtered, snap.docs.length == pageSize * 3);
   }
 
-  /// Load "all" feed page: merges public + group posts.
-  /// Fetches from both sources and merges by createdAt descending.
+  /// Load "all" feed page: fetches recent posts ordered by createdAt.
+  /// No composite index needed — just orderBy on a single field.
   Future<PaginatedResult<CommunityPostModel>> getAllFeedPage(
     List<String> myGroupIds, {
     DocumentSnapshot? publicCursor,
     DocumentSnapshot? groupCursor,
   }) async {
-    // Fetch public posts
-    var pubQuery = _publicQuery().limit(pageSize);
+    var query = _firestore
+        .collection('community_posts')
+        .where('createdAt', isGreaterThanOrEqualTo: _feedCutoff)
+        .orderBy('createdAt', descending: true)
+        .limit(pageSize);
     if (publicCursor != null) {
-      pubQuery = pubQuery.startAfterDocument(publicCursor);
+      query = query.startAfterDocument(publicCursor);
     }
-
-    // Fetch group posts (whereIn limited to 30)
-    final feedGroupIds = myGroupIds.take(29).toList();
-    Query<Map<String, dynamic>>? grpQuery;
-    if (feedGroupIds.isNotEmpty) {
-      grpQuery = _firestore
-          .collection('community_posts')
-          .where('groupId', whereIn: feedGroupIds)
-          .orderBy('createdAt', descending: true)
-          .limit(pageSize);
-      if (groupCursor != null) {
-        grpQuery = grpQuery.startAfterDocument(groupCursor);
-      }
-    }
-
-    // Execute queries in parallel
-    final results = await Future.wait([
-      pubQuery.get(),
-      if (grpQuery != null) grpQuery.get(),
-    ]);
-
-    final pubSnap = results[0];
-    final grpSnap = results.length > 1 ? results[1] : null;
-
-    // Merge and sort by createdAt descending
-    final allDocs = <QueryDocumentSnapshot<Map<String, dynamic>>>[
-      ...pubSnap.docs,
-      if (grpSnap != null) ...grpSnap.docs,
-    ];
-    allDocs.sort((a, b) {
-      final aTime = (a.data()['createdAt'] as Timestamp?)?.toDate() ?? DateTime(1970);
-      final bTime = (b.data()['createdAt'] as Timestamp?)?.toDate() ?? DateTime(1970);
-      return bTime.compareTo(aTime);
-    });
-
-    // Take only pageSize items
-    final trimmed = allDocs.take(pageSize).toList();
-    final items = trimmed
-        .map((d) => CommunityPostModel.fromMap(d.id, d.data()))
-        .toList();
-
-    return PaginatedResult(
-      items: items,
-      lastDoc: trimmed.isNotEmpty ? trimmed.last : null,
-      hasMore: pubSnap.docs.length == pageSize ||
-          (grpSnap != null && grpSnap.docs.length == pageSize),
-    );
+    final snap = await query.get();
+    return _buildResult(snap);
   }
 
   PaginatedResult<CommunityPostModel> _buildResult(
@@ -189,16 +156,47 @@ class CommunityPostService {
     );
   }
 
+  /// Build result from pre-filtered doc list.
+  PaginatedResult<CommunityPostModel> _buildResultFromDocs(
+    List<QueryDocumentSnapshot<Map<String, dynamic>>> docs,
+    bool hasMore,
+  ) {
+    final items = docs
+        .map((d) => CommunityPostModel.fromMap(d.id, d.data()))
+        .toList();
+    return PaginatedResult(
+      items: items,
+      lastDoc: docs.isNotEmpty ? docs.last : null,
+      hasMore: hasMore,
+    );
+  }
+
   // ─── REALTIME STREAM (for live updates on current page) ──────────
 
   Stream<List<CommunityPostModel>> streamPublicFeed({int limit = 20}) {
-    return _publicQuery().limit(limit).snapshots().map((snap) =>
-        snap.docs.map((d) => CommunityPostModel.fromMap(d.id, d.data())).toList());
+    return _firestore
+        .collection('community_posts')
+        .orderBy('createdAt', descending: true)
+        .limit(limit * 3)
+        .snapshots()
+        .map((snap) => snap.docs
+            .where((d) => d.data()['originType'] == 'public')
+            .take(limit)
+            .map((d) => CommunityPostModel.fromMap(d.id, d.data()))
+            .toList());
   }
 
   Stream<List<CommunityPostModel>> streamGroupFeed(String groupId, {int limit = 20}) {
-    return _groupQuery(groupId).limit(limit).snapshots().map((snap) =>
-        snap.docs.map((d) => CommunityPostModel.fromMap(d.id, d.data())).toList());
+    return _firestore
+        .collection('community_posts')
+        .orderBy('createdAt', descending: true)
+        .limit(limit * 3)
+        .snapshots()
+        .map((snap) => snap.docs
+            .where((d) => d.data()['groupId'] == groupId)
+            .take(limit)
+            .map((d) => CommunityPostModel.fromMap(d.id, d.data()))
+            .toList());
   }
 
   // ─── GET SINGLE POST ──────────────────────────────────────────────

@@ -4,12 +4,14 @@ import 'package:intl/intl.dart';
 import '../../services/report_post_service.dart';
 import '../../models/report_post_model.dart';
 import 'report_detail_sheet.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class ArchivedReportsPage extends StatelessWidget {
   const ArchivedReportsPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final service = ReportPostService();
 
     return Scaffold(
@@ -20,7 +22,7 @@ class ArchivedReportsPage extends StatelessWidget {
             const Text('Archived Reports'),
             Text(
               'Reports older than 48 hours',
-              style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+              style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurfaceVariant),
             ),
           ],
         ),
@@ -38,12 +40,12 @@ class ArchivedReportsPage extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.archive_outlined,
-                      size: 64, color: Colors.grey.shade400),
+                  Icon(LucideIcons.archive,
+                      size: 64, color: theme.colorScheme.onSurfaceVariant.withAlpha(150)),
                   const SizedBox(height: 16),
                   Text(
                     'No archived reports',
-                    style: TextStyle(color: Colors.grey.shade600),
+                    style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
                   ),
                 ],
               ),
@@ -60,9 +62,9 @@ class ArchivedReportsPage extends StatelessWidget {
                 child: ListTile(
                   leading: Icon(
                     report.isUrgent
-                        ? Icons.warning_amber
-                        : Icons.report_problem,
-                    color: report.isUrgent ? Colors.red : Colors.orange,
+                        ? LucideIcons.alertTriangle
+                        : LucideIcons.alertTriangle,
+                    color: report.isUrgent ? theme.colorScheme.error : theme.colorScheme.tertiary,
                   ),
                   title: Text(
                     report.reportType,
@@ -74,7 +76,7 @@ class ArchivedReportsPage extends StatelessWidget {
                   ),
                   trailing: Text(
                     '${report.latitude.toStringAsFixed(4)}, ${report.longitude.toStringAsFixed(4)}',
-                    style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+                    style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurfaceVariant),
                   ),
                   onTap: () {
                     showModalBottomSheet(

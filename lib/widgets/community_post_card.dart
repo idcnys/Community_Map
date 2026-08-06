@@ -5,6 +5,7 @@ import '../core/utils/time_ago.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/community_post_model.dart';
 import '../providers/service_providers.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Provider that checks if the current user liked a specific post.
 final hasLikedProvider = FutureProvider.family<bool, String>((ref, postId) async {
@@ -60,14 +61,14 @@ class _CommunityPostCardState extends ConsumerState<CommunityPostCard> {
             // Repost indicator
             if (widget.post.isRepost)
               Padding(
-                padding: const EdgeInsets.only(bottom: 8),
+                padding: EdgeInsets.only(bottom: 8),
                 child: Row(
                   children: [
-                    Icon(Icons.repeat, size: 16, color: Colors.grey.shade600),
-                    const SizedBox(width: 6),
+                    Icon(LucideIcons.repeat, size: 16, color: theme.colorScheme.onSurfaceVariant),
+                    SizedBox(width: 6),
                     Text(
                       '${widget.post.authorName} reposted from ${widget.post.originalAuthorName}',
-                      style: TextStyle(fontSize: 12, color: Colors.grey.shade600, fontStyle: FontStyle.italic),
+                      style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant, fontStyle: FontStyle.italic),
                     ),
                   ],
                 ),
@@ -104,7 +105,7 @@ class _CommunityPostCardState extends ConsumerState<CommunityPostCard> {
                         timeAgo(widget.post.createdAt ?? DateTime.now()),
                         style: TextStyle(
                           fontSize: 12,
-                          color: Colors.grey.shade500,
+                          color: theme.colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ],
@@ -112,34 +113,34 @@ class _CommunityPostCardState extends ConsumerState<CommunityPostCard> {
                 ),
                 if (widget.post.isPublic)
                   Container(
-                    padding: const EdgeInsets.symmetric(
+                    padding: EdgeInsets.symmetric(
                         horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: Colors.blue.shade50,
+                      color: theme.colorScheme.primaryContainer,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
                       'Public',
                       style: TextStyle(
                         fontSize: 11,
-                        color: Colors.blue.shade700,
+                        color: theme.colorScheme.onPrimaryContainer,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                   )
                 else
                   Container(
-                    padding: const EdgeInsets.symmetric(
+                    padding: EdgeInsets.symmetric(
                         horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: Colors.orange.shade50,
+                      color: theme.colorScheme.tertiaryContainer,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
                       widget.post.groupName,
                       style: TextStyle(
                         fontSize: 11,
-                        color: Colors.orange.shade800,
+                        color: theme.colorScheme.onTertiaryContainer,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -159,7 +160,7 @@ class _CommunityPostCardState extends ConsumerState<CommunityPostCard> {
               widget.post.description,
               style: TextStyle(
                 fontSize: 14,
-                color: Colors.grey.shade700,
+                color: theme.colorScheme.onSurface,
                 height: 1.4,
               ),
             ),
@@ -167,50 +168,56 @@ class _CommunityPostCardState extends ConsumerState<CommunityPostCard> {
             const Divider(height: 1),
             const SizedBox(height: 8),
 
-            // Actions row
-            Row(
-              children: [
-                _actionButton(
-                  icon: _isLiked ? Icons.thumb_up : Icons.thumb_up_outlined,
-                  count: widget.post.likeCount,
-                  color: _isLiked ? theme.colorScheme.primary : Colors.grey.shade600,
-                  onTap: _loadingLike ? null : _toggleLike,
-                ),
-                _actionButton(
-                  icon: Icons.comment_outlined,
-                  count: widget.post.commentCount,
-                  color: Colors.grey.shade600,
-                  onTap: widget.onCommentTap,
-                ),
-                _actionButton(
-                  icon: Icons.repeat,
-                  count: widget.post.repostCount,
-                  color: widget.post.isRepost ? Colors.grey.shade300 : Colors.grey.shade600,
-                  onTap: (isOwn || widget.post.isRepost) ? null : _repost,
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  child: Row(
-                    children: [
-                      Icon(Icons.visibility_outlined, size: 20, color: Colors.grey.shade600),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${widget.post.viewCount}',
-                        style: TextStyle(color: Colors.grey.shade600, fontWeight: FontWeight.w500),
+            // Actions row — live counts via post stream
+            StreamBuilder<CommunityPostModel?>(
+              stream: ref.read(communityPostServiceProvider).getPostById(widget.post.id),
+              builder: (context, liveSnap) {
+                final livePost = liveSnap.data ?? widget.post;
+                return Row(
+                  children: [
+                    _actionButton(
+                      icon: _isLiked ? LucideIcons.thumbsUp : LucideIcons.thumbsUp,
+                      count: livePost.likeCount,
+                      color: _isLiked ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant,
+                      onTap: _loadingLike ? null : _toggleLike,
+                    ),
+                    _actionButton(
+                      icon: LucideIcons.messageCircle,
+                      count: livePost.commentCount,
+                      color: theme.colorScheme.onSurfaceVariant,
+                      onTap: widget.onCommentTap,
+                    ),
+                    _actionButton(
+                      icon: LucideIcons.repeat,
+                      count: livePost.repostCount,
+                      color: widget.post.isRepost ? theme.colorScheme.outline : theme.colorScheme.onSurfaceVariant,
+                      onTap: (isOwn || widget.post.isRepost) ? null : _repost,
+                    ),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      child: Row(
+                        children: [
+                          Icon(LucideIcons.eye, size: 20, color: theme.colorScheme.onSurfaceVariant),
+                          SizedBox(width: 4),
+                          Text(
+                            '${livePost.viewCount}',
+                            style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontWeight: FontWeight.w500),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                ),
-                const Spacer(),
-                if (isOwn)
-                  IconButton(
-                    icon: const Icon(Icons.delete_outline,
-                        size: 20, color: Colors.red),
-                    onPressed: () => _confirmDelete(context),
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                  ),
-              ],
+                    ),
+                    Spacer(),
+                    if (isOwn)
+                      IconButton(
+                        icon: Icon(LucideIcons.trash2,
+                            size: 20, color: theme.colorScheme.error),
+                        onPressed: () => _confirmDelete(context),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      ),
+                  ],
+                );
+              },
             ),
           ],
         ),
@@ -219,13 +226,13 @@ class _CommunityPostCardState extends ConsumerState<CommunityPostCard> {
   }
 
   Future<void> _toggleLike() async {
-    setState(() => _loadingLike = true);
-    final service = ref.read(communityPostServiceProvider);
-    await service.toggleLike(widget.post.id, widget.post.authorId);
     setState(() {
       _isLiked = !_isLiked;
-      _loadingLike = false;
+      _loadingLike = true;
     });
+    final service = ref.read(communityPostServiceProvider);
+    await service.toggleLike(widget.post.id, widget.post.authorId);
+    if (mounted) setState(() => _loadingLike = false);
   }
 
   void _confirmDelete(BuildContext context) {
@@ -299,7 +306,7 @@ class _CommunityPostCardState extends ConsumerState<CommunityPostCard> {
                 ),
               ),
               ListTile(
-                leading: const Icon(Icons.public),
+                leading: const Icon(LucideIcons.globe),
                 title: const Text('Public'),
                 onTap: () async {
                   Navigator.of(ctx).pop();
@@ -308,7 +315,7 @@ class _CommunityPostCardState extends ConsumerState<CommunityPostCard> {
                 },
               ),
               ...groups.map((g) => ListTile(
-                    leading: const Icon(Icons.group),
+                    leading: const Icon(LucideIcons.users),
                     title: Text(g.name),
                     onTap: () async {
                       Navigator.of(ctx).pop();

@@ -54,7 +54,8 @@ dependencies:
   # Immutable models
   freezed_annotation: ^3.0.0
   json_annotation: ^4.9.0
-
+  google_fonts: ^8.2.1
+  lucide_icons_flutter: ^3.1.15
 dev_dependencies:
   flutter_test:
     sdk: flutter

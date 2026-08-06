@@ -22,13 +22,16 @@ class UserGroupService {
       return _cachedGroupIds!;
     }
 
+    final user = _auth.currentUser;
+    if (user == null) return [];
+
     final created = await _firestore
         .collection('groups')
-        .where('createdBy', isEqualTo: currentUid)
+        .where('createdBy', isEqualTo: user.uid)
         .get();
     final joined = await _firestore
         .collection('groups')
-        .where('members', arrayContains: currentUid)
+        .where('members', arrayContains: user.uid)
         .get();
 
     final ids = <String>{};

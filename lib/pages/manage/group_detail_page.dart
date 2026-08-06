@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../services/group_service.dart';
 import '../../models/group_model.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class GroupDetailPage extends StatefulWidget {
   final String groupId;
@@ -62,13 +63,13 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                     children: [
                       Text(group.name, style: theme.textTheme.titleLarge),
                       if (group.description.isNotEmpty) ...[
-                        const SizedBox(height: 4),
-                        Text(group.description, style: TextStyle(color: Colors.grey.shade700)),
+                        SizedBox(height: 4),
+                        Text(group.description, style: TextStyle(color: theme.colorScheme.onSurface)),
                       ],
-                      const SizedBox(height: 8),
+                      SizedBox(height: 8),
                       Text(
                         '${group.memberCount} members • Created by ${group.createdByName}',
-                        style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                        style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 13),
                       ),
                     ],
                   ),
@@ -87,24 +88,24 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                   return Card(
                     margin: const EdgeInsets.only(bottom: 6),
                     child: ListTile(
-                      leading: const Icon(Icons.person_add_alt),
+                      leading: const Icon(LucideIcons.userPlus),
                       title: FutureBuilder<String>(
                         future: _resolveName(requestUid),
                         builder: (ctx, nameSnap) => Text(
                           nameSnap.data ?? 'Loading...',
                         ),
                       ),
-                      subtitle: const Text('Wants to join'),
+                      subtitle: Text('Wants to join'),
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           IconButton(
-                            icon: const Icon(Icons.check_circle, color: Colors.green),
+                            icon: Icon(LucideIcons.checkCircle, color: theme.colorScheme.primary),
                             tooltip: 'Approve',
                             onPressed: () => _approve(context, widget.groupId, requestUid),
                           ),
                           IconButton(
-                            icon: const Icon(Icons.cancel, color: Colors.red),
+                            icon: Icon(LucideIcons.xCircle, color: theme.colorScheme.error),
                             tooltip: 'Reject',
                             onPressed: () => _reject(context, widget.groupId, requestUid),
                           ),
@@ -125,11 +126,11 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
               ...group.members.map((memberUid) {
                 final isOwner = memberUid == group.createdBy;
                 return Card(
-                  margin: const EdgeInsets.only(bottom: 6),
+                  margin: EdgeInsets.only(bottom: 6),
                   child: ListTile(
                     leading: CircleAvatar(
                       backgroundColor: theme.colorScheme.primaryContainer,
-                      child: const Icon(Icons.person, size: 20),
+                      child: const Icon(LucideIcons.user, size: 20),
                     ),
                     title: FutureBuilder<String>(
                       future: _resolveName(memberUid),
@@ -139,7 +140,7 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                     ),
                     subtitle: Text(
                       isOwner ? 'Group Admin' : 'Member',
-                      style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                      style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
                     ),
                     trailing: isOwner
                         ? Chip(

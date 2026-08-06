@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'my_groups_tab.dart';
 import 'discover_groups_tab.dart';
 import 'requests_tab.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class ManagePage extends StatelessWidget {
   const ManagePage({super.key});
@@ -16,7 +17,7 @@ class ManagePage extends StatelessWidget {
           title: const Text('Manage'),
           actions: [
             IconButton(
-              icon: const Icon(Icons.person_outline),
+              icon: const Icon(LucideIcons.user),
               tooltip: 'Profile',
               onPressed: () => context.push('/dashboard/profile'),
             ),

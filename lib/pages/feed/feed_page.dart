@@ -6,6 +6,7 @@ import '../../providers/service_providers.dart';
 import '../../models/group_model.dart';
 import '../../widgets/community_post_card.dart';
 import 'notification_panel.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class FeedPage extends ConsumerStatefulWidget {
   const FeedPage({super.key});
@@ -40,6 +41,7 @@ class _FeedPageState extends ConsumerState<FeedPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final unreadCount = ref.watch(unreadCountProvider).value ?? 0;
     final filter = ref.watch(feedFilterProvider);
     final myGroups = ref.watch(myJoinedGroupsProvider).value ?? [];
@@ -51,7 +53,7 @@ class _FeedPageState extends ConsumerState<FeedPage> {
           Stack(
             children: [
               IconButton(
-                icon: const Icon(Icons.notifications_outlined),
+                icon: const Icon(LucideIcons.bell),
                 onPressed: () {
                   showModalBottomSheet(
                     context: context,
@@ -65,9 +67,9 @@ class _FeedPageState extends ConsumerState<FeedPage> {
                   right: 6,
                   top: 6,
                   child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: const BoxDecoration(
-                      color: Colors.red,
+                    padding: EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.error,
                       shape: BoxShape.circle,
                     ),
                     constraints: const BoxConstraints(
@@ -76,8 +78,8 @@ class _FeedPageState extends ConsumerState<FeedPage> {
                     ),
                     child: Text(
                       unreadCount > 9 ? '9+' : '$unreadCount',
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: theme.colorScheme.onPrimary,
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
                       ),
@@ -95,7 +97,7 @@ class _FeedPageState extends ConsumerState<FeedPage> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push('/dashboard/create-post'),
-        icon: const Icon(Icons.add),
+        icon: const Icon(LucideIcons.plus),
         label: const Text('Post'),
       ),
       body: _buildFeedList(),
@@ -119,14 +121,37 @@ class _FeedPageState extends ConsumerState<FeedPage> {
 
   Widget _filterChip(String label, String value, String currentFilter) {
     final isSelected = currentFilter == value;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: FilterChip(
-        label: Text(label),
+        label: Text(
+          label,
+          style: TextStyle(
+            color: isSelected
+                ? theme.colorScheme.onPrimary
+                : theme.colorScheme.onSurface,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+            fontSize: 13,
+          ),
+        ),
         selected: isSelected,
+        backgroundColor: isDark
+            ? const Color(0xFF1C1C1F)
+            : const Color(0xFFF9FAFB),
+        selectedColor: theme.colorScheme.primary,
+        side: BorderSide(
+          color: isSelected
+              ? theme.colorScheme.primary
+              : (isDark ? const Color(0xFF3F3F46) : const Color(0xFFE4E4E7)),
+          width: 1,
+        ),
+        showCheckmark: false,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         onSelected: (_) {
           ref.read(feedFilterProvider.notifier).setFilter(value);
-          // Reset pagination on filter change
           ref.invalidate(paginatedFeedProvider);
         },
       ),
@@ -134,17 +159,18 @@ class _FeedPageState extends ConsumerState<FeedPage> {
   }
 
   Widget _buildFeedList() {
+    final theme = Theme.of(context);
     final feedAsync = ref.watch(paginatedFeedProvider);
 
     return feedAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => Center(child: CircularProgressIndicator()),
       error: (err, _) => Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.error_outline, size: 48, color: Colors.grey.shade400),
-            const SizedBox(height: 12),
-            Text('Failed to load feed', style: TextStyle(color: Colors.grey.shade600)),
+            Icon(LucideIcons.alertCircle, size: 48, color: theme.colorScheme.onSurfaceVariant.withAlpha(150)),
+            SizedBox(height: 12),
+            Text('Failed to load feed', style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
             const SizedBox(height: 8),
             FilledButton.tonal(
               onPressed: () => ref.read(paginatedFeedProvider.notifier).refresh(),
@@ -161,12 +187,12 @@ class _FeedPageState extends ConsumerState<FeedPage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.feed_outlined, size: 64, color: Colors.grey.shade400),
-                const SizedBox(height: 16),
+                Icon(LucideIcons.newspaper, size: 64, color: theme.colorScheme.onSurfaceVariant.withAlpha(150)),
+                SizedBox(height: 16),
                 Text(
                   'No posts yet.\nBe the first to share something!',
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.grey.shade600),
+                  style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
                 ),
               ],
             ),
