@@ -6,6 +6,8 @@ import '../../providers/service_providers.dart';
 import '../../models/group_model.dart';
 import '../../widgets/community_post_card.dart';
 import 'notification_panel.dart';
+import 'poll_form.dart';
+import 'manage_posts_page.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class FeedPage extends ConsumerStatefulWidget {
@@ -50,6 +52,15 @@ class _FeedPageState extends ConsumerState<FeedPage> {
       appBar: AppBar(
         title: const Text('Feed'),
         actions: [
+          IconButton(
+            icon: const Icon(LucideIcons.settings2),
+            tooltip: 'Manage My Posts',
+            onPressed: () {
+              Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => const ManagePostsPage(),
+              ));
+            },
+          ),
           Stack(
             children: [
               IconButton(
@@ -96,11 +107,49 @@ class _FeedPageState extends ConsumerState<FeedPage> {
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.push('/dashboard/create-post'),
+        onPressed: _showPostOptions,
         icon: const Icon(LucideIcons.plus),
         label: const Text('Post'),
       ),
       body: _buildFeedList(),
+    );
+  }
+
+  void _showPostOptions() {
+    showModalBottomSheet(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text('Create New', style: Theme.of(ctx).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+            ),
+            ListTile(
+              leading: Icon(LucideIcons.fileText, color: Theme.of(ctx).colorScheme.primary),
+              title: const Text('Normal Post'),
+              subtitle: const Text('Share text with the community'),
+              onTap: () {
+                Navigator.of(ctx).pop();
+                context.push('/dashboard/create-post');
+              },
+            ),
+            ListTile(
+              leading: Icon(LucideIcons.barChart2, color: Theme.of(ctx).colorScheme.tertiary),
+              title: const Text('Poll'),
+              subtitle: const Text('Create a vote for the community'),
+              onTap: () {
+                Navigator.of(ctx).pop();
+                Navigator.of(context).push(MaterialPageRoute(
+                  builder: (_) => const PollForm(),
+                ));
+              },
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
     );
   }
 

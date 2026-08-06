@@ -34,10 +34,16 @@ abstract class CommunityPostModel with _$CommunityPostModel {
     @Default('') String originalPostId,
     @Default('') String originalAuthorName,
     @Default(null) DateTime? createdAt,
+    // Poll fields
+    @Default(false) bool isPoll,
+    @Default([]) List<String> pollOptions,
+    @Default('single') String pollType, // 'single' or 'multi'
+    @Default({}) Map<String, List<String>> pollVotes, // optionIndex -> [userIds]
   }) = _CommunityPostModel;
 
   bool get isPublic => originType == 'public';
   bool get isRepost => originalPostId.isNotEmpty;
+  int get totalPollVotes => pollVotes.values.fold(0, (sum, list) => sum + list.length);
 
   factory CommunityPostModel.fromMap(String id, Map<String, dynamic> map) {
     return CommunityPostModel(
@@ -55,6 +61,12 @@ abstract class CommunityPostModel with _$CommunityPostModel {
       repostCount: map['repostCount'] ?? 0,
       originalPostId: map['originalPostId'] ?? '',
       originalAuthorName: map['originalAuthorName'] ?? '',
+      isPoll: map['isPoll'] ?? false,
+      pollOptions: List<String>.from(map['pollOptions'] ?? []),
+      pollType: map['pollType'] ?? 'single',
+      pollVotes: (map['pollVotes'] as Map<String, dynamic>?)?.map(
+        (k, v) => MapEntry(k, List<String>.from(v ?? [])),
+      ) ?? {},
       createdAt: (map['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
   }
@@ -74,6 +86,10 @@ abstract class CommunityPostModel with _$CommunityPostModel {
       'repostCount': repostCount,
       'originalPostId': originalPostId,
       'originalAuthorName': originalAuthorName,
+      'isPoll': isPoll,
+      'pollOptions': pollOptions,
+      'pollType': pollType,
+      'pollVotes': pollVotes,
       'createdAt': createdAt != null ? Timestamp.fromDate(createdAt!) : FieldValue.serverTimestamp(),
     };
   }
