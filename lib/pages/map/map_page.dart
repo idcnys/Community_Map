@@ -18,6 +18,7 @@ import 'map_notification_panel.dart';
 import 'my_reports_page.dart';
 import 'member_detail_sheet.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import '../../providers/guest_provider.dart';
 
 class MapPage extends ConsumerStatefulWidget {
   const MapPage({super.key});
@@ -126,6 +127,7 @@ class _MapPageState extends ConsumerState<MapPage>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isGuest = ref.watch(isGuestProvider);
     final reports = ref.watch(activeReportsProvider).value ?? [];
     final hasActiveReport = ref.watch(hasActiveReportProvider);
     final myGroups = ref.watch(myJoinedGroupsProvider).value ?? [];
@@ -337,7 +339,12 @@ class _MapPageState extends ConsumerState<MapPage>
                           value: _selectedGroupFilter,
                           isDense: true,
                           icon: Icon(LucideIcons.chevronDown, size: 18, color: theme.colorScheme.primary),
-                          style: TextStyle(color: theme.colorScheme.onSurface, fontSize: 14),
+                          style: TextStyle(
+                            color: isGuest
+                                ? theme.colorScheme.onSurfaceVariant.withAlpha(120)
+                                : theme.colorScheme.onSurface,
+                            fontSize: 14,
+                          ),
                           items: [
                             const DropdownMenuItem(
                               value: 'global',
@@ -350,19 +357,20 @@ class _MapPageState extends ConsumerState<MapPage>
                                 ],
                               ),
                             ),
-                            ...myGroups.map((g) => DropdownMenuItem(
-                                  value: g.id,
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const Icon(LucideIcons.users, size: 16),
-                                      const SizedBox(width: 6),
-                                      Text(g.name, overflow: TextOverflow.ellipsis),
-                                    ],
-                                  ),
-                                )),
+                            if (!isGuest)
+                              ...myGroups.map((g) => DropdownMenuItem(
+                                    value: g.id,
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Icon(LucideIcons.users, size: 16),
+                                        const SizedBox(width: 6),
+                                        Text(g.name, overflow: TextOverflow.ellipsis),
+                                      ],
+                                    ),
+                                  )),
                           ],
-                          onChanged: _onGroupFilterChanged,
+                          onChanged: isGuest ? null : _onGroupFilterChanged,
                         ),
                       ),
                     ),

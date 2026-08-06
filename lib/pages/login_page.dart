@@ -5,15 +5,17 @@ import 'package:go_router/go_router.dart';
 import '../core/utils/validators.dart';
 import '../core/utils/snackbar_helper.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/guest_provider.dart';
 
-class LoginPage extends StatefulWidget {
+class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  ConsumerState<LoginPage> createState() => _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _LoginPageState extends ConsumerState<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -169,6 +171,20 @@ class _LoginPageState extends State<LoginPage> {
                           )
                         : const Text('Sign In', style: TextStyle(fontSize: 16)),
                   ),
+                  const SizedBox(height: 12),
+
+                  // Guest Login Button
+                  OutlinedButton.icon(
+                    onPressed: _isLoading ? null : _handleGuestLogin,
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    icon: const Icon(LucideIcons.eye),
+                    label: const Text('Login as Guest', style: TextStyle(fontSize: 16)),
+                  ),
                   const SizedBox(height: 32),
 
                   Row(
@@ -198,6 +214,22 @@ class _LoginPageState extends State<LoginPage> {
         ),
       ),
     );
+  }
+
+
+  Future<void> _handleGuestLogin() async {
+    setState(() => _isLoading = true);
+    try {
+      await FirebaseAuth.instance.signInAnonymously();
+      ref.read(isGuestProvider.notifier).set(true);
+      if (mounted) {
+        context.go('/dashboard');
+      }
+    } catch (e) {
+      if (mounted) context.showError('Guest login failed. Please try again.');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   Future<void> _handleForgotPassword() async {

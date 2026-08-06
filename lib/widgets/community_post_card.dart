@@ -5,6 +5,7 @@ import '../core/utils/time_ago.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/community_post_model.dart';
 import '../providers/service_providers.dart';
+import '../providers/guest_provider.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Provider that checks if the current user liked a specific post.
@@ -189,25 +190,26 @@ class _CommunityPostCardState extends ConsumerState<CommunityPostCard> {
               stream: ref.read(communityPostServiceProvider).getPostById(widget.post.id),
               builder: (context, liveSnap) {
                 final livePost = liveSnap.data ?? widget.post;
+                final isGuest = ref.read(isGuestProvider);
                 return Row(
                   children: [
                     _actionButton(
                       icon: _isLiked ? Icons.thumb_up : LucideIcons.thumbsUp,
                       count: livePost.likeCount,
                       color: _isLiked ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant,
-                      onTap: _loadingLike ? null : _toggleLike,
+                      onTap: (isGuest || _loadingLike) ? null : _toggleLike,
                     ),
                     _actionButton(
                       icon: LucideIcons.messageCircle,
                       count: livePost.commentCount,
                       color: theme.colorScheme.onSurfaceVariant,
-                      onTap: widget.onCommentTap,
+                      onTap: isGuest ? null : widget.onCommentTap,
                     ),
                     _actionButton(
                       icon: LucideIcons.repeat,
                       count: livePost.repostCount,
                       color: widget.post.isRepost ? theme.colorScheme.outline : theme.colorScheme.onSurfaceVariant,
-                      onTap: (isOwn || widget.post.isRepost) ? null : _repost,
+                      onTap: (isGuest || isOwn || widget.post.isRepost) ? null : _repost,
                     ),
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -312,8 +314,9 @@ class _CommunityPostCardState extends ConsumerState<CommunityPostCard> {
           final percentage = totalVotes > 0 ? (voteCount / totalVotes * 100) : 0.0;
           final isSelected = _myPollVotes.contains(key);
 
+          final isGuest = ref.read(isGuestProvider);
           return GestureDetector(
-            onTap: _loadingVotes ? null : () => _votePoll(key),
+            onTap: (isGuest || _loadingVotes) ? null : () => _votePoll(key),
             child: Container(
               margin: const EdgeInsets.only(bottom: 8),
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),

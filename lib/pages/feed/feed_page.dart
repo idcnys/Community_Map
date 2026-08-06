@@ -9,6 +9,8 @@ import 'notification_panel.dart';
 import 'poll_form.dart';
 import 'manage_posts_page.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import '../../providers/guest_provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class FeedPage extends ConsumerStatefulWidget {
   const FeedPage({super.key});
@@ -44,6 +46,7 @@ class _FeedPageState extends ConsumerState<FeedPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isGuest = ref.watch(isGuestProvider);
     final unreadCount = ref.watch(unreadCountProvider).value ?? 0;
     final filter = ref.watch(feedFilterProvider);
     final myGroups = ref.watch(myJoinedGroupsProvider).value ?? [];
@@ -52,67 +55,87 @@ class _FeedPageState extends ConsumerState<FeedPage> {
       appBar: AppBar(
         title: const Text('Feed'),
         actions: [
-          IconButton(
-            icon: const Icon(LucideIcons.settings2),
-            tooltip: 'Manage My Posts',
-            onPressed: () {
-              Navigator.of(context).push(MaterialPageRoute(
-                builder: (_) => const ManagePostsPage(),
-              ));
-            },
-          ),
-          Stack(
-            children: [
-              IconButton(
-                icon: const Icon(LucideIcons.bell),
-                onPressed: () {
-                  showModalBottomSheet(
-                    context: context,
-                    isScrollControlled: true,
-                    builder: (_) => const NotificationPanel(),
-                  );
-                },
-              ),
-              if (unreadCount > 0)
-                Positioned(
-                  right: 6,
-                  top: 6,
-                  child: Container(
-                    padding: EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.error,
-                      shape: BoxShape.circle,
-                    ),
-                    constraints: const BoxConstraints(
-                      minWidth: 16,
-                      minHeight: 16,
-                    ),
-                    child: Text(
-                      unreadCount > 9 ? '9+' : '$unreadCount',
-                      style: TextStyle(
-                        color: theme.colorScheme.onPrimary,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
+          if (isGuest)
+            IconButton(
+              icon: const Icon(LucideIcons.logOut),
+              tooltip: 'Sign Out',
+              onPressed: _handleGuestLogout,
+            )
+          else ...[
+            IconButton(
+              icon: const Icon(LucideIcons.settings2),
+              tooltip: 'Manage My Posts',
+              onPressed: () {
+                Navigator.of(context).push(MaterialPageRoute(
+                  builder: (_) => const ManagePostsPage(),
+                ));
+              },
+            ),
+            Stack(
+              children: [
+                IconButton(
+                  icon: const Icon(LucideIcons.bell),
+                  onPressed: () {
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      builder: (_) => const NotificationPanel(),
+                    );
+                  },
+                ),
+                if (unreadCount > 0)
+                  Positioned(
+                    right: 6,
+                    top: 6,
+                    child: Container(
+                      padding: EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.error,
+                        shape: BoxShape.circle,
                       ),
-                      textAlign: TextAlign.center,
+                      constraints: const BoxConstraints(
+                        minWidth: 16,
+                        minHeight: 16,
+                      ),
+                      child: Text(
+                        unreadCount > 9 ? '9+' : '$unreadCount',
+                        style: TextStyle(
+                          color: theme.colorScheme.onPrimary,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
                     ),
                   ),
-                ),
-            ],
-          ),
+              ],
+            ),
+          ],
         ],
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(48),
-          child: _buildGroupFilter(filter, myGroups),
-        ),
+        bottom: isGuest
+            ? null
+            : PreferredSize(
+                preferredSize: const Size.fromHeight(48),
+                child: _buildGroupFilter(filter, myGroups),
+              ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _showPostOptions,
-        icon: const Icon(LucideIcons.plus),
-        label: const Text('Post'),
-      ),
+      floatingActionButton: isGuest
+          ? null
+          : FloatingActionButton.extended(
+              onPressed: _showPostOptions,
+              icon: const Icon(LucideIcons.plus),
+              label: const Text('Post'),
+            ),
       body: _buildFeedList(),
     );
+  }
+
+  void _handleGuestLogout() async {
+    await FirebaseAuth.instance.signOut();
+    ref.read(isGuestProvider.notifier).set(false);
+    if (mounted) {
+      context.go('/login');
+    }
   }
 
   void _showPostOptions() {

@@ -5,6 +5,7 @@ import '../models/group_model.dart';
 import '../models/notification_model.dart';
 import '../services/community_post_service.dart';
 import 'service_providers.dart';
+import 'guest_provider.dart';
 
 /// User's group IDs — cached, shared across feed and reports.
 final myGroupIdsProvider = FutureProvider<List<String>>((ref) async {
@@ -80,7 +81,8 @@ class PaginatedFeedNotifier extends AsyncNotifier<PaginatedFeedState> {
   Future<PaginatedFeedState> _loadFirstPage() async {
     try {
       final service = ref.read(communityPostServiceProvider);
-      final filter = ref.watch(feedFilterProvider);
+      final isGuest = ref.read(isGuestProvider);
+      final filter = isGuest ? 'public' : ref.watch(feedFilterProvider);
       final myGroupIdsAsync = ref.watch(myGroupIdsProvider);
       final myGroupIds = myGroupIdsAsync.value ?? [];
 
@@ -110,7 +112,8 @@ class PaginatedFeedNotifier extends AsyncNotifier<PaginatedFeedState> {
 
     try {
       final service = ref.read(communityPostServiceProvider);
-      final filter = ref.read(feedFilterProvider);
+      final isGuest = ref.read(isGuestProvider);
+      final filter = isGuest ? 'public' : ref.read(feedFilterProvider);
       final myGroupIds = ref.read(myGroupIdsProvider).value ?? [];
 
       final result = await _fetchPage(service, filter, myGroupIds, current.cursor);
