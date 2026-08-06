@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "505795864357",
+    "project_id": "cmap-0",
+    "storage_bucket": "cmap-0.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:505795864357:android:431ad844557410e6db5ccc",
+        "android_client_info": {
+          "package_name": "com.communityapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "505795864357-rqqm71lfm22fpf3phkppdghdul1p92iq.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCEM3qZMqzOAmSFzCwMt24rxcGydvV20dg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "505795864357-rqqm71lfm22fpf3phkppdghdul1p92iq.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "505795864357-grcoqtnnvu0mv3n7vot0vsn34uprkdif.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.communityapp"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
