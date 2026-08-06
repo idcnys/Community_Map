@@ -5,6 +5,7 @@ import '../../services/report_post_service.dart';
 import '../../services/group_service.dart';
 import '../../models/report_post_model.dart';
 import '../../models/group_model.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class ReportPostForm extends StatefulWidget {
   const ReportPostForm({super.key});
@@ -77,7 +78,7 @@ class _ReportPostFormState extends State<ReportPostForm> {
                 keyboardType: TextInputType.phone,
                 decoration: const InputDecoration(
                   labelText: 'Contact Number',
-                  prefixIcon: Icon(Icons.phone),
+                  prefixIcon: Icon(LucideIcons.phone),
                   helperText:
                       'Only visible to users sharing groups with you',
                 ),
@@ -92,7 +93,7 @@ class _ReportPostFormState extends State<ReportPostForm> {
                 value: _reportType,
                 decoration: const InputDecoration(
                   labelText: 'Report Type',
-                  prefixIcon: Icon(Icons.category),
+                  prefixIcon: Icon(LucideIcons.layoutGrid),
                 ),
                 items: ReportTypes.options.map((type) {
                   return DropdownMenuItem(value: type, child: Text(type));
@@ -108,7 +109,7 @@ class _ReportPostFormState extends State<ReportPostForm> {
                 decoration: const InputDecoration(
                   labelText: 'Description',
                   hintText: 'Describe the incident...',
-                  prefixIcon: Icon(Icons.description_outlined),
+                  prefixIcon: Icon(LucideIcons.fileText),
                   alignLabelWithHint: true,
                 ),
                 validator: (v) => (v == null || v.trim().isEmpty)
@@ -125,13 +126,13 @@ class _ReportPostFormState extends State<ReportPostForm> {
                     children: [
                       Icon(
                         _locating
-                            ? Icons.gps_not_fixed
+                            ? LucideIcons.locate
                             : (_currentPosition != null
-                                ? Icons.location_on
-                                : Icons.location_off),
+                                ? LucideIcons.mapPin
+                                : LucideIcons.mapPinOff),
                         color: _currentPosition != null
-                            ? Colors.green
-                            : Colors.grey,
+                            ? theme.colorScheme.primary
+                            : theme.colorScheme.onSurfaceVariant,
                       ),
                       const SizedBox(width: 12),
                       Expanded(
@@ -146,11 +147,11 @@ class _ReportPostFormState extends State<ReportPostForm> {
                                 : Text(
                                     'Location unavailable',
                                     style: TextStyle(
-                                        color: Colors.red.shade400),
+                                        color: theme.colorScheme.error.withAlpha(180)),
                                   ),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.refresh),
+                        icon: const Icon(LucideIcons.refreshCw),
                         onPressed: _detectLocation,
                       ),
                     ],
@@ -164,7 +165,7 @@ class _ReportPostFormState extends State<ReportPostForm> {
                 Text(
                   'Contact visible to members of:',
                   style: theme.textTheme.bodySmall
-                      ?.copyWith(color: Colors.grey.shade600),
+                      ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                 ),
                 const SizedBox(height: 8),
                 Wrap(
@@ -192,11 +193,11 @@ class _ReportPostFormState extends State<ReportPostForm> {
                         height: 20,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Icon(Icons.report_problem),
+                    : Icon(LucideIcons.alertTriangle),
                 label: const Text('Submit Report'),
                 style: FilledButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  backgroundColor: Colors.orange.shade700,
+                  backgroundColor: theme.colorScheme.tertiary,
                 ),
               ),
             ],

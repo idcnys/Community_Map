@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'feed/feed_page.dart';
 import 'map/map_page.dart';
 import 'manage/manage_page.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -47,18 +48,18 @@ class _DashboardPageState extends State<DashboardPage> {
         },
         destinations: const [
           NavigationDestination(
-            icon: Icon(Icons.dynamic_feed_outlined),
-            selectedIcon: Icon(Icons.dynamic_feed),
+            icon: Icon(LucideIcons.newspaper),
+            selectedIcon: Icon(LucideIcons.newspaper),
             label: 'Feed',
           ),
           NavigationDestination(
-            icon: Icon(Icons.map_outlined),
-            selectedIcon: Icon(Icons.map),
+            icon: Icon(LucideIcons.map),
+            selectedIcon: Icon(LucideIcons.map),
             label: 'Map',
           ),
           NavigationDestination(
-            icon: Icon(Icons.settings_outlined),
-            selectedIcon: Icon(Icons.settings),
+            icon: Icon(LucideIcons.settings),
+            selectedIcon: Icon(LucideIcons.settings),
             label: 'Manage',
           ),
         ],

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/group_providers.dart';
 import '../../providers/service_providers.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class RequestsTab extends ConsumerWidget {
   const RequestsTab({super.key});
@@ -20,13 +21,13 @@ class RequestsTab extends ConsumerWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.hourglass_empty, size: 64, color: Colors.grey.shade400),
+                Icon(LucideIcons.hourglass, size: 64, color: theme.colorScheme.onSurfaceVariant.withAlpha(150)),
                 const SizedBox(height: 12),
                 Text('No pending requests', style: theme.textTheme.titleMedium),
                 const SizedBox(height: 4),
                 Text(
                   'Your join requests will appear here.',
-                  style: TextStyle(color: Colors.grey.shade600),
+                  style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
                 ),
               ],
             ),
@@ -41,7 +42,7 @@ class RequestsTab extends ConsumerWidget {
             return Card(
               margin: const EdgeInsets.only(bottom: 8),
               child: ListTile(
-                leading: const Icon(Icons.hourglass_top),
+                leading: const Icon(LucideIcons.hourglass),
                 title: Text(group.name),
                 subtitle: Text('${group.memberCount} members'),
                 trailing: OutlinedButton(

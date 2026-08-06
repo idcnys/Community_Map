@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../services/community_post_service.dart';
 import '../../models/community_post_model.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class CommentsPage extends StatefulWidget {
   final String postId;
@@ -46,11 +47,11 @@ class _CommentsPageState extends State<CommentsPage> {
 
               return Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(14),
+                padding: EdgeInsets.all(14),
                 decoration: BoxDecoration(
                   color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
                   border: Border(
-                    bottom: BorderSide(color: Colors.grey.shade300),
+                    bottom: BorderSide(color: theme.colorScheme.outline),
                   ),
                 ),
                 child: Column(
@@ -82,7 +83,7 @@ class _CommentsPageState extends State<CommentsPage> {
                               ),
                               Text(
                                 DateFormat('MMM d, h:mm a').format(post.createdAt ?? DateTime.now()),
-                                style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                                style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurfaceVariant),
                               ),
                             ],
                           ),
@@ -100,12 +101,12 @@ class _CommentsPageState extends State<CommentsPage> {
                       post.title,
                       style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
                     ),
-                    const SizedBox(height: 4),
+                    SizedBox(height: 4),
                     Text(
                       post.description,
                       maxLines: 4,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: 13, color: Colors.grey.shade800),
+                      style: TextStyle(fontSize: 13, color: theme.colorScheme.onSurface),
                     ),
                   ],
                 ),
@@ -128,7 +129,7 @@ class _CommentsPageState extends State<CommentsPage> {
                     child: Text(
                       'No comments yet.\nBe the first to comment!',
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.grey.shade600),
+                      style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
                     ),
                   );
                 }
@@ -166,15 +167,15 @@ class _CommentsPageState extends State<CommentsPage> {
                                   .format(comment.createdAt ?? DateTime.now()),
                               style: TextStyle(
                                 fontSize: 11,
-                                color: Colors.grey.shade500,
+                                color: theme.colorScheme.onSurfaceVariant,
                               ),
                             ),
                           ],
                         ),
                         trailing: isOwn
                             ? IconButton(
-                                icon: const Icon(Icons.delete_outline,
-                                    size: 20, color: Colors.red),
+                                icon: Icon(LucideIcons.trash2,
+                                    size: 20, color: theme.colorScheme.error),
                                 onPressed: () => _deleteComment(comment.id),
                               )
                             : null,
@@ -187,12 +188,12 @@ class _CommentsPageState extends State<CommentsPage> {
           ),
           // Comment input
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: Theme.of(context).scaffoldBackgroundColor,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
+                  color: theme.colorScheme.onSurface.withAlpha(13),
                   blurRadius: 4,
                   offset: const Offset(0, -2),
                 ),
@@ -207,7 +208,7 @@ class _CommentsPageState extends State<CommentsPage> {
                       decoration: InputDecoration(
                         hintText: 'Write a comment...',
                         filled: true,
-                        fillColor: Colors.grey.shade100,
+                        fillColor: theme.colorScheme.surfaceContainerHighest,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(24),
                           borderSide: BorderSide.none,
@@ -230,7 +231,7 @@ class _CommentsPageState extends State<CommentsPage> {
                               child:
                                   CircularProgressIndicator(strokeWidth: 2),
                             )
-                          : const Icon(Icons.send, size: 20),
+                          : const Icon(LucideIcons.send, size: 20),
                       onPressed: _sending ? null : _sendComment,
                     ),
                   ),

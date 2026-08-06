@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../services/profile_service.dart';
 import '../../models/post_model.dart';
 import '../login_page.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class ProfileEditorPage extends StatefulWidget {
   const ProfileEditorPage({super.key});
@@ -53,7 +54,7 @@ class _ProfileEditorPageState extends State<ProfileEditorPage> {
         title: const Text('Edit Profile'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.logout),
+            icon: const Icon(LucideIcons.logOut),
             tooltip: 'Logout',
             onPressed: _logout,
           ),
@@ -91,7 +92,7 @@ class _ProfileEditorPageState extends State<ProfileEditorPage> {
                   controller: _nameCtrl,
                   decoration: const InputDecoration(
                     labelText: 'Full Name',
-                    prefixIcon: Icon(Icons.person_outline),
+                    prefixIcon: Icon(LucideIcons.user),
                   ),
                   validator: (v) => (v == null || v.trim().length < 3)
                       ? 'Name must be at least 3 characters'
@@ -103,7 +104,7 @@ class _ProfileEditorPageState extends State<ProfileEditorPage> {
                   maxLines: 2,
                   decoration: const InputDecoration(
                     labelText: 'Bio',
-                    prefixIcon: Icon(Icons.info_outline),
+                    prefixIcon: Icon(LucideIcons.info),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -112,7 +113,7 @@ class _ProfileEditorPageState extends State<ProfileEditorPage> {
                   keyboardType: TextInputType.phone,
                   decoration: const InputDecoration(
                     labelText: 'Phone',
-                    prefixIcon: Icon(Icons.phone_outlined),
+                    prefixIcon: Icon(LucideIcons.phone),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -120,7 +121,7 @@ class _ProfileEditorPageState extends State<ProfileEditorPage> {
                   controller: _locationCtrl,
                   decoration: const InputDecoration(
                     labelText: 'Location',
-                    prefixIcon: Icon(Icons.location_on_outlined),
+                    prefixIcon: Icon(LucideIcons.mapPin),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -129,7 +130,7 @@ class _ProfileEditorPageState extends State<ProfileEditorPage> {
                   decoration: const InputDecoration(
                     labelText: 'Date of Birth',
                     hintText: 'DD/MM/YYYY',
-                    prefixIcon: Icon(Icons.cake_outlined),
+                    prefixIcon: Icon(LucideIcons.cake),
                   ),
                 ),
                 const SizedBox(height: 32),
@@ -140,7 +141,7 @@ class _ProfileEditorPageState extends State<ProfileEditorPage> {
                           width: 18, height: 18,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Icon(Icons.save),
+                      : const Icon(LucideIcons.save),
                   label: Text(_saving ? 'Saving...' : 'Save Changes'),
                   style: FilledButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 14),

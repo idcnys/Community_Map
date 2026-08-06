@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/utils/time_ago.dart';
 import '../../services/community_post_service.dart';
 import '../../models/notification_model.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class NotificationPanel extends StatelessWidget {
   const NotificationPanel({super.key});
@@ -59,11 +60,11 @@ class NotificationPanel extends StatelessWidget {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.notifications_none,
-                              size: 64, color: Colors.grey.shade400),
+                          Icon(LucideIcons.bell,
+                              size: 64, color: theme.colorScheme.onSurfaceVariant.withAlpha(150)),
                           const SizedBox(height: 12),
                           Text('No notifications yet',
-                              style: TextStyle(color: Colors.grey.shade600)),
+                              style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
                         ],
                       ),
                     ),
@@ -88,25 +89,26 @@ class NotificationPanel extends StatelessWidget {
     CommunityPostService service,
     AppNotificationModel notif,
   ) {
+    final theme = Theme.of(context);
     IconData icon;
     Color iconColor;
 
     switch (notif.type) {
       case 'like':
-        icon = Icons.thumb_up;
-        iconColor = Colors.blue;
+        icon = LucideIcons.thumbsUp;
+        iconColor = theme.colorScheme.primary;
         break;
       case 'comment':
-        icon = Icons.comment;
-        iconColor = Colors.green;
+        icon = LucideIcons.messageCircle;
+        iconColor = theme.colorScheme.primary;
         break;
       case 'new_post':
-        icon = Icons.article;
-        iconColor = Colors.orange;
+        icon = LucideIcons.fileText;
+        iconColor = theme.colorScheme.tertiary;
         break;
       default:
-        icon = Icons.notifications;
-        iconColor = Colors.grey;
+        icon = LucideIcons.bell;
+        iconColor = theme.colorScheme.onSurfaceVariant;
     }
 
     return ListTile(
@@ -126,7 +128,7 @@ class NotificationPanel extends StatelessWidget {
         timeAgo(notif.createdAt ?? DateTime.now()),
         style: TextStyle(
           fontSize: 12,
-          color: Colors.grey.shade500,
+          color: theme.colorScheme.onSurfaceVariant,
         ),
       ),
       trailing: notif.read

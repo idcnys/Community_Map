@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/feed_providers.dart';
 import '../../providers/service_providers.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class CommunityPostForm extends ConsumerStatefulWidget {
   const CommunityPostForm({super.key});
@@ -46,7 +47,7 @@ class _CommunityPostFormState extends ConsumerState<CommunityPostForm> {
                 controller: _titleCtrl,
                 decoration: const InputDecoration(
                   labelText: 'Title',
-                  prefixIcon: Icon(Icons.title),
+                  prefixIcon: Icon(LucideIcons.type),
                 ),
                 validator: (v) =>
                     (v == null || v.trim().isEmpty) ? 'Title is required' : null,
@@ -59,7 +60,7 @@ class _CommunityPostFormState extends ConsumerState<CommunityPostForm> {
                 decoration: const InputDecoration(
                   labelText: 'Description',
                   hintText: 'What do you want to share?',
-                  prefixIcon: Icon(Icons.description_outlined),
+                  prefixIcon: Icon(LucideIcons.fileText),
                   alignLabelWithHint: true,
                 ),
                 validator: (v) => (v == null || v.trim().isEmpty)
@@ -101,7 +102,7 @@ class _CommunityPostFormState extends ConsumerState<CommunityPostForm> {
                     padding: const EdgeInsets.all(12),
                     child: Text(
                       'You haven\'t joined any groups yet.',
-                      style: TextStyle(color: Colors.grey.shade600),
+                      style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
                     ),
                   )
                 else
@@ -109,7 +110,7 @@ class _CommunityPostFormState extends ConsumerState<CommunityPostForm> {
                     value: _selectedGroupId,
                     decoration: const InputDecoration(
                       labelText: 'Select Group',
-                      prefixIcon: Icon(Icons.group),
+                      prefixIcon: Icon(LucideIcons.users),
                     ),
                     items: myGroups.map((g) {
                       return DropdownMenuItem(value: g.id, child: Text(g.name));
@@ -131,7 +132,7 @@ class _CommunityPostFormState extends ConsumerState<CommunityPostForm> {
                         height: 20,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Icon(Icons.send),
+                    : const Icon(LucideIcons.send),
                 label: const Text('Publish Post'),
                 style: FilledButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),

@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../services/report_post_service.dart';
 import '../../models/report_post_model.dart';
 import 'report_detail_sheet.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class MapNotificationPanel extends StatelessWidget {
   const MapNotificationPanel({super.key});
@@ -26,7 +27,7 @@ class MapNotificationPanel extends StatelessWidget {
               padding: const EdgeInsets.all(16),
               child: Row(
                 children: [
-                  Icon(Icons.notifications_active,
+                  Icon(LucideIcons.bellRing,
                       color: theme.colorScheme.primary),
                   const SizedBox(width: 12),
                   Text(
@@ -39,7 +40,7 @@ class MapNotificationPanel extends StatelessWidget {
                     'Active: < 48 hrs',
                     style: TextStyle(
                       fontSize: 12,
-                      color: Colors.grey.shade500,
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ],
@@ -61,12 +62,12 @@ class MapNotificationPanel extends StatelessWidget {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.notifications_none,
-                              size: 64, color: Colors.grey.shade400),
+                          Icon(LucideIcons.bell,
+                              size: 64, color: theme.colorScheme.onSurfaceVariant.withAlpha(150)),
                           const SizedBox(height: 12),
                           Text(
                             'No active reports',
-                            style: TextStyle(color: Colors.grey.shade600),
+                            style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
                           ),
                         ],
                       ),
@@ -91,14 +92,15 @@ class MapNotificationPanel extends StatelessWidget {
   }
 
   Widget _buildReportTile(BuildContext context, ReportPostModel report) {
+    final theme = Theme.of(context);
     return ListTile(
       leading: CircleAvatar(
         backgroundColor: report.isUrgent
-            ? Colors.red.shade50
-            : Colors.orange.shade50,
+            ? theme.colorScheme.errorContainer
+            : theme.colorScheme.tertiaryContainer,
         child: Icon(
-          report.isUrgent ? Icons.warning_amber : Icons.report_problem,
-          color: report.isUrgent ? Colors.red.shade700 : Colors.orange.shade700,
+          report.isUrgent ? LucideIcons.alertTriangle : LucideIcons.alertTriangle,
+          color: report.isUrgent ? theme.colorScheme.error : theme.colorScheme.tertiary,
           size: 20,
         ),
       ),
@@ -114,12 +116,12 @@ class MapNotificationPanel extends StatelessWidget {
             report.description,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+            style: TextStyle(fontSize: 13, color: theme.colorScheme.onSurfaceVariant),
           ),
           const SizedBox(height: 2),
           Text(
             '${report.authorName} • ${_timeAgo(report.createdAt)}',
-            style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+            style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurfaceVariant),
           ),
         ],
       ),
@@ -128,13 +130,13 @@ class MapNotificationPanel extends StatelessWidget {
               padding:
                   const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
-                color: Colors.red.shade50,
+                color: theme.colorScheme.errorContainer,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Text(
                 'URGENT',
                 style: TextStyle(
-                  color: Colors.red.shade700,
+                  color: theme.colorScheme.error,
                   fontSize: 10,
                   fontWeight: FontWeight.bold,
                 ),

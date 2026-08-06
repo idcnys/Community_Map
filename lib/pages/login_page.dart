@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
 import '../core/utils/validators.dart';
 import '../core/utils/snackbar_helper.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -83,7 +84,7 @@ class _LoginPageState extends State<LoginPage> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Icon(
-                    Icons.lock_outline_rounded,
+                    LucideIcons.lock,
                     size: 80,
                     color: theme.colorScheme.primary,
                   ),
@@ -95,7 +96,7 @@ class _LoginPageState extends State<LoginPage> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   Text(
                     'Sign in to your account',
                     textAlign: TextAlign.center,
@@ -113,7 +114,7 @@ class _LoginPageState extends State<LoginPage> {
                     decoration: const InputDecoration(
                       labelText: 'Email',
                       hintText: 'you@example.com',
-                      prefixIcon: Icon(Icons.email_outlined),
+                      prefixIcon: Icon(LucideIcons.mail),
                     ),
                     validator: validateEmail,
                   ),
@@ -127,12 +128,12 @@ class _LoginPageState extends State<LoginPage> {
                     decoration: InputDecoration(
                       labelText: 'Password',
                       hintText: 'Enter your password',
-                      prefixIcon: const Icon(Icons.lock_outline),
+                      prefixIcon: const Icon(LucideIcons.lock),
                       suffixIcon: IconButton(
                         icon: Icon(
                           _obscurePassword
-                              ? Icons.visibility_outlined
-                              : Icons.visibility_off_outlined,
+                              ? LucideIcons.eye
+                              : LucideIcons.eyeOff,
                         ),
                         onPressed: () =>
                             setState(() => _obscurePassword = !_obscurePassword),
@@ -227,7 +228,7 @@ class _LoginPageState extends State<LoginPage> {
                 await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
+                    SnackBar(
                       content: Text('Password reset email sent!'),
                       backgroundColor: Colors.green,
                     ),

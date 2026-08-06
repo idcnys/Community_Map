@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:go_router/go_router.dart';
 import '../core/utils/validators.dart';
 import '../core/utils/snackbar_helper.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 
 class SignUpPage extends StatefulWidget {
@@ -137,7 +138,7 @@ class _SignUpPageState extends State<SignUpPage> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Icon(
-                  Icons.person_add_alt_1_rounded,
+                  LucideIcons.userPlus,
                   size: 64,
                   color: theme.colorScheme.primary,
                 ),
@@ -167,7 +168,7 @@ class _SignUpPageState extends State<SignUpPage> {
                   decoration: const InputDecoration(
                     labelText: 'Full Name',
                     hintText: 'John Doe',
-                    prefixIcon: Icon(Icons.person_outline),
+                    prefixIcon: Icon(LucideIcons.user),
                   ),
                   validator: validateName,
                 ),
@@ -181,8 +182,8 @@ class _SignUpPageState extends State<SignUpPage> {
                   decoration: const InputDecoration(
                     labelText: 'Date of Birth',
                     hintText: 'DD/MM/YYYY',
-                    prefixIcon: Icon(Icons.calendar_today_outlined),
-                    suffixIcon: Icon(Icons.arrow_drop_down),
+                    prefixIcon: Icon(LucideIcons.calendar),
+                    suffixIcon: Icon(LucideIcons.chevronDown),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
@@ -201,7 +202,7 @@ class _SignUpPageState extends State<SignUpPage> {
                   decoration: const InputDecoration(
                     labelText: 'Email',
                     hintText: 'you@example.com',
-                    prefixIcon: Icon(Icons.email_outlined),
+                    prefixIcon: Icon(LucideIcons.mail),
                   ),
                   validator: validateEmail,
                 ),
@@ -215,12 +216,12 @@ class _SignUpPageState extends State<SignUpPage> {
                   decoration: InputDecoration(
                     labelText: 'Password',
                     hintText: 'Min. 6 characters',
-                    prefixIcon: const Icon(Icons.lock_outline),
+                    prefixIcon: const Icon(LucideIcons.lock),
                     suffixIcon: IconButton(
                       icon: Icon(
                         _obscurePassword
-                            ? Icons.visibility_outlined
-                            : Icons.visibility_off_outlined,
+                            ? LucideIcons.eye
+                            : LucideIcons.eyeOff,
                       ),
                       onPressed: () =>
                           setState(() => _obscurePassword = !_obscurePassword),
@@ -246,12 +247,12 @@ class _SignUpPageState extends State<SignUpPage> {
                   decoration: InputDecoration(
                     labelText: 'Confirm Password',
                     hintText: 'Re-enter your password',
-                    prefixIcon: const Icon(Icons.lock_outline),
+                    prefixIcon: const Icon(LucideIcons.lock),
                     suffixIcon: IconButton(
                       icon: Icon(
                         _obscureConfirmPassword
-                            ? Icons.visibility_outlined
-                            : Icons.visibility_off_outlined,
+                            ? LucideIcons.eye
+                            : LucideIcons.eyeOff,
                       ),
                       onPressed: () => setState(
                           () => _obscureConfirmPassword = !_obscureConfirmPassword),

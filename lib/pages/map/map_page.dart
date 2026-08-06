@@ -13,6 +13,7 @@ import 'archived_reports_page.dart';
 import 'report_detail_sheet.dart';
 import 'map_notification_panel.dart';
 import 'my_reports_page.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class MapPage extends ConsumerStatefulWidget {
   const MapPage({super.key});
@@ -21,14 +22,32 @@ class MapPage extends ConsumerStatefulWidget {
   ConsumerState<MapPage> createState() => _MapPageState();
 }
 
-class _MapPageState extends ConsumerState<MapPage> {
+class _MapPageState extends ConsumerState<MapPage>
+    with TickerProviderStateMixin {
   final MapController _mapController = MapController();
   LatLng? _userLocation;
+  late final AnimationController _blinkController;
+
+  @override
+  void initState() {
+    super.initState();
+    _blinkController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _blinkController.dispose();
+    super.dispose();
+  }
 
   final LatLng _initialCenter = LatLng(23.8103, 90.4125);
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final reports = ref.watch(activeReportsProvider).value ?? [];
     final hasActiveReport = ref.watch(hasActiveReportProvider);
 
@@ -58,6 +77,7 @@ class _MapPageState extends ConsumerState<MapPage> {
                     'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
                 subdomains: const ['a', 'b', 'c', 'd'],
                 userAgentPackageName: 'com.communityapp.app',
+                retinaMode: RetinaMode.isHighDensity(context),
               ),
               if (_userLocation != null)
                 MarkerLayer(
@@ -69,18 +89,18 @@ class _MapPageState extends ConsumerState<MapPage> {
                       child: Container(
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: Colors.blue.shade600,
-                          border: Border.all(color: Colors.white, width: 3),
+                          color: theme.colorScheme.primary,
+                          border: Border.all(color: theme.colorScheme.onPrimary, width: 3),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.blue.withValues(alpha: 0.3),
+                              color: theme.colorScheme.primary.withAlpha(77),
                               blurRadius: 10,
                               spreadRadius: 3,
                             ),
                           ],
                         ),
-                        child: const Icon(Icons.my_location,
-                            color: Colors.white, size: 20),
+                        child: Icon(LucideIcons.locateFixed,
+                            color: theme.colorScheme.onPrimary, size: 20),
                       ),
                     ),
                   ],
@@ -88,35 +108,25 @@ class _MapPageState extends ConsumerState<MapPage> {
               MarkerLayer(
                 markers: reports.map((report) {
                   final point = LatLng(report.latitude, report.longitude);
+                  final color = _markerColor(report);
+                  final blink = _shouldBlink(report);
+
                   return Marker(
                     point: point,
                     width: 44,
                     height: 44,
                     child: GestureDetector(
                       onTap: () => _onMarkerTap(report, point),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: report.isUrgent
-                              ? Colors.red.shade700
-                              : Colors.orange.shade700,
-                          border: Border.all(color: Colors.white, width: 2.5),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.25),
-                              blurRadius: 6,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Icon(
-                          report.isUrgent
-                              ? Icons.warning_amber_rounded
-                              : Icons.report_problem,
-                          color: Colors.white,
-                          size: 22,
-                        ),
-                      ),
+                      child: blink
+                          ? AnimatedBuilder(
+                              animation: _blinkController,
+                              builder: (_, child) => Opacity(
+                                opacity: 0.4 + (_blinkController.value * 0.6),
+                                child: child,
+                              ),
+                              child: _markerDot(color, report),
+                            )
+                          : _markerDot(color, report),
                     ),
                   );
                 }).toList(),
@@ -135,14 +145,14 @@ class _MapPageState extends ConsumerState<MapPage> {
                 child: Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(
+                      padding: EdgeInsets.symmetric(
                           horizontal: 16, vertical: 10),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: theme.colorScheme.onPrimary,
                         borderRadius: BorderRadius.circular(24),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.1),
+                            color: theme.colorScheme.onSurface.withAlpha(26),
                             blurRadius: 8,
                           ),
                         ],
@@ -150,7 +160,7 @@ class _MapPageState extends ConsumerState<MapPage> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.map,
+                          Icon(LucideIcons.map,
                               color: Theme.of(context).colorScheme.primary),
                           const SizedBox(width: 8),
                           const Text(
@@ -165,7 +175,7 @@ class _MapPageState extends ConsumerState<MapPage> {
                     ),
                     const Spacer(),
                     _circleButton(
-                      icon: Icons.archive_outlined,
+                      icon: LucideIcons.archive,
                       tooltip: 'Archived Reports',
                       onPressed: () {
                         Navigator.of(context).push(MaterialPageRoute(
@@ -175,7 +185,7 @@ class _MapPageState extends ConsumerState<MapPage> {
                     ),
                     const SizedBox(width: 8),
                     _circleButton(
-                      icon: Icons.notifications_outlined,
+                      icon: LucideIcons.bell,
                       tooltip: 'Latest Reports',
                       onPressed: () {
                         showModalBottomSheet(
@@ -203,21 +213,21 @@ class _MapPageState extends ConsumerState<MapPage> {
                   heroTag: 'my_reports',
                   onPressed: () {
                     Navigator.of(context).push(MaterialPageRoute(
-                      builder: (_) => const MyReportsPage(),
+                      builder: (_) => MyReportsPage(),
                     ));
                   },
-                  backgroundColor: Colors.white,
-                  child: Icon(Icons.folder_open,
+                  backgroundColor: theme.colorScheme.surface,
+                  child: Icon(LucideIcons.folderOpen,
                       color: Theme.of(context).colorScheme.primary),
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: 12),
                 FloatingActionButton.small(
                   heroTag: 'rush',
                   onPressed: hasActiveReport ? null : _submitRushReport,
                   backgroundColor: hasActiveReport
-                      ? Colors.grey.shade400
-                      : Colors.red.shade700,
-                  child: const Icon(Icons.sos, color: Colors.white),
+                      ? theme.colorScheme.onSurfaceVariant.withAlpha(150)
+                      : theme.colorScheme.error,
+                  child: Icon(LucideIcons.siren, color: theme.colorScheme.onPrimary),
                 ),
                 const SizedBox(height: 12),
                 Row(
@@ -226,16 +236,16 @@ class _MapPageState extends ConsumerState<MapPage> {
                     FloatingActionButton.small(
                       heroTag: 'reset_map',
                       onPressed: _resetMapView,
-                      backgroundColor: Colors.white,
-                      child: Icon(Icons.center_focus_strong,
+                      backgroundColor: theme.colorScheme.surface,
+                      child: Icon(LucideIcons.crosshair,
                           color: Theme.of(context).colorScheme.primary),
                     ),
-                    const SizedBox(width: 8),
+                    SizedBox(width: 8),
                     FloatingActionButton.small(
                       heroTag: 'my_location',
                       onPressed: _goToMyLocation,
-                      backgroundColor: Colors.white,
-                      child: Icon(Icons.location_searching,
+                      backgroundColor: theme.colorScheme.surface,
+                      child: Icon(LucideIcons.locate,
                           color: Theme.of(context).colorScheme.primary),
                     ),
                     const SizedBox(width: 12),
@@ -248,7 +258,7 @@ class _MapPageState extends ConsumerState<MapPage> {
                                 builder: (_) => const ReportPostForm(),
                               ));
                             },
-                      icon: const Icon(Icons.add),
+                      icon: const Icon(LucideIcons.plus),
                       label: const Text('Report'),
                     ),
                   ],
@@ -259,6 +269,43 @@ class _MapPageState extends ConsumerState<MapPage> {
         ],
       ),
     );
+  }
+
+  Widget _markerDot(Color color, ReportPostModel report) {
+    return Container(
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: color,
+        border: Border.all(color: Colors.white, width: 2.5),
+        boxShadow: [
+          BoxShadow(
+            color: color.withAlpha(100),
+            blurRadius: 8,
+            spreadRadius: 2,
+          ),
+        ],
+      ),
+      child: Icon(
+        LucideIcons.alertTriangle,
+        color: Colors.white,
+        size: 20,
+      ),
+    );
+  }
+
+  /// Returns marker color based on report age.
+  Color _markerColor(ReportPostModel report) {
+    final age = DateTime.now().difference(report.createdAt).inHours;
+    if (age < 8) return const Color(0xFFEF4444);   // red
+    if (age < 16) return const Color(0xFFF97316);  // orange
+    if (age < 24) return const Color(0xFF8B5CF6);  // blue-violet
+    return const Color(0xFF9CA3AF);                 // gray
+  }
+
+  /// Whether the marker should blink (< 24 hours old).
+  bool _shouldBlink(ReportPostModel report) {
+    final age = DateTime.now().difference(report.createdAt).inHours;
+    return age < 24;
   }
 
   void _resetMapView() {
@@ -285,11 +332,16 @@ class _MapPageState extends ConsumerState<MapPage> {
   }
 
   void _onMarkerTap(ReportPostModel report, LatLng point) {
-    _mapController.move(point, 15.0);
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (_) => ReportDetailSheet(report: report),
+      builder: (_) => ReportDetailSheet(
+        report: report,
+        onZoomToLocation: () {
+          Navigator.of(context).pop();
+          _mapController.move(point, 16.0);
+        },
+      ),
     );
   }
 
@@ -327,13 +379,14 @@ class _MapPageState extends ConsumerState<MapPage> {
     required String tooltip,
     required VoidCallback onPressed,
   }) {
+    final theme = Theme.of(context);
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.colorScheme.surface,
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
+            color: theme.colorScheme.onSurface.withAlpha(26),
             blurRadius: 8,
           ),
         ],
