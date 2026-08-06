@@ -3,6 +3,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/group_providers.dart';
 import '../../providers/service_providers.dart';
+import '../../services/group_service.dart';
+import '../../services/group_chat_service.dart';
+import '../../models/group_model.dart';
 import 'group_detail_page.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
@@ -44,31 +47,7 @@ class MyGroupsTab extends ConsumerWidget {
                 itemCount: groups.length,
                 itemBuilder: (context, index) {
                   final group = groups[index];
-                  final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
-                  final isAdmin = group.createdBy == uid;
-                  return Card(
-                    margin: const EdgeInsets.only(bottom: 8),
-                    child: ListTile(
-                      leading: const Icon(LucideIcons.users),
-                      title: Text(group.name),
-                      subtitle: Text(
-                        '${group.memberCount} members${isAdmin ? ' • Admin' : ''}',
-                      ),
-                      trailing: PopupMenuButton<String>(
-                        onSelected: (value) {
-                          if (value == 'leave') _leaveGroup(context, ref, group.id);
-                        },
-                        itemBuilder: (_) => [
-                          const PopupMenuItem(value: 'leave', child: Text('Leave Group')),
-                        ],
-                      ),
-                      onTap: () => Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => GroupDetailPage(groupId: group.id),
-                        ),
-                      ),
-                    ),
-                  );
+                  return _GroupTile(group: group);
                 },
               );
             },
@@ -90,13 +69,6 @@ class MyGroupsTab extends ConsumerWidget {
         ),
       ],
     );
-  }
-
-  void _leaveGroup(BuildContext context, WidgetRef ref, String groupId) async {
-    final error = await ref.read(groupServiceProvider).leaveGroup(groupId);
-    if (error != null && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
-    }
   }
 
   void _showCreateGroupDialog(BuildContext context, WidgetRef ref) {
@@ -155,5 +127,113 @@ class MyGroupsTab extends ConsumerWidget {
         ],
       ),
     );
+  }
+}
+
+/// Individual group tile with unread + pending badges.
+class _GroupTile extends StatelessWidget {
+  final GroupModel group;
+  const _GroupTile({required this.group});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+    final isAdmin = group.createdBy == uid;
+    final chatService = GroupChatService();
+    final pendingCount = group.pendingRequests.length;
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: ListTile(
+        leading: const Icon(LucideIcons.users),
+        title: Text(group.name),
+        subtitle: Text(
+          '${group.memberCount} members${isAdmin ? ' • Admin' : ''}',
+        ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Unread messages badge
+            StreamBuilder<int>(
+              stream: chatService.getUnreadCount(group.id),
+              builder: (context, snapshot) {
+                final unread = snapshot.data ?? 0;
+                if (unread <= 0) return const SizedBox.shrink();
+                return Container(
+                  margin: const EdgeInsets.only(right: 6),
+                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(LucideIcons.messageCircle, size: 11, color: theme.colorScheme.onPrimary),
+                      const SizedBox(width: 3),
+                      Text(
+                        unread > 99 ? '99+' : '$unread',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: theme.colorScheme.onPrimary,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+            // Pending requests badge (admin only)
+            if (isAdmin && pendingCount > 0)
+              Container(
+                margin: const EdgeInsets.only(right: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.error,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(LucideIcons.userPlus, size: 11, color: theme.colorScheme.onError),
+                    const SizedBox(width: 3),
+                    Text(
+                      '$pendingCount',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: theme.colorScheme.onError,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            PopupMenuButton<String>(
+              onSelected: (value) {
+                if (value == 'leave') _leaveGroup(context, group.id);
+              },
+              itemBuilder: (_) => [
+                const PopupMenuItem(value: 'leave', child: Text('Leave Group')),
+              ],
+            ),
+          ],
+        ),
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => GroupDetailPage(groupId: group.id),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _leaveGroup(BuildContext context, String groupId) async {
+    final service = GroupService();
+    final error = await service.leaveGroup(groupId);
+    if (error != null && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+    }
   }
 }

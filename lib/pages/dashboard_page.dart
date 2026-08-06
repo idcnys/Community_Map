@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'feed/feed_page.dart';
 import 'map/map_page.dart';
 import 'manage/manage_page.dart';
+import '../../services/group_chat_service.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class DashboardPage extends StatefulWidget {
@@ -13,10 +14,18 @@ class DashboardPage extends StatefulWidget {
 
 class _DashboardPageState extends State<DashboardPage> {
   int _currentIndex = 0;
+  final _chatService = GroupChatService();
 
   // Lazy-loaded pages: only build when first visited, then keep alive.
   final List<bool> _pageInitialized = [true, false, false];
   final List<Widget?> _pages = [const FeedPage(), null, null];
+
+  @override
+  void initState() {
+    super.initState();
+    // Update last active timestamp
+    _chatService.updateLastActive();
+  }
 
   @override
   Widget build(BuildContext context) {

@@ -55,7 +55,7 @@ class _SignUpPageState extends State<SignUpPage> {
   }
 
   Future<void> _handleSignUp() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!(_formKey.currentState?.validate() ?? false)) return;
 
     setState(() => _isLoading = true);
 
@@ -68,25 +68,34 @@ class _SignUpPageState extends State<SignUpPage> {
       );
 
       final user = credential.user;
-      if (user != null) {
-        // Update display name
-        await user.updateDisplayName(_fullNameController.text.trim());
-
-        // Store profile in Firestore
-        await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
-          'fullName': _fullNameController.text.trim(),
-          'email': _emailController.text.trim(),
-          'dateOfBirth': _selectedDate?.toIso8601String(),
-          'createdAt': FieldValue.serverTimestamp(),
-        });
+      if (user == null) {
+        if (mounted) context.showError('Account creation failed. Please try again.');
+        return;
       }
+
+      // Update display name
+      await user.updateDisplayName(_fullNameController.text.trim());
+
+      // Store profile in Firestore
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+        'fullName': _fullNameController.text.trim(),
+        'email': _emailController.text.trim(),
+        'dateOfBirth': _selectedDate?.toIso8601String(),
+        'createdAt': FieldValue.serverTimestamp(),
+        'lastActive': FieldValue.serverTimestamp(),
+      });
 
       // Sign out the auto-logged-in user, then redirect to login
       await FirebaseAuth.instance.signOut();
 
       if (mounted) {
-        context.showSuccess('Account created successfully! Please sign in.');
-        context.pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Account created successfully! Please sign in.'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        context.go('/login');
       }
     } on FirebaseAuthException catch (e) {
       String message;
@@ -104,7 +113,9 @@ class _SignUpPageState extends State<SignUpPage> {
       }
 
       if (mounted) {
-        context.showError(message);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message), backgroundColor: Colors.red),
+        );
       }
     } catch (e) {
       if (mounted) {

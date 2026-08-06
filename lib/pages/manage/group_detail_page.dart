@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../services/group_service.dart';
+import '../../services/group_chat_service.dart';
 import '../../models/group_model.dart';
+import '../../core/utils/time_ago.dart';
+import 'group_chat_page.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class GroupDetailPage extends StatefulWidget {
@@ -15,8 +18,10 @@ class GroupDetailPage extends StatefulWidget {
 
 class _GroupDetailPageState extends State<GroupDetailPage> {
   final _groupService = GroupService();
+  final _chatService = GroupChatService();
   final _firestore = FirebaseFirestore.instance;
   final Map<String, String> _nameCache = {};
+  final Map<String, DateTime?> _lastActiveCache = {};
 
   Future<String> _resolveName(String uid) async {
     if (_nameCache.containsKey(uid)) return _nameCache[uid]!;
@@ -27,6 +32,19 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
       return name;
     } catch (_) {
       return 'Unknown User';
+    }
+  }
+
+  Future<DateTime?> _resolveLastActive(String uid) async {
+    if (_lastActiveCache.containsKey(uid)) return _lastActiveCache[uid];
+    try {
+      final doc = await _firestore.collection('users').doc(uid).get();
+      final ts = doc.data()?['lastActive'] as Timestamp?;
+      final dt = ts?.toDate();
+      _lastActiveCache[uid] = dt;
+      return dt;
+    } catch (_) {
+      return null;
     }
   }
 
@@ -63,17 +81,30 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                     children: [
                       Text(group.name, style: theme.textTheme.titleLarge),
                       if (group.description.isNotEmpty) ...[
-                        SizedBox(height: 4),
+                        const SizedBox(height: 4),
                         Text(group.description, style: TextStyle(color: theme.colorScheme.onSurface)),
                       ],
-                      SizedBox(height: 8),
+                      const SizedBox(height: 8),
                       Text(
-                        '${group.memberCount} members • Created by ${group.createdByName}',
+                        '${group.memberCount} members \u2022 Created by ${group.createdByName}',
                         style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 13),
                       ),
                     ],
                   ),
                 ),
+              ),
+              const SizedBox(height: 12),
+
+              // Group Chat button
+              FilledButton.icon(
+                onPressed: () {
+                  Navigator.of(context).push(MaterialPageRoute(
+                    builder: (_) => GroupChatPage(groupId: widget.groupId, groupName: group.name),
+                  ));
+                },
+                icon: const Icon(LucideIcons.messageCircle, size: 18),
+                label: const Text('Group Chat'),
+                style: FilledButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14)),
               ),
               const SizedBox(height: 16),
 
@@ -95,7 +126,7 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                           nameSnap.data ?? 'Loading...',
                         ),
                       ),
-                      subtitle: Text('Wants to join'),
+                      subtitle: const Text('Wants to join'),
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -126,7 +157,7 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
               ...group.members.map((memberUid) {
                 final isOwner = memberUid == group.createdBy;
                 return Card(
-                  margin: EdgeInsets.only(bottom: 6),
+                  margin: const EdgeInsets.only(bottom: 6),
                   child: ListTile(
                     leading: CircleAvatar(
                       backgroundColor: theme.colorScheme.primaryContainer,
@@ -138,9 +169,27 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                         nameSnap.data ?? 'Loading...',
                       ),
                     ),
-                    subtitle: Text(
-                      isOwner ? 'Group Admin' : 'Member',
-                      style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
+                    subtitle: FutureBuilder<DateTime?>(
+                      future: _resolveLastActive(memberUid),
+                      builder: (ctx, activeSnap) {
+                        final lastActive = activeSnap.data;
+                        final activeText = lastActive != null
+                            ? 'Active ${timeAgo(lastActive)}'
+                            : 'No activity recorded';
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              isOwner ? 'Group Admin' : 'Member',
+                              style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
+                            ),
+                            Text(
+                              activeText,
+                              style: TextStyle(fontSize: 11, color: theme.colorScheme.primary.withAlpha(180)),
+                            ),
+                          ],
+                        );
+                      },
                     ),
                     trailing: isOwner
                         ? Chip(

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -6,13 +7,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 import '../../providers/report_providers.dart';
 import '../../providers/service_providers.dart';
+import '../../providers/group_providers.dart';
 import '../../services/report_post_service.dart';
+import '../../services/group_chat_service.dart';
 import '../../models/report_post_model.dart';
 import 'report_post_form.dart';
 import 'archived_reports_page.dart';
 import 'report_detail_sheet.dart';
 import 'map_notification_panel.dart';
 import 'my_reports_page.dart';
+import 'member_detail_sheet.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class MapPage extends ConsumerStatefulWidget {
@@ -25,8 +29,15 @@ class MapPage extends ConsumerStatefulWidget {
 class _MapPageState extends ConsumerState<MapPage>
     with TickerProviderStateMixin {
   final MapController _mapController = MapController();
+  final _chatService = GroupChatService();
   LatLng? _userLocation;
   late final AnimationController _blinkController;
+
+  // Group location state
+  String _selectedGroupFilter = 'global'; // 'global' or groupId
+  List<Map<String, dynamic>> _memberLocations = [];
+  List<String> _membersWithoutLocation = [];
+  StreamSubscription? _locationSub;
 
   @override
   void initState() {
@@ -40,16 +51,84 @@ class _MapPageState extends ConsumerState<MapPage>
   @override
   void dispose() {
     _blinkController.dispose();
+    _locationSub?.cancel();
     super.dispose();
   }
 
   final LatLng _initialCenter = LatLng(23.8103, 90.4125);
+
+  void _onGroupFilterChanged(String? value) {
+    if (value == null) return;
+    setState(() {
+      _selectedGroupFilter = value;
+      _memberLocations = [];
+      _membersWithoutLocation = [];
+    });
+    _locationSub?.cancel();
+
+    if (value != 'global') {
+      _locationSub = _chatService.getGroupMemberLocations(value).listen((locations) {
+        final myGroups = ref.read(myJoinedGroupsProvider).value ?? [];
+        final group = myGroups.where((g) => g.id == value).firstOrNull;
+        final allMembers = group?.members ?? [];
+
+        final locUids = locations.map((l) => l['uid'] as String? ?? '').toSet();
+        final missing = allMembers.where((m) => !locUids.contains(m)).toList();
+
+        setState(() {
+          _memberLocations = locations;
+          _membersWithoutLocation = missing;
+        });
+
+        // Show toast for members who haven't shared
+        if (missing.isNotEmpty && mounted) {
+          final names = missing.length > 2
+              ? '${missing.length} members haven\'t shared location'
+              : '${missing.length} member(s) haven\'t shared location yet';
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(names),
+              duration: const Duration(seconds: 2),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+
+        // Fit map to show all member locations
+        if (locations.isNotEmpty) {
+          _fitToLocations(locations);
+        }
+      });
+    }
+  }
+
+  void _fitToLocations(List<Map<String, dynamic>> locations) {
+    if (locations.isEmpty) return;
+    final points = locations
+        .map((l) => LatLng(
+              (l['latitude'] as num?)?.toDouble() ?? 0,
+              (l['longitude'] as num?)?.toDouble() ?? 0,
+            ))
+        .where((p) => p.latitude != 0 && p.longitude != 0)
+        .toList();
+    if (points.isEmpty) return;
+
+    if (points.length == 1) {
+      _mapController.move(points.first, 14);
+    } else {
+      final bounds = LatLngBounds.fromPoints(points);
+      _mapController.fitCamera(
+        CameraFit.bounds(bounds: bounds, padding: const EdgeInsets.all(60)),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final reports = ref.watch(activeReportsProvider).value ?? [];
     final hasActiveReport = ref.watch(hasActiveReportProvider);
+    final myGroups = ref.watch(myJoinedGroupsProvider).value ?? [];
 
     return Scaffold(
       body: Stack(
@@ -79,6 +158,7 @@ class _MapPageState extends ConsumerState<MapPage>
                 userAgentPackageName: 'com.communityapp.app',
                 retinaMode: RetinaMode.isHighDensity(context),
               ),
+              // User's own location marker
               if (_userLocation != null)
                 MarkerLayer(
                   markers: [
@@ -105,36 +185,74 @@ class _MapPageState extends ConsumerState<MapPage>
                     ),
                   ],
                 ),
-              MarkerLayer(
-                markers: reports.map((report) {
-                  final point = LatLng(report.latitude, report.longitude);
-                  final color = _markerColor(report);
-                  final blink = _shouldBlink(report);
+              // Report markers (only in global mode)
+              if (_selectedGroupFilter == 'global')
+                MarkerLayer(
+                  markers: reports.map((report) {
+                    final point = LatLng(report.latitude, report.longitude);
+                    final color = _markerColor(report);
+                    final blink = _shouldBlink(report);
 
-                  return Marker(
-                    point: point,
-                    width: 44,
-                    height: 44,
-                    child: GestureDetector(
-                      onTap: () => _onMarkerTap(report, point),
-                      child: blink
-                          ? AnimatedBuilder(
-                              animation: _blinkController,
-                              builder: (_, child) => Opacity(
-                                opacity: 0.4 + (_blinkController.value * 0.6),
-                                child: child,
+                    return Marker(
+                      point: point,
+                      width: 44,
+                      height: 44,
+                      child: GestureDetector(
+                        onTap: () => _onMarkerTap(report, point),
+                        child: blink
+                            ? AnimatedBuilder(
+                                animation: _blinkController,
+                                builder: (_, child) => Opacity(
+                                  opacity: 0.4 + (_blinkController.value * 0.6),
+                                  child: child,
+                                ),
+                                child: _markerDot(color, report),
+                              )
+                            : _markerDot(color, report),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              // Group member location markers (blue)
+              if (_selectedGroupFilter != 'global')
+                MarkerLayer(
+                  markers: _memberLocations.map((loc) {
+                    final lat = (loc['latitude'] as num?)?.toDouble() ?? 0;
+                    final lng = (loc['longitude'] as num?)?.toDouble() ?? 0;
+                    if (lat == 0 && lng == 0) {
+                      return Marker(point: const LatLng(0, 0), width: 0, height: 0, child: const SizedBox.shrink());
+                    }
+                    final uid = loc['uid'] ?? '';
+                    final name = loc['name'] ?? 'Member';
+                    return Marker(
+                      point: LatLng(lat, lng),
+                      width: 44,
+                      height: 44,
+                      child: GestureDetector(
+                        onTap: () => _showMemberDetail(uid, name),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: const Color(0xFF2563EB),
+                            border: Border.all(color: Colors.white, width: 2.5),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF2563EB).withAlpha(100),
+                                blurRadius: 8,
+                                spreadRadius: 2,
                               ),
-                              child: _markerDot(color, report),
-                            )
-                          : _markerDot(color, report),
-                    ),
-                  );
-                }).toList(),
-              ),
+                            ],
+                          ),
+                          child: const Icon(LucideIcons.user, color: Colors.white, size: 20),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
             ],
           ),
 
-          // Top bar
+          // Top bar with dropdown
           Positioned(
             top: 0,
             left: 0,
@@ -142,58 +260,111 @@ class _MapPageState extends ConsumerState<MapPage>
             child: SafeArea(
               child: Padding(
                 padding: const EdgeInsets.all(12),
-                child: Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.onPrimary,
+                            borderRadius: BorderRadius.circular(24),
+                            boxShadow: [
+                              BoxShadow(
+                                color: theme.colorScheme.onSurface.withAlpha(26),
+                                blurRadius: 8,
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(LucideIcons.map,
+                                  color: theme.colorScheme.primary),
+                              const SizedBox(width: 8),
+                              const Text(
+                                'Reports Map',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Spacer(),
+                        _circleButton(
+                          icon: LucideIcons.archive,
+                          tooltip: 'Archived Reports',
+                          onPressed: () {
+                            Navigator.of(context).push(MaterialPageRoute(
+                              builder: (_) => const ArchivedReportsPage(),
+                            ));
+                          },
+                        ),
+                        const SizedBox(width: 8),
+                        _circleButton(
+                          icon: LucideIcons.bell,
+                          tooltip: 'Latest Reports',
+                          onPressed: () {
+                            showModalBottomSheet(
+                              context: context,
+                              isScrollControlled: true,
+                              builder: (_) => const MapNotificationPanel(),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    // Group filter dropdown
                     Container(
-                      padding: EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 10),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                       decoration: BoxDecoration(
                         color: theme.colorScheme.onPrimary,
-                        borderRadius: BorderRadius.circular(24),
+                        borderRadius: BorderRadius.circular(12),
                         boxShadow: [
                           BoxShadow(
-                            color: theme.colorScheme.onSurface.withAlpha(26),
-                            blurRadius: 8,
+                            color: theme.colorScheme.onSurface.withAlpha(20),
+                            blurRadius: 6,
                           ),
                         ],
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(LucideIcons.map,
-                              color: Theme.of(context).colorScheme.primary),
-                          const SizedBox(width: 8),
-                          const Text(
-                            'Reports Map',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: _selectedGroupFilter,
+                          isDense: true,
+                          icon: Icon(LucideIcons.chevronDown, size: 18, color: theme.colorScheme.primary),
+                          style: TextStyle(color: theme.colorScheme.onSurface, fontSize: 14),
+                          items: [
+                            const DropdownMenuItem(
+                              value: 'global',
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(LucideIcons.globe, size: 16),
+                                  SizedBox(width: 6),
+                                  Text('Global'),
+                                ],
+                              ),
                             ),
-                          ),
-                        ],
+                            ...myGroups.map((g) => DropdownMenuItem(
+                                  value: g.id,
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(LucideIcons.users, size: 16),
+                                      const SizedBox(width: 6),
+                                      Text(g.name, overflow: TextOverflow.ellipsis),
+                                    ],
+                                  ),
+                                )),
+                          ],
+                          onChanged: _onGroupFilterChanged,
+                        ),
                       ),
-                    ),
-                    const Spacer(),
-                    _circleButton(
-                      icon: LucideIcons.archive,
-                      tooltip: 'Archived Reports',
-                      onPressed: () {
-                        Navigator.of(context).push(MaterialPageRoute(
-                          builder: (_) => const ArchivedReportsPage(),
-                        ));
-                      },
-                    ),
-                    const SizedBox(width: 8),
-                    _circleButton(
-                      icon: LucideIcons.bell,
-                      tooltip: 'Latest Reports',
-                      onPressed: () {
-                        showModalBottomSheet(
-                          context: context,
-                          isScrollControlled: true,
-                          builder: (_) => const MapNotificationPanel(),
-                        );
-                      },
                     ),
                   ],
                 ),
@@ -218,9 +389,9 @@ class _MapPageState extends ConsumerState<MapPage>
                   },
                   backgroundColor: theme.colorScheme.surface,
                   child: Icon(LucideIcons.folderOpen,
-                      color: Theme.of(context).colorScheme.primary),
+                      color: theme.colorScheme.primary),
                 ),
-                SizedBox(height: 12),
+                const SizedBox(height: 12),
                 FloatingActionButton.small(
                   heroTag: 'rush',
                   onPressed: hasActiveReport ? null : _submitRushReport,
@@ -238,15 +409,15 @@ class _MapPageState extends ConsumerState<MapPage>
                       onPressed: _resetMapView,
                       backgroundColor: theme.colorScheme.surface,
                       child: Icon(LucideIcons.crosshair,
-                          color: Theme.of(context).colorScheme.primary),
+                          color: theme.colorScheme.primary),
                     ),
-                    SizedBox(width: 8),
+                    const SizedBox(width: 8),
                     FloatingActionButton.small(
                       heroTag: 'my_location',
                       onPressed: _goToMyLocation,
                       backgroundColor: theme.colorScheme.surface,
                       child: Icon(LucideIcons.locate,
-                          color: Theme.of(context).colorScheme.primary),
+                          color: theme.colorScheme.primary),
                     ),
                     const SizedBox(width: 12),
                     FloatingActionButton.extended(
@@ -285,7 +456,7 @@ class _MapPageState extends ConsumerState<MapPage>
           ),
         ],
       ),
-      child: Icon(
+      child: const Icon(
         LucideIcons.alertTriangle,
         color: Colors.white,
         size: 20,
@@ -293,23 +464,25 @@ class _MapPageState extends ConsumerState<MapPage>
     );
   }
 
-  /// Returns marker color based on report age.
   Color _markerColor(ReportPostModel report) {
     final age = DateTime.now().difference(report.createdAt).inHours;
-    if (age < 8) return const Color(0xFFEF4444);   // red
-    if (age < 16) return const Color(0xFFF97316);  // orange
-    if (age < 24) return const Color(0xFF8B5CF6);  // blue-violet
-    return const Color(0xFF9CA3AF);                 // gray
+    if (age < 8) return const Color(0xFFEF4444);
+    if (age < 16) return const Color(0xFFF97316);
+    if (age < 24) return const Color(0xFF8B5CF6);
+    return const Color(0xFF9CA3AF);
   }
 
-  /// Whether the marker should blink (< 24 hours old).
   bool _shouldBlink(ReportPostModel report) {
     final age = DateTime.now().difference(report.createdAt).inHours;
     return age < 24;
   }
 
   void _resetMapView() {
-    _mapController.move(_initialCenter, 7.5);
+    if (_selectedGroupFilter == 'global') {
+      _mapController.move(_initialCenter, 7.5);
+    } else {
+      _fitToLocations(_memberLocations);
+    }
   }
 
   Future<void> _goToMyLocation() async {
@@ -328,20 +501,15 @@ class _MapPageState extends ConsumerState<MapPage>
 
     final latLng = LatLng(position.latitude, position.longitude);
     setState(() => _userLocation = latLng);
-    _mapController.move(latLng, 14.0);
+    _mapController.move(latLng, 15);
   }
 
   void _onMarkerTap(ReportPostModel report, LatLng point) {
+    _mapController.move(point, 14);
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (_) => ReportDetailSheet(
-        report: report,
-        onZoomToLocation: () {
-          Navigator.of(context).pop();
-          _mapController.move(point, 16.0);
-        },
-      ),
+      builder: (_) => ReportDetailSheet(report: report),
     );
   }
 
@@ -351,7 +519,7 @@ class _MapPageState extends ConsumerState<MapPage>
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Could not get location for urgent report.'),
+            content: Text('Could not get location. Enable GPS and try again.'),
             backgroundColor: Colors.red,
           ),
         );
@@ -359,7 +527,8 @@ class _MapPageState extends ConsumerState<MapPage>
       return;
     }
 
-    final error = await ref.read(reportPostServiceProvider).createUrgentReport(
+    final service = ref.read(reportPostServiceProvider);
+    final error = await service.createUrgentReport(
       latitude: position.latitude,
       longitude: position.longitude,
     );
@@ -368,31 +537,39 @@ class _MapPageState extends ConsumerState<MapPage>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(error ?? 'Urgent report submitted!'),
-          backgroundColor: error != null ? Colors.red : Colors.green,
+          backgroundColor: error != null ? Colors.red : null,
         ),
       );
     }
   }
+
+  void _showMemberDetail(String uid, String name) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => MemberDetailSheet(uid: uid, name: name),
+    );
+  }
+
 
   Widget _circleButton({
     required IconData icon,
     required String tooltip,
     required VoidCallback onPressed,
   }) {
-    final theme = Theme.of(context);
     return Container(
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
+        color: Theme.of(context).colorScheme.onPrimary,
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: theme.colorScheme.onSurface.withAlpha(26),
+            color: Theme.of(context).colorScheme.onSurface.withAlpha(26),
             blurRadius: 8,
           ),
         ],
       ),
       child: IconButton(
-        icon: Icon(icon, color: Theme.of(context).colorScheme.primary),
+        icon: Icon(icon, size: 20),
         tooltip: tooltip,
         onPressed: onPressed,
       ),
