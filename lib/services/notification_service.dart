@@ -32,6 +32,7 @@ class NotificationService {
         .collection('notifications')
         .where('targetUserId', isEqualTo: currentUid)
         .where('read', isEqualTo: false)
+        .limit(200)
         .snapshots()
         .map((snap) => snap.docs.length);
   }

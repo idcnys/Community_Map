@@ -5,6 +5,7 @@ import '../core/utils/time_ago.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/community_post_model.dart';
 import '../providers/service_providers.dart';
+import '../providers/feed_providers.dart';
 import '../providers/guest_provider.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -63,6 +64,10 @@ class _CommunityPostCardState extends ConsumerState<CommunityPostCard> {
     final theme = Theme.of(context);
     final isOwn =
         widget.post.authorId == FirebaseAuth.instance.currentUser?.uid;
+
+    // Live post data via shared Riverpod StreamProvider (auto-disposed, deduplicated)
+    final livePostAsync = ref.watch(postByIdProvider(widget.post.id));
+    final livePost = livePostAsync.value ?? widget.post;
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -213,71 +218,61 @@ class _CommunityPostCardState extends ConsumerState<CommunityPostCard> {
             const Divider(height: 1),
             const SizedBox(height: 8),
 
-            // Live counts via post stream (poll + actions)
-            StreamBuilder<CommunityPostModel?>(
-              stream: ref.read(communityPostServiceProvider).getPostById(widget.post.id),
-              builder: (context, liveSnap) {
-                final livePost = liveSnap.data ?? widget.post;
-                final isGuest = ref.read(isGuestProvider);
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Poll UI — uses live data
-                    if (widget.post.isPoll) ...[
-                      _buildPollUI(theme, livePost),
-                      const SizedBox(height: 12),
-                      const Divider(height: 1),
-                      const SizedBox(height: 8),
-                    ],
-                    // Actions row
-                    Row(
-                  children: [
-                    _actionButton(
-                      icon: _isLiked ? Icons.thumb_up : LucideIcons.thumbsUp,
-                      count: livePost.likeCount,
-                      color: _isLiked ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant,
-                      onTap: (isGuest || _loadingLike) ? null : _toggleLike,
+            // Poll UI — uses live data
+            if (widget.post.isPoll) ...[
+              _buildPollUI(theme, livePost),
+              const SizedBox(height: 12),
+              const Divider(height: 1),
+              const SizedBox(height: 8),
+            ],
+            // Actions row
+            Builder(builder: (context) {
+              final isGuest = ref.read(isGuestProvider);
+              return Row(
+                children: [
+                  _actionButton(
+                    icon: _isLiked ? Icons.thumb_up : LucideIcons.thumbsUp,
+                    count: livePost.likeCount,
+                    color: _isLiked ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant,
+                    onTap: (isGuest || _loadingLike) ? null : _toggleLike,
+                  ),
+                  _actionButton(
+                    icon: LucideIcons.messageCircle,
+                    count: livePost.commentCount,
+                    color: theme.colorScheme.onSurfaceVariant,
+                    onTap: isGuest ? null : widget.onCommentTap,
+                  ),
+                  _actionButton(
+                    icon: LucideIcons.repeat,
+                    count: livePost.repostCount,
+                    color: widget.post.isRepost ? theme.colorScheme.outline : theme.colorScheme.onSurfaceVariant,
+                    onTap: (isGuest || isOwn || widget.post.isRepost) ? null : _repost,
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    child: Row(
+                      children: [
+                        Icon(LucideIcons.eye, size: 20, color: theme.colorScheme.onSurfaceVariant),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${livePost.viewCount}',
+                          style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontWeight: FontWeight.w500),
+                        ),
+                      ],
                     ),
-                    _actionButton(
-                      icon: LucideIcons.messageCircle,
-                      count: livePost.commentCount,
-                      color: theme.colorScheme.onSurfaceVariant,
-                      onTap: isGuest ? null : widget.onCommentTap,
+                  ),
+                  const Spacer(),
+                  if (isOwn)
+                    IconButton(
+                      icon: Icon(LucideIcons.trash2,
+                          size: 20, color: theme.colorScheme.error),
+                      onPressed: () => _confirmDelete(context),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
                     ),
-                    _actionButton(
-                      icon: LucideIcons.repeat,
-                      count: livePost.repostCount,
-                      color: widget.post.isRepost ? theme.colorScheme.outline : theme.colorScheme.onSurfaceVariant,
-                      onTap: (isGuest || isOwn || widget.post.isRepost) ? null : _repost,
-                    ),
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      child: Row(
-                        children: [
-                          Icon(LucideIcons.eye, size: 20, color: theme.colorScheme.onSurfaceVariant),
-                          SizedBox(width: 4),
-                          Text(
-                            '${livePost.viewCount}',
-                            style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontWeight: FontWeight.w500),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Spacer(),
-                    if (isOwn)
-                      IconButton(
-                        icon: Icon(LucideIcons.trash2,
-                            size: 20, color: theme.colorScheme.error),
-                        onPressed: () => _confirmDelete(context),
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
-                      ),
-                  ],
-                ),
-                  ],
-                );
-              },
-            ),
+                ],
+              );
+            }),
           ],
         ),
       ),

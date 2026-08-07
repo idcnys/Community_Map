@@ -132,19 +132,21 @@ class GroupChatService {
         .asyncMap((receiptSnap) async {
       final lastRead = (receiptSnap.data()?['lastReadAt'] as Timestamp?)?.toDate();
       if (lastRead == null) {
-        // Never read — count all messages
+        // Never read — count messages (capped to avoid unbounded reads)
         final msgSnap = await _firestore
             .collection('groups')
             .doc(groupId)
             .collection('messages')
+            .limit(200)
             .get();
-        return msgSnap.docs.length;
+        return msgSnap.docs.where((d) => d.data()['senderId'] != currentUid).length;
       }
       final msgSnap = await _firestore
           .collection('groups')
           .doc(groupId)
           .collection('messages')
           .where('createdAt', isGreaterThan: Timestamp.fromDate(lastRead))
+          .limit(200)
           .get();
       // Exclude own messages from unread count
       return msgSnap.docs.where((d) => d.data()['senderId'] != currentUid).length;

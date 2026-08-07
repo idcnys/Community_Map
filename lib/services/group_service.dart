@@ -41,6 +41,7 @@ class GroupService {
     return _firestore
         .collection('groups')
         .orderBy('createdAt', descending: true)
+        .limit(50)
         .snapshots()
         .map((snap) =>
             snap.docs.map((d) => GroupModel.fromMap(d.id, d.data())).toList());
@@ -51,6 +52,7 @@ class GroupService {
     return _firestore
         .collection('groups')
         .where('createdBy', isEqualTo: currentUid)
+        .limit(50)
         .snapshots()
         .map((snap) =>
             snap.docs.map((d) => GroupModel.fromMap(d.id, d.data())).toList());
@@ -60,6 +62,7 @@ class GroupService {
     return _firestore
         .collection('groups')
         .where('members', arrayContains: currentUid)
+        .limit(50)
         .snapshots()
         .map((snap) =>
             snap.docs.map((d) => GroupModel.fromMap(d.id, d.data())).toList());
@@ -69,6 +72,7 @@ class GroupService {
     return _firestore
         .collection('groups')
         .where('pendingRequests', arrayContains: currentUid)
+        .limit(50)
         .snapshots()
         .map((snap) =>
             snap.docs.map((d) => GroupModel.fromMap(d.id, d.data())).toList());

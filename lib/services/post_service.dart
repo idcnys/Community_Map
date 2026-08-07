@@ -97,18 +97,15 @@ class PostService {
   }) async {
     var query = _firestore
         .collection('community_posts')
+        .where('originType', isEqualTo: 'public')
         .where('createdAt', isGreaterThanOrEqualTo: _feedCutoff)
         .orderBy('createdAt', descending: true)
-        .limit(pageSize * 3);
+        .limit(pageSize);
     if (startAfter != null) {
       query = query.startAfterDocument(startAfter);
     }
     final snap = await query.get();
-    final filtered = snap.docs
-        .where((d) => d.data()['originType'] == 'public')
-        .take(pageSize)
-        .toList();
-    return _buildResultFromDocs(filtered, snap.docs.length == pageSize * 3);
+    return _buildResult(snap);
   }
 
   Future<PaginatedResult<CommunityPostModel>> getGroupFeedPage(
@@ -117,18 +114,15 @@ class PostService {
   }) async {
     var query = _firestore
         .collection('community_posts')
+        .where('groupId', isEqualTo: groupId)
         .where('createdAt', isGreaterThanOrEqualTo: _feedCutoff)
         .orderBy('createdAt', descending: true)
-        .limit(pageSize * 3);
+        .limit(pageSize);
     if (startAfter != null) {
       query = query.startAfterDocument(startAfter);
     }
     final snap = await query.get();
-    final filtered = snap.docs
-        .where((d) => d.data()['groupId'] == groupId)
-        .take(pageSize)
-        .toList();
-    return _buildResultFromDocs(filtered, snap.docs.length == pageSize * 3);
+    return _buildResult(snap);
   }
 
   Future<PaginatedResult<CommunityPostModel>> getAllFeedPage(
@@ -161,31 +155,16 @@ class PostService {
     );
   }
 
-  PaginatedResult<CommunityPostModel> _buildResultFromDocs(
-    List<QueryDocumentSnapshot<Map<String, dynamic>>> docs,
-    bool hasMore,
-  ) {
-    final items = docs
-        .map((d) => CommunityPostModel.fromMap(d.id, d.data()))
-        .toList();
-    return PaginatedResult(
-      items: items,
-      lastDoc: docs.isNotEmpty ? docs.last : null,
-      hasMore: hasMore,
-    );
-  }
-
   // ─── REALTIME STREAMS ────────────────────────────────────────────
 
   Stream<List<CommunityPostModel>> streamPublicFeed({int limit = 20}) {
     return _firestore
         .collection('community_posts')
+        .where('originType', isEqualTo: 'public')
         .orderBy('createdAt', descending: true)
-        .limit(limit * 3)
+        .limit(limit)
         .snapshots()
         .map((snap) => snap.docs
-            .where((d) => d.data()['originType'] == 'public')
-            .take(limit)
             .map((d) => CommunityPostModel.fromMap(d.id, d.data()))
             .toList());
   }
@@ -193,12 +172,11 @@ class PostService {
   Stream<List<CommunityPostModel>> streamGroupFeed(String groupId, {int limit = 20}) {
     return _firestore
         .collection('community_posts')
+        .where('groupId', isEqualTo: groupId)
         .orderBy('createdAt', descending: true)
-        .limit(limit * 3)
+        .limit(limit)
         .snapshots()
         .map((snap) => snap.docs
-            .where((d) => d.data()['groupId'] == groupId)
-            .take(limit)
             .map((d) => CommunityPostModel.fromMap(d.id, d.data()))
             .toList());
   }
@@ -354,6 +332,7 @@ class PostService {
         .doc(postId)
         .collection('comments')
         .orderBy('createdAt', descending: true)
+        .limit(50)
         .snapshots()
         .map((snap) => snap.docs
             .map((d) => CommunityCommentModel.fromMap(d.id, d.data()))

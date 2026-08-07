@@ -217,9 +217,8 @@ class _ReportCardState extends State<_ReportCard> {
                 ),
               ),
 
-            // Comments toggle + section
-            _buildCommentsToggle(theme),
-            if (_showComments) _buildCommentsList(theme),
+            // Comments toggle + section (single stream for both)
+            _buildCommentsSection(theme),
 
             const SizedBox(height: 10),
 
@@ -273,105 +272,106 @@ class _ReportCardState extends State<_ReportCard> {
     );
   }
 
-  Widget _buildCommentsToggle(ThemeData theme) {
-    return StreamBuilder<List<ReportComment>>(
-      stream: service.getComments(report.id),
-      builder: (context, snapshot) {
-        final count = snapshot.data?.length ?? 0;
-        return InkWell(
-          onTap: () => setState(() => _showComments = !_showComments),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4),
-            child: Row(
-              children: [
-                Icon(LucideIcons.messageCircle,
-                    size: 16, color: theme.colorScheme.onSurfaceVariant),
-                const SizedBox(width: 6),
-                Text(
-                  count > 0
-                      ? '$count comment${count > 1 ? 's' : ''}'
-                      : 'No comments',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                const Spacer(),
-                Icon(
-                  _showComments
-                      ? LucideIcons.chevronUp
-                      : LucideIcons.chevronDown,
-                  size: 16,
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildCommentsList(ThemeData theme) {
+  Widget _buildCommentsSection(ThemeData theme) {
     return StreamBuilder<List<ReportComment>>(
       stream: service.getComments(report.id),
       builder: (context, snapshot) {
         final comments = snapshot.data ?? [];
-        if (comments.isEmpty) {
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Text(
-              'No comments yet.',
-              style: TextStyle(
-                fontSize: 13,
-                fontStyle: FontStyle.italic,
-                color: theme.colorScheme.onSurfaceVariant,
+        final count = comments.length;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Toggle row
+            InkWell(
+              onTap: () => setState(() => _showComments = !_showComments),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Row(
+                  children: [
+                    Icon(LucideIcons.messageCircle,
+                        size: 16, color: theme.colorScheme.onSurfaceVariant),
+                    const SizedBox(width: 6),
+                    Text(
+                      count > 0
+                          ? '$count comment${count > 1 ? 's' : ''}'
+                          : 'No comments',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const Spacer(),
+                    Icon(
+                      _showComments
+                          ? LucideIcons.chevronUp
+                          : LucideIcons.chevronDown,
+                      size: 16,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ],
+                ),
               ),
             ),
-          );
-        }
-        return Column(
-          children: comments
-              .map((c) => Container(
-                    margin: const EdgeInsets.only(bottom: 6),
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surfaceContainerHighest
-                          .withAlpha(128),
-                      borderRadius: BorderRadius.circular(8),
+            // Expanded comments list
+            if (_showComments) ...[
+              if (comments.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Text(
+                    'No comments yet.',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontStyle: FontStyle.italic,
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Text(
-                              c.authorName,
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: theme.colorScheme.primary,
-                              ),
+                  ),
+                )
+              else
+                Column(
+                  children: comments
+                      .map((c) => Container(
+                            margin: const EdgeInsets.only(bottom: 6),
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.surfaceContainerHighest
+                                  .withAlpha(128),
+                              borderRadius: BorderRadius.circular(8),
                             ),
-                            const Spacer(),
-                            Text(
-                              DateFormat('MMM d, h:mm a').format(c.createdAt),
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Text(
+                                      c.authorName,
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        color: theme.colorScheme.primary,
+                                      ),
+                                    ),
+                                    const Spacer(),
+                                    Text(
+                                      DateFormat('MMM d, h:mm a').format(c.createdAt),
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: theme.colorScheme.onSurfaceVariant,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  c.text,
+                                  style: const TextStyle(fontSize: 14, height: 1.3),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          c.text,
-                          style: const TextStyle(fontSize: 14, height: 1.3),
-                        ),
-                      ],
-                    ),
-                  ))
-              .toList(),
+                          ))
+                      .toList(),
+                ),
+            ],
+          ],
         );
       },
     );

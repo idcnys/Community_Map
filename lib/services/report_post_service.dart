@@ -78,6 +78,7 @@ class ReportPostService {
         .collection('report_posts')
         .where('createdAt', isGreaterThanOrEqualTo: Timestamp.fromDate(cutoff))
         .orderBy('createdAt', descending: true)
+        .limit(100)
         .snapshots()
         .map((snap) => snap.docs
             .map((d) => ReportPostModel.fromMap(d.id, d.data()))
@@ -128,6 +129,7 @@ class ReportPostService {
     return _firestore
         .collection('report_posts')
         .where('authorId', isEqualTo: currentUid)
+        .limit(50)
         .snapshots()
         .map((snap) => snap.docs
             .map((d) => ReportPostModel.fromMap(d.id, d.data()))

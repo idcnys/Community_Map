@@ -39,6 +39,8 @@ class _MapPageState extends ConsumerState<MapPage>
   List<Map<String, dynamic>> _memberLocations = [];
   List<String> _membersWithoutLocation = [];
   StreamSubscription? _locationSub;
+  Timer? _debounceTimer;
+  bool _hasShownMissingToast = false;
 
   @override
   void initState() {
@@ -53,6 +55,7 @@ class _MapPageState extends ConsumerState<MapPage>
   void dispose() {
     _blinkController.dispose();
     _locationSub?.cancel();
+    _debounceTimer?.cancel();
     super.dispose();
   }
 
@@ -68,37 +71,45 @@ class _MapPageState extends ConsumerState<MapPage>
     _locationSub?.cancel();
 
     if (value != 'global') {
+      _hasShownMissingToast = false;
       _locationSub = _chatService.getGroupMemberLocations(value).listen((locations) {
-        final myGroups = ref.read(myJoinedGroupsProvider).value ?? [];
-        final group = myGroups.where((g) => g.id == value).firstOrNull;
-        final allMembers = group?.members ?? [];
+        // Debounce: wait 500ms after last emission before rebuilding
+        _debounceTimer?.cancel();
+        _debounceTimer = Timer(const Duration(milliseconds: 500), () {
+          if (!mounted) return;
 
-        final locUids = locations.map((l) => l['uid'] as String? ?? '').toSet();
-        final missing = allMembers.where((m) => !locUids.contains(m)).toList();
+          final myGroups = ref.read(myJoinedGroupsProvider).value ?? [];
+          final group = myGroups.where((g) => g.id == value).firstOrNull;
+          final allMembers = group?.members ?? [];
 
-        setState(() {
-          _memberLocations = locations;
-          _membersWithoutLocation = missing;
+          final locUids = locations.map((l) => l['uid'] as String? ?? '').toSet();
+          final missing = allMembers.where((m) => !locUids.contains(m)).toList();
+
+          setState(() {
+            _memberLocations = locations;
+            _membersWithoutLocation = missing;
+          });
+
+          // Show toast only once per group selection
+          if (missing.isNotEmpty && !_hasShownMissingToast) {
+            _hasShownMissingToast = true;
+            final names = missing.length > 2
+                ? '${missing.length} members haven\'t shared location'
+                : '${missing.length} member(s) haven\'t shared location yet';
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(names),
+                duration: const Duration(seconds: 2),
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          }
+
+          // Fit map to show all member locations
+          if (locations.isNotEmpty) {
+            _fitToLocations(locations);
+          }
         });
-
-        // Show toast for members who haven't shared
-        if (missing.isNotEmpty && mounted) {
-          final names = missing.length > 2
-              ? '${missing.length} members haven\'t shared location'
-              : '${missing.length} member(s) haven\'t shared location yet';
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(names),
-              duration: const Duration(seconds: 2),
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        }
-
-        // Fit map to show all member locations
-        if (locations.isNotEmpty) {
-          _fitToLocations(locations);
-        }
       });
     }
   }
@@ -127,6 +138,7 @@ class _MapPageState extends ConsumerState<MapPage>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final now = DateTime.now(); // Compute once, not per-marker
     final isGuest = ref.watch(isGuestProvider);
     final reports = ref.watch(activeReportsProvider).value ?? [];
     final hasActiveReport = ref.watch(hasActiveReportProvider);
@@ -192,8 +204,8 @@ class _MapPageState extends ConsumerState<MapPage>
                 MarkerLayer(
                   markers: reports.map((report) {
                     final point = LatLng(report.latitude, report.longitude);
-                    final color = _markerColor(report);
-                    final blink = _shouldBlink(report);
+                    final color = _markerColor(report, now);
+                    final blink = _shouldBlink(report, now);
 
                     return Marker(
                       point: point,
@@ -472,16 +484,16 @@ class _MapPageState extends ConsumerState<MapPage>
     );
   }
 
-  Color _markerColor(ReportPostModel report) {
-    final age = DateTime.now().difference(report.createdAt).inHours;
+  Color _markerColor(ReportPostModel report, DateTime now) {
+    final age = now.difference(report.createdAt).inHours;
     if (age < 8) return const Color(0xFFEF4444);
     if (age < 16) return const Color(0xFFF97316);
     if (age < 24) return const Color(0xFF8B5CF6);
     return const Color(0xFF9CA3AF);
   }
 
-  bool _shouldBlink(ReportPostModel report) {
-    final age = DateTime.now().difference(report.createdAt).inHours;
+  bool _shouldBlink(ReportPostModel report, DateTime now) {
+    final age = now.difference(report.createdAt).inHours;
     return age < 24;
   }
 

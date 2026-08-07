@@ -275,6 +275,7 @@ class _FeedPageState extends ConsumerState<FeedPage> {
           onRefresh: () => ref.read(paginatedFeedProvider.notifier).refresh(),
           child: ListView.builder(
             controller: _scrollController,
+            cacheExtent: 500,
             padding: const EdgeInsets.only(top: 8, bottom: 80),
             itemCount: posts.length + 1, // +1 for loading indicator
             itemBuilder: (ctx, i) {

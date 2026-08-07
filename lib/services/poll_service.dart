@@ -68,35 +68,38 @@ class PollService {
   // ─── VOTE ────────────────────────────────────────────────────────
   Future<void> vote(String postId, List<String> optionIndexes) async {
     final postRef = _firestore.collection('community_posts').doc(postId);
-    final snap = await postRef.get();
-    if (!snap.exists) return;
 
-    final data = snap.data()!;
-    final pollVotes = Map<String, List<String>>.from(
-      (data['pollVotes'] as Map<String, dynamic>?)?.map(
-        (k, v) => MapEntry(k, List<String>.from(v ?? [])),
-      ) ?? {},
-    );
-    final pollType = data['pollType'] ?? 'single';
+    await _firestore.runTransaction((transaction) async {
+      final snap = await transaction.get(postRef);
+      if (!snap.exists) return;
 
-    // Remove user's previous votes
-    for (final key in pollVotes.keys) {
-      pollVotes[key]!.remove(currentUid);
-    }
+      final data = snap.data()!;
+      final pollVotes = Map<String, List<String>>.from(
+        (data['pollVotes'] as Map<String, dynamic>?)?.map(
+          (k, v) => MapEntry(k, List<String>.from(v ?? [])),
+        ) ?? {},
+      );
+      final pollType = data['pollType'] ?? 'single';
 
-    // Add new votes
-    if (pollType == 'single') {
-      final idx = optionIndexes.first;
-      pollVotes.putIfAbsent(idx, () => []);
-      pollVotes[idx]!.add(currentUid);
-    } else {
-      for (final idx in optionIndexes) {
+      // Remove user's previous votes
+      for (final key in pollVotes.keys) {
+        pollVotes[key]!.remove(currentUid);
+      }
+
+      // Add new votes
+      if (pollType == 'single') {
+        final idx = optionIndexes.first;
         pollVotes.putIfAbsent(idx, () => []);
         pollVotes[idx]!.add(currentUid);
+      } else {
+        for (final idx in optionIndexes) {
+          pollVotes.putIfAbsent(idx, () => []);
+          pollVotes[idx]!.add(currentUid);
+        }
       }
-    }
 
-    await postRef.update({'pollVotes': pollVotes});
+      transaction.update(postRef, {'pollVotes': pollVotes});
+    });
   }
 
   // ─── GET MY VOTES ────────────────────────────────────────────────
