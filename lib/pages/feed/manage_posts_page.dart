@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../core/utils/time_ago.dart';
-import '../../providers/service_providers.dart';
 import '../../models/community_post_model.dart';
-import '../../services/community_post_service.dart';
+import '../../services/post_service.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'comments_page.dart';
 
@@ -16,7 +15,7 @@ class ManagePostsPage extends ConsumerStatefulWidget {
 }
 
 class _ManagePostsPageState extends ConsumerState<ManagePostsPage> {
-  final _service = CommunityPostService();
+  final _service = PostService();
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +25,7 @@ class _ManagePostsPageState extends ConsumerState<ManagePostsPage> {
     return Scaffold(
       appBar: AppBar(title: const Text('Manage My Posts')),
       body: StreamBuilder<List<CommunityPostModel>>(
-        stream: _service.getMyCommunityPosts(),
+        stream: _service.getMyPosts(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());

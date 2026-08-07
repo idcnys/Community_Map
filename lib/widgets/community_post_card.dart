@@ -43,8 +43,8 @@ class _CommunityPostCardState extends ConsumerState<CommunityPostCard> {
 
   Future<void> _checkPollVotes() async {
     try {
-      final service = ref.read(communityPostServiceProvider);
-      final votes = await service.getMyPollVotes(widget.post.id);
+      final pollService = ref.read(pollServiceProvider);
+      final votes = await pollService.getMyVotes(widget.post.id);
       if (mounted) setState(() => _myPollVotes = votes);
     } catch (_) {}
   }
@@ -404,8 +404,8 @@ class _CommunityPostCardState extends ConsumerState<CommunityPostCard> {
       return;
     }
 
-    final service = ref.read(communityPostServiceProvider);
-    await service.votePoll(widget.post.id, newVotes);
+    final pollService = ref.read(pollServiceProvider);
+    await pollService.vote(widget.post.id, newVotes);
     if (mounted) {
       setState(() {
         _myPollVotes = newVotes;

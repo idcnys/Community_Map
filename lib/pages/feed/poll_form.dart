@@ -192,7 +192,7 @@ class _PollFormState extends ConsumerState<PollForm> {
       groupName = myGroups.firstWhere((g) => g.id == groupId).name;
     }
 
-    final service = ref.read(communityPostServiceProvider);
+    final service = ref.read(pollServiceProvider);
     final error = await service.createPollPost(
       title: _titleCtrl.text.trim(),
       description: _descCtrl.text.trim(),

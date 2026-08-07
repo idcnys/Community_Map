@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'community_post_service.dart';
+import 'post_service.dart';
 
 /// Batches view count increments and flushes periodically.
 /// Instead of one Firestore write per view, accumulates IDs and
@@ -8,12 +8,12 @@ class ViewCountBatcher {
   final _pendingIds = <String>{};
   Timer? _flushTimer;
   final Duration flushInterval;
-  final CommunityPostService _service;
+  final PostService _service;
 
   ViewCountBatcher({
     this.flushInterval = const Duration(seconds: 10),
-    CommunityPostService? service,
-  }) : _service = service ?? CommunityPostService();
+    PostService? service,
+  }) : _service = service ?? PostService();
 
   /// Queue a post ID for view count increment.
   void trackView(String postId) {

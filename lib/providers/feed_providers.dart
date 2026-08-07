@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/community_post_model.dart';
 import '../models/group_model.dart';
 import '../models/notification_model.dart';
-import '../services/community_post_service.dart';
+import '../services/post_service.dart';
 import 'service_providers.dart';
 import 'guest_provider.dart';
 
@@ -137,7 +137,7 @@ class PaginatedFeedNotifier extends AsyncNotifier<PaginatedFeedState> {
   }
 
   Future<PaginatedResult<CommunityPostModel>> _fetchPage(
-    CommunityPostService service,
+    PostService service,
     String filter,
     List<String> myGroupIds,
     DocumentSnapshot? cursor,
@@ -156,13 +156,13 @@ class PaginatedFeedNotifier extends AsyncNotifier<PaginatedFeedState> {
 
 /// Unread notification count for the bell badge.
 final unreadCountProvider = StreamProvider<int>((ref) {
-  final service = ref.watch(communityPostServiceProvider);
+  final service = ref.watch(notificationServiceProvider);
   return service.getUnreadCount();
 });
 
 /// Notification list.
 final notificationsProvider = StreamProvider<List<AppNotificationModel>>((ref) {
-  final service = ref.watch(communityPostServiceProvider);
+  final service = ref.watch(notificationServiceProvider);
   return service.getMyNotifications();
 });
 

@@ -1,7 +1,6 @@
-
 import 'package:flutter/material.dart';
 import '../../core/utils/time_ago.dart';
-import '../../services/community_post_service.dart';
+import '../../services/notification_service.dart';
 import '../../models/notification_model.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'comments_page.dart';
@@ -11,7 +10,7 @@ class NotificationPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final service = CommunityPostService();
+    final service = NotificationService();
     final theme = Theme.of(context);
 
     return DraggableScrollableSheet(
@@ -49,7 +48,6 @@ class NotificationPanel extends StatelessWidget {
             return CustomScrollView(
               controller: scrollController,
               slivers: [
-                // Header
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.all(16),
@@ -62,7 +60,7 @@ class NotificationPanel extends StatelessWidget {
                               ?.copyWith(fontWeight: FontWeight.bold),
                         ),
                         TextButton(
-                          onPressed: () => service.markAllNotificationsRead(),
+                          onPressed: () => service.markAllRead(),
                           child: const Text('Mark all read'),
                         ),
                       ],
@@ -70,7 +68,6 @@ class NotificationPanel extends StatelessWidget {
                   ),
                 ),
                 const SliverToBoxAdapter(child: Divider(height: 1)),
-                // Notification list
                 if (notifications.isEmpty)
                   SliverFillRemaining(
                     hasScrollBody: false,
@@ -104,7 +101,7 @@ class NotificationPanel extends StatelessWidget {
 
   Widget _buildNotificationTile(
     BuildContext context,
-    CommunityPostService service,
+    NotificationService service,
     AppNotificationModel notif,
   ) {
     final theme = Theme.of(context);
@@ -160,7 +157,7 @@ class NotificationPanel extends StatelessWidget {
               ),
             ),
       onTap: () {
-        service.markNotificationRead(notif.id);
+        service.markRead(notif.id);
         if (notif.postId.isNotEmpty) {
           Navigator.of(context).push(
             MaterialPageRoute(
@@ -171,6 +168,4 @@ class NotificationPanel extends StatelessWidget {
       },
     );
   }
-
-
 }
