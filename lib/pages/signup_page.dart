@@ -85,17 +85,23 @@ class _SignUpPageState extends State<SignUpPage> {
         'lastActive': FieldValue.serverTimestamp(),
       });
 
-      // Sign out the auto-logged-in user, then redirect to login
-      await FirebaseAuth.instance.signOut();
+      // Send verification email (non-fatal if it fails; can resend later).
+      try {
+        await user.sendEmailVerification();
+      } catch (_) {
+        // Ignore; user can resend from the verify screen.
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Account created successfully! Please sign in.'),
+            content: Text('Account created! Please verify your email.'),
             backgroundColor: Colors.green,
           ),
         );
-        context.go('/login');
+        // Keep the user signed in so they can resend; the router guard
+        // blocks dashboard access until the email is verified.
+        context.go('/verify-email');
       }
     } on FirebaseAuthException catch (e) {
       String message;

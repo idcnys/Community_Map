@@ -1,15 +1,65 @@
+import 'dart:async';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
 import 'pages/login_page.dart';
 import 'pages/signup_page.dart';
+import 'pages/verify_email_page.dart';
 import 'pages/dashboard_page.dart';
 import 'pages/feed/comments_page.dart';
 import 'pages/feed/community_post_form.dart';
 import 'pages/manage/profile_editor_page.dart';
 import 'pages/manage/group_detail_page.dart';
 
-/// Centralized router configuration.
+/// Converts the Firebase auth-state stream into a [Listenable] so GoRouter
+/// re-evaluates its redirect whenever the user signs in/out or reloads.
+class _GoRouterRefreshStream extends ChangeNotifier {
+  _GoRouterRefreshStream(Stream<dynamic> stream) {
+    _sub = stream.asBroadcastStream().listen((_) => notifyListeners());
+  }
+
+  late final StreamSubscription<dynamic> _sub;
+
+  @override
+  void dispose() {
+    _sub.cancel();
+    super.dispose();
+  }
+}
+
+/// Centralized router configuration with an email-verification guard.
 final router = GoRouter(
   initialLocation: '/login',
+  refreshListenable: _GoRouterRefreshStream(
+    FirebaseAuth.instance.authStateChanges(),
+  ),
+  redirect: (context, state) {
+    final user = FirebaseAuth.instance.currentUser;
+    final isLoggedIn = user != null;
+    final isAnonymous = user?.isAnonymous ?? false;
+    final isVerified = user?.emailVerified ?? false;
+
+    final loc = state.matchedLocation;
+    final isAuthScreen = loc == '/login' || loc == '/signup';
+    final isVerifyScreen = loc == '/verify-email';
+
+    // Not signed in -> force to login (unless already there / signing up).
+    if (!isLoggedIn) {
+      return isAuthScreen ? null : '/login';
+    }
+
+    // Signed in but email not verified (and not a guest) -> verify screen.
+    if (!isAnonymous && !isVerified) {
+      return isVerifyScreen ? null : '/verify-email';
+    }
+
+    // Verified user or guest lingering on auth/verify screens -> dashboard.
+    if (isAuthScreen || isVerifyScreen) {
+      return '/dashboard';
+    }
+
+    return null;
+  },
   routes: [
     GoRoute(
       path: '/login',
@@ -20,6 +70,11 @@ final router = GoRouter(
       path: '/signup',
       name: 'signup',
       builder: (context, state) => const SignUpPage(),
+    ),
+    GoRoute(
+      path: '/verify-email',
+      name: 'verifyEmail',
+      builder: (context, state) => const VerifyEmailPage(),
     ),
     GoRoute(
       path: '/dashboard',

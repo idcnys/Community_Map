@@ -35,10 +35,18 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     setState(() => _isLoading = true);
 
     try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
+      final credential =
+          await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text,
       );
+
+      final user = credential.user;
+      // Block login until the email is verified.
+      if (user != null && !user.emailVerified) {
+        if (mounted) context.go('/verify-email');
+        return;
+      }
 
       if (mounted) {
         context.go('/dashboard');
