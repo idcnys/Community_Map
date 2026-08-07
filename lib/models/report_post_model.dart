@@ -1,4 +1,3 @@
-
 class ReportPostModel {
   final String id;
   final String contactNumber;
@@ -12,6 +11,9 @@ class ReportPostModel {
   final String origin; // 'public' or 'urgent'
   final String imageUrl;
   final DateTime createdAt;
+  final String status; // 'active' or 'solved'
+  final Map<String, String> votes; // userId -> 'appropriate' | 'spam'
+  final int viewCount;
 
   ReportPostModel({
     required this.id,
@@ -26,12 +28,22 @@ class ReportPostModel {
     this.origin = 'public',
     this.imageUrl = '',
     required this.createdAt,
+    this.status = 'active',
+    this.votes = const {},
+    this.viewCount = 0,
   });
 
   bool get isUrgent => origin == 'urgent';
 
+  bool get isSolved => status == 'solved';
+
   bool get isArchived =>
-      DateTime.now().difference(createdAt).inHours > 48;
+      isSolved || DateTime.now().difference(createdAt).inHours > 48;
+
+  int get appropriateCount =>
+      votes.values.where((v) => v == 'appropriate').length;
+
+  int get spamCount => votes.values.where((v) => v == 'spam').length;
 
   /// Whether the given user can see the contact number
   bool canSeeContact(String userId, List<String> userGroupIds) {
@@ -53,6 +65,9 @@ class ReportPostModel {
       origin: map['origin'] ?? 'public',
       imageUrl: map['imageUrl'] ?? '',
       createdAt: (map['createdAt'] as dynamic)?.toDate() ?? DateTime.now(),
+      status: map['status'] ?? 'active',
+      votes: Map<String, String>.from(map['votes'] ?? {}),
+      viewCount: map['viewCount'] ?? 0,
     );
   }
 
@@ -69,6 +84,9 @@ class ReportPostModel {
       'origin': origin,
       'imageUrl': imageUrl,
       'createdAt': createdAt,
+      'status': status,
+      'votes': votes,
+      'viewCount': viewCount,
     };
   }
 }
@@ -89,4 +107,44 @@ class ReportTypes {
   ];
 
   static const String urgentType = 'Urgent Emergency';
+}
+
+/// A comment on a report post
+class ReportComment {
+  final String id;
+  final String reportId;
+  final String authorId;
+  final String authorName;
+  final String text;
+  final DateTime createdAt;
+
+  ReportComment({
+    required this.id,
+    required this.reportId,
+    required this.authorId,
+    required this.authorName,
+    required this.text,
+    required this.createdAt,
+  });
+
+  factory ReportComment.fromMap(String id, Map<String, dynamic> map) {
+    return ReportComment(
+      id: id,
+      reportId: map['reportId'] ?? '',
+      authorId: map['authorId'] ?? '',
+      authorName: map['authorName'] ?? '',
+      text: map['text'] ?? '',
+      createdAt: (map['createdAt'] as dynamic)?.toDate() ?? DateTime.now(),
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'reportId': reportId,
+      'authorId': authorId,
+      'authorName': authorName,
+      'text': text,
+      'createdAt': createdAt,
+    };
+  }
 }

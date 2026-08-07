@@ -1,5 +1,3 @@
-
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../models/report_post_model.dart';
@@ -65,11 +63,22 @@ class MyReportsPage extends StatelessWidget {
   }
 }
 
-class _ReportCard extends StatelessWidget {
+class _ReportCard extends StatefulWidget {
   final ReportPostModel report;
   final ReportPostService service;
 
   const _ReportCard({required this.report, required this.service});
+
+  @override
+  State<_ReportCard> createState() => _ReportCardState();
+}
+
+class _ReportCardState extends State<_ReportCard> {
+  bool _showComments = false;
+  bool _solving = false;
+
+  ReportPostModel get report => widget.report;
+  ReportPostService get service => widget.service;
 
   @override
   Widget build(BuildContext context) {
@@ -83,7 +92,7 @@ class _ReportCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header row: type + urgent badge
+            // Header row: type + status badge
             Row(
               children: [
                 Container(
@@ -91,8 +100,11 @@ class _ReportCard extends StatelessWidget {
                   height: 10,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color:
-                        report.isUrgent ? theme.colorScheme.error : theme.colorScheme.tertiary,
+                    color: report.isSolved
+                        ? Colors.green
+                        : report.isUrgent
+                            ? theme.colorScheme.error
+                            : theme.colorScheme.tertiary,
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -103,7 +115,24 @@ class _ReportCard extends StatelessWidget {
                         ?.copyWith(fontWeight: FontWeight.w600),
                   ),
                 ),
-                if (report.isUrgent)
+                if (report.isSolved)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: Colors.green.shade100,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      'SOLVED',
+                      style: TextStyle(
+                        color: Colors.green.shade700,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 10,
+                      ),
+                    ),
+                  )
+                else if (report.isUrgent)
                   Container(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 8, vertical: 3),
@@ -142,11 +171,13 @@ class _ReportCard extends StatelessWidget {
             // Date + location
             Row(
               children: [
-                Icon(LucideIcons.clock, size: 14, color: theme.colorScheme.onSurfaceVariant),
+                Icon(LucideIcons.clock,
+                    size: 14, color: theme.colorScheme.onSurfaceVariant),
                 const SizedBox(width: 4),
                 Text(
                   DateFormat('MMM d, h:mm a').format(report.createdAt),
-                  style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
+                  style: TextStyle(
+                      fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
                 ),
                 const Spacer(),
                 Icon(LucideIcons.mapPin,
@@ -154,16 +185,67 @@ class _ReportCard extends StatelessWidget {
                 const SizedBox(width: 4),
                 Text(
                   '${report.latitude.toStringAsFixed(4)}, ${report.longitude.toStringAsFixed(4)}',
-                  style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
+                  style: TextStyle(
+                      fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
                 ),
               ],
             ),
+            const SizedBox(height: 8),
+
+            // Vote counts
+            if (report.votes.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  children: [
+                    Icon(LucideIcons.thumbsUp,
+                        size: 14, color: theme.colorScheme.primary),
+                    const SizedBox(width: 4),
+                    Text('${report.appropriateCount} appropriate',
+                        style: TextStyle(
+                            fontSize: 12,
+                            color: theme.colorScheme.onSurfaceVariant)),
+                    const SizedBox(width: 12),
+                    Icon(LucideIcons.flag,
+                        size: 14, color: theme.colorScheme.error),
+                    const SizedBox(width: 4),
+                    Text('${report.spamCount} spam',
+                        style: TextStyle(
+                            fontSize: 12,
+                            color: theme.colorScheme.onSurfaceVariant)),
+                  ],
+                ),
+              ),
+
+            // Comments toggle + section
+            _buildCommentsToggle(theme),
+            if (_showComments) _buildCommentsList(theme),
+
             const SizedBox(height: 10),
 
             // Action buttons
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
+                // Mark as Solved (only if not already solved)
+                if (!report.isSolved) ...[
+                  TextButton.icon(
+                    onPressed: _solving ? null : () => _confirmSolve(context),
+                    icon: _solving
+                        ? const SizedBox(
+                            width: 14,
+                            height: 14,
+                            child:
+                                CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(LucideIcons.checkCircle, size: 16),
+                    label: const Text('Solved'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.green.shade700,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                ],
                 // Edit description
                 TextButton.icon(
                   onPressed: () => _editDescription(context),
@@ -187,6 +269,145 @@ class _ReportCard extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildCommentsToggle(ThemeData theme) {
+    return StreamBuilder<List<ReportComment>>(
+      stream: service.getComments(report.id),
+      builder: (context, snapshot) {
+        final count = snapshot.data?.length ?? 0;
+        return InkWell(
+          onTap: () => setState(() => _showComments = !_showComments),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: Row(
+              children: [
+                Icon(LucideIcons.messageCircle,
+                    size: 16, color: theme.colorScheme.onSurfaceVariant),
+                const SizedBox(width: 6),
+                Text(
+                  count > 0
+                      ? '$count comment${count > 1 ? 's' : ''}'
+                      : 'No comments',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const Spacer(),
+                Icon(
+                  _showComments
+                      ? LucideIcons.chevronUp
+                      : LucideIcons.chevronDown,
+                  size: 16,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildCommentsList(ThemeData theme) {
+    return StreamBuilder<List<ReportComment>>(
+      stream: service.getComments(report.id),
+      builder: (context, snapshot) {
+        final comments = snapshot.data ?? [];
+        if (comments.isEmpty) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Text(
+              'No comments yet.',
+              style: TextStyle(
+                fontSize: 13,
+                fontStyle: FontStyle.italic,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          );
+        }
+        return Column(
+          children: comments
+              .map((c) => Container(
+                    margin: const EdgeInsets.only(bottom: 6),
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surfaceContainerHighest
+                          .withAlpha(128),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              c.authorName,
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: theme.colorScheme.primary,
+                              ),
+                            ),
+                            const Spacer(),
+                            Text(
+                              DateFormat('MMM d, h:mm a').format(c.createdAt),
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          c.text,
+                          style: const TextStyle(fontSize: 14, height: 1.3),
+                        ),
+                      ],
+                    ),
+                  ))
+              .toList(),
+        );
+      },
+    );
+  }
+
+  void _confirmSolve(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Mark as Solved'),
+        content: const Text(
+            'Mark this report as solved? It will be archived and no longer visible on the active map.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Colors.green),
+            onPressed: () async {
+              Navigator.of(ctx).pop();
+              setState(() => _solving = true);
+              final error = await service.markAsSolved(report.id);
+              if (mounted) {
+                setState(() => _solving = false);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(error ?? 'Report marked as solved'),
+                    backgroundColor: error != null ? Colors.red : null,
+                  ),
+                );
+              }
+            },
+            child: const Text('Mark Solved'),
+          ),
+        ],
       ),
     );
   }

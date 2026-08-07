@@ -517,7 +517,11 @@ class _MapPageState extends ConsumerState<MapPage>
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (_) => ReportDetailSheet(report: report),
+      builder: (_) => ReportDetailSheet(
+        report: report,
+        userLat: _userLocation?.latitude,
+        userLng: _userLocation?.longitude,
+      ),
     );
   }
 

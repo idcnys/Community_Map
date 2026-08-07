@@ -1,4 +1,3 @@
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:geolocator/geolocator.dart';
@@ -36,6 +35,8 @@ class ReportPostService {
         'sharedGroupIds': sharedGroupIds,
         'origin': origin,
         'imageUrl': imageUrl,
+        'status': 'active',
+        'votes': <String, String>{},
         'createdAt': FieldValue.serverTimestamp(),
       });
       return null;
@@ -60,6 +61,8 @@ class ReportPostService {
         'authorName': currentName,
         'sharedGroupIds': <String>[],
         'origin': 'urgent',
+        'status': 'active',
+        'votes': <String, String>{},
         'createdAt': FieldValue.serverTimestamp(),
       });
       return null;
@@ -68,7 +71,7 @@ class ReportPostService {
     }
   }
 
-  // ─── GET ACTIVE REPORTS (within 48 hours) ────────────────────────
+  // ─── GET ACTIVE REPORTS (within 48 hours, not solved) ───────────
   Stream<List<ReportPostModel>> getActiveReports() {
     final cutoff = DateTime.now().subtract(const Duration(hours: 48));
     return _firestore
@@ -78,10 +81,11 @@ class ReportPostService {
         .snapshots()
         .map((snap) => snap.docs
             .map((d) => ReportPostModel.fromMap(d.id, d.data()))
+            .where((r) => !r.isSolved)
             .toList());
   }
 
-  // ─── GET ARCHIVED REPORTS (older than 48 hours) ──────────────────
+  // ─── GET ARCHIVED REPORTS (older than 48 hours or solved) ───────
   Stream<List<ReportPostModel>> getArchivedReports() {
     final cutoff = DateTime.now().subtract(const Duration(hours: 48));
     return _firestore
@@ -142,6 +146,95 @@ class ReportPostService {
     } catch (e) {
       return 'Failed to update report: $e';
     }
+  }
+
+  // ─── VOTE ON REPORT (appropriate / spam) ─────────────────────────
+  Future<String?> voteOnReport(String reportId, String voteType) async {
+    try {
+      await _firestore.collection('report_posts').doc(reportId).update({
+        'votes.$currentUid': voteType,
+      });
+      return null;
+    } catch (e) {
+      return 'Failed to vote: $e';
+    }
+  }
+
+  // ─── MARK REPORT AS SOLVED ───────────────────────────────────────
+  Future<String?> markAsSolved(String reportId) async {
+    try {
+      await _firestore.collection('report_posts').doc(reportId).update({
+        'status': 'solved',
+        'solvedAt': FieldValue.serverTimestamp(),
+      });
+      return null;
+    } catch (e) {
+      return 'Failed to mark as solved: $e';
+    }
+  }
+
+  // ─── COMMENTS ────────────────────────────────────────────────────
+  Future<String?> addComment(String reportId, String text) async {
+    try {
+      await _firestore
+          .collection('report_posts')
+          .doc(reportId)
+          .collection('comments')
+          .add({
+        'reportId': reportId,
+        'authorId': currentUid,
+        'authorName': currentName,
+        'text': text,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+      return null;
+    } catch (e) {
+      return 'Failed to add comment: $e';
+    }
+  }
+
+  Stream<List<ReportComment>> getComments(String reportId) {
+    return _firestore
+        .collection('report_posts')
+        .doc(reportId)
+        .collection('comments')
+        .orderBy('createdAt', descending: false)
+        .snapshots()
+        .map((snap) => snap.docs
+            .map((d) => ReportComment.fromMap(d.id, d.data()))
+            .toList());
+  }
+
+  // ─── GET SINGLE REPORT (live stream) ───────────────────────────
+  Stream<ReportPostModel?> getReportStream(String reportId) {
+    return _firestore
+        .collection('report_posts')
+        .doc(reportId)
+        .snapshots()
+        .map((doc) => doc.exists ? ReportPostModel.fromMap(doc.id, doc.data()!) : null);
+  }
+
+  // ─── INCREMENT VIEW COUNT ──────────────────────────────────────
+  Future<void> incrementViewCount(String reportId) async {
+    try {
+      await _firestore.collection('report_posts').doc(reportId).update({
+        'viewCount': FieldValue.increment(1),
+      });
+    } catch (_) {}
+  }
+
+  // ─── DISTANCE CHECK (within 1km) ────────────────────────────────
+  static bool isWithinRange({
+    required double userLat,
+    required double userLng,
+    required double targetLat,
+    required double targetLng,
+    double rangeMeters = 1000,
+  }) {
+    final distance = Geolocator.distanceBetween(
+      userLat, userLng, targetLat, targetLng,
+    );
+    return distance <= rangeMeters;
   }
 
   // ─── GET USER'S GROUP IDS ────────────────────────────────────────
