@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../models/report_post_model.dart';
+import '../../models/community_post_model.dart';
 import '../../services/report_post_service.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../../widgets/audio_player_widget.dart';
 
 class ReportDetailSheet extends StatefulWidget {
   final ReportPostModel report;
@@ -244,6 +246,12 @@ class _ReportDetailSheetState extends State<ReportDetailSheet> {
                       ),
                     ),
                   ),
+                  const SizedBox(height: 16),
+                ],
+
+                // Voice note audio player
+                if (report.audioUrl.isNotEmpty) ...[
+                  AudioPlayerWidget(audioUrl: report.audioUrl),
                   const SizedBox(height: 16),
                 ],
 
@@ -550,7 +558,7 @@ class _ReportDetailSheetState extends State<ReportDetailSheet> {
   }
 
   Widget _buildCommentsSection(ThemeData theme) {
-    return StreamBuilder<List<ReportComment>>(
+    return StreamBuilder<List<CommunityCommentModel>>(
       stream: _service.getComments(widget.report.id),
       builder: (context, snapshot) {
         final comments = snapshot.data ?? [];
@@ -602,7 +610,7 @@ class _ReportDetailSheetState extends State<ReportDetailSheet> {
                             ),
                             const Spacer(),
                             Text(
-                              DateFormat('h:mm a').format(c.createdAt),
+                              DateFormat('h:mm a').format(c.createdAt ?? DateTime.now()),
                               style: TextStyle(
                                 fontSize: 11,
                                 color: theme.colorScheme.onSurfaceVariant,
@@ -612,7 +620,7 @@ class _ReportDetailSheetState extends State<ReportDetailSheet> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          c.text,
+                          c.content,
                           style:
                               const TextStyle(fontSize: 14, height: 1.3),
                         ),

@@ -75,7 +75,7 @@
 		<key>NSPhotoLibraryUsageDescription</key>
 		<string>CMap needs photo library access to attach images to reports and update your profile picture.</string>
 		<key>NSMicrophoneUsageDescription</key>
-		<string>CMap needs microphone access if you record video for reports.</string>
+		<string>CMap needs microphone access to record voice notes for reports.</string>
 		<key>UIStatusBarHidden</key>
 		<false/>
 	</dict>

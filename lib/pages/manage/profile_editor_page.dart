@@ -5,7 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../services/profile_service.dart';
 import '../../services/cloudinary_service.dart';
-import '../../models/post_model.dart';
+import '../../models/user_profile_model.dart';
 import '../login_page.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
@@ -27,6 +27,8 @@ class _ProfileEditorPageState extends State<ProfileEditorPage> {
   final _phoneCtrl = TextEditingController();
   final _locationCtrl = TextEditingController();
   final _dobCtrl = TextEditingController();
+  final _hobbyCtrl = TextEditingController();
+  String _bloodGroup = '';
 
   bool _loaded = false;
   bool _saving = false;
@@ -41,6 +43,7 @@ class _ProfileEditorPageState extends State<ProfileEditorPage> {
     _phoneCtrl.dispose();
     _locationCtrl.dispose();
     _dobCtrl.dispose();
+    _hobbyCtrl.dispose();
     super.dispose();
   }
 
@@ -51,6 +54,8 @@ class _ProfileEditorPageState extends State<ProfileEditorPage> {
     _phoneCtrl.text = profile.phone;
     _locationCtrl.text = profile.location;
     _dobCtrl.text = profile.dateOfBirth;
+    _hobbyCtrl.text = profile.hobby;
+    _bloodGroup = profile.bloodGroup;
     _existingAvatarUrl = profile.imageUrl;
     _loaded = true;
   }
@@ -211,12 +216,46 @@ class _ProfileEditorPageState extends State<ProfileEditorPage> {
                   ),
                 ),
                 const SizedBox(height: 16),
+                // Date of Birth — disabled, set at signup only
                 TextFormField(
                   controller: _dobCtrl,
-                  decoration: const InputDecoration(
+                  enabled: false,
+                  decoration: InputDecoration(
                     labelText: 'Date of Birth',
                     hintText: 'DD/MM/YYYY',
-                    prefixIcon: Icon(LucideIcons.cake),
+                    prefixIcon: const Icon(LucideIcons.cake),
+                    helperText: 'Set during signup — cannot be changed',
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // Blood Group dropdown
+                DropdownButtonFormField<String>(
+                  value: _bloodGroup.isEmpty ? null : _bloodGroup,
+                  decoration: const InputDecoration(
+                    labelText: 'Blood Group',
+                    prefixIcon: Icon(LucideIcons.droplets),
+                  ),
+                  items: const [
+                    DropdownMenuItem(value: '', child: Text('Select')),
+                    DropdownMenuItem(value: 'A+', child: Text('A+')),
+                    DropdownMenuItem(value: 'A-', child: Text('A-')),
+                    DropdownMenuItem(value: 'B+', child: Text('B+')),
+                    DropdownMenuItem(value: 'B-', child: Text('B-')),
+                    DropdownMenuItem(value: 'AB+', child: Text('AB+')),
+                    DropdownMenuItem(value: 'AB-', child: Text('AB-')),
+                    DropdownMenuItem(value: 'O+', child: Text('O+')),
+                    DropdownMenuItem(value: 'O-', child: Text('O-')),
+                  ],
+                  onChanged: (val) => setState(() => _bloodGroup = val ?? ''),
+                ),
+                const SizedBox(height: 16),
+                // Hobby
+                TextFormField(
+                  controller: _hobbyCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Hobby',
+                    hintText: 'e.g. Reading, Photography, Cycling',
+                    prefixIcon: Icon(LucideIcons.heart),
                   ),
                 ),
                 const SizedBox(height: 32),
@@ -270,6 +309,8 @@ class _ProfileEditorPageState extends State<ProfileEditorPage> {
       phone: _phoneCtrl.text.trim(),
       location: _locationCtrl.text.trim(),
       dateOfBirth: _dobCtrl.text.trim(),
+      bloodGroup: _bloodGroup,
+      hobby: _hobbyCtrl.text.trim(),
       imageUrl: newImageUrl,
     );
 

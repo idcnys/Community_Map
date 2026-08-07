@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../models/report_post_model.dart';
+import '../../models/community_post_model.dart';
 import '../../services/report_post_service.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
@@ -245,23 +246,25 @@ class _ReportCardState extends State<_ReportCard> {
                   ),
                   const SizedBox(width: 4),
                 ],
-                // Edit description
+                // Edit description (disabled when solved)
                 TextButton.icon(
-                  onPressed: () => _editDescription(context),
+                  onPressed: report.isSolved ? null : () => _editDescription(context),
                   icon: const Icon(LucideIcons.pencil, size: 16),
                   label: const Text('Edit'),
                   style: TextButton.styleFrom(
                     foregroundColor: theme.colorScheme.primary,
+                    disabledForegroundColor: theme.colorScheme.onSurfaceVariant.withAlpha(80),
                   ),
                 ),
                 const SizedBox(width: 4),
-                // Delete
+                // Delete (disabled when solved)
                 TextButton.icon(
-                  onPressed: () => _confirmDelete(context),
+                  onPressed: report.isSolved ? null : () => _confirmDelete(context),
                   icon: const Icon(LucideIcons.trash2, size: 16),
                   label: const Text('Delete'),
                   style: TextButton.styleFrom(
                     foregroundColor: theme.colorScheme.error,
+                    disabledForegroundColor: theme.colorScheme.onSurfaceVariant.withAlpha(80),
                   ),
                 ),
               ],
@@ -273,7 +276,7 @@ class _ReportCardState extends State<_ReportCard> {
   }
 
   Widget _buildCommentsSection(ThemeData theme) {
-    return StreamBuilder<List<ReportComment>>(
+    return StreamBuilder<List<CommunityCommentModel>>(
       stream: service.getComments(report.id),
       builder: (context, snapshot) {
         final comments = snapshot.data ?? [];
@@ -352,7 +355,7 @@ class _ReportCardState extends State<_ReportCard> {
                                     ),
                                     const Spacer(),
                                     Text(
-                                      DateFormat('MMM d, h:mm a').format(c.createdAt),
+                                      DateFormat('MMM d, h:mm a').format(c.createdAt ?? DateTime.now()),
                                       style: TextStyle(
                                         fontSize: 11,
                                         color: theme.colorScheme.onSurfaceVariant,
@@ -362,7 +365,7 @@ class _ReportCardState extends State<_ReportCard> {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  c.text,
+                                  c.content,
                                   style: const TextStyle(fontSize: 14, height: 1.3),
                                 ),
                               ],

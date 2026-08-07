@@ -1,24 +1,48 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:freezed_annotation/freezed_annotation.dart';
+import 'model_extensions.dart';
 
-part 'notification_model.freezed.dart';
+class AppNotificationModel {
+  final String id;
+  final String type;
+  final String targetUserId;
+  final String actorId;
+  final String actorName;
+  final String postId;
+  final String postTitle;
+  final String message;
+  final bool read;
+  final DateTime? createdAt;
 
-@freezed
-abstract class AppNotificationModel with _$AppNotificationModel {
-  const AppNotificationModel._();
+  AppNotificationModel({
+    this.id = '',
+    this.type = '',
+    this.targetUserId = '',
+    this.actorId = '',
+    this.actorName = '',
+    this.postId = '',
+    this.postTitle = '',
+    this.message = '',
+    this.read = false,
+    this.createdAt,
+  });
 
-  const factory AppNotificationModel({
-    @Default('') String id,
-    @Default('') String type,
-    @Default('') String targetUserId,
-    @Default('') String actorId,
-    @Default('') String actorName,
-    @Default('') String postId,
-    @Default('') String postTitle,
-    @Default('') String message,
-    @Default(false) bool read,
-    @Default(null) DateTime? createdAt,
-  }) = _AppNotificationModel;
+  AppNotificationModel copyWith({
+    bool? read,
+    String? message,
+  }) {
+    return AppNotificationModel(
+      id: id,
+      type: type,
+      targetUserId: targetUserId,
+      actorId: actorId,
+      actorName: actorName,
+      postId: postId,
+      postTitle: postTitle,
+      message: message ?? this.message,
+      read: read ?? this.read,
+      createdAt: createdAt,
+    );
+  }
 
   factory AppNotificationModel.fromMap(String id, Map<String, dynamic> map) {
     return AppNotificationModel(
@@ -31,7 +55,7 @@ abstract class AppNotificationModel with _$AppNotificationModel {
       postTitle: map['postTitle'] ?? '',
       message: map['message'] ?? '',
       read: map['read'] ?? false,
-      createdAt: (map['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      createdAt: map.parseTimestamp('createdAt'),
     );
   }
 

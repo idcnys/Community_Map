@@ -45,15 +45,11 @@ dependencies:
 
   # Utils
   intl: ^0.19.0
-  cupertino_icons: ^1.0.8
   flutter_riverpod: ^3.4.2
 
   # Navigation
   go_router: ^16.0.0
 
-  # Immutable models
-  freezed_annotation: ^3.0.0
-  json_annotation: ^4.9.0
   google_fonts: ^8.2.1
   lucide_icons_flutter: ^3.1.15
 
@@ -62,20 +58,22 @@ dependencies:
   http: ^1.2.2
   cached_network_image: ^3.4.1
 
+  # Audio recording
+  record: ^6.1.1
+
+  # Supabase (audio storage)
+  supabase_flutter: ^2.9.0
+  just_audio: ^0.10.4
+
   # Local storage
   shared_preferences: ^2.3.5
+  flutter_native_splash: ^2.4.8
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
 
-  # Code generation
-  build_runner: ^2.4.15
-  freezed: ^3.0.6
-  json_serializable: ^6.9.4
-
   # Splash screen & app icon
-  flutter_native_splash: ^2.4.6
   flutter_launcher_icons: ^0.14.3
 
 # For information on the generic Dart part of this file, see the

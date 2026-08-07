@@ -1,7 +1,7 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../models/post_model.dart';
+import '../models/user_profile_model.dart';
 
 class ProfileService {
   final _firestore = FirebaseFirestore.instance;
@@ -24,6 +24,8 @@ class ProfileService {
     String phone = '',
     String location = '',
     String dateOfBirth = '',
+    String bloodGroup = '',
+    String hobby = '',
     String? imageUrl,
   }) async {
     try {
@@ -33,6 +35,8 @@ class ProfileService {
         'phone': phone,
         'location': location,
         'dateOfBirth': dateOfBirth,
+        'bloodGroup': bloodGroup,
+        'hobby': hobby,
         if (imageUrl != null) 'imageUrl': imageUrl,
       });
       // Also update Firebase Auth display name

@@ -14,6 +14,7 @@ import '../../models/report_post_model.dart';
 import 'report_post_form.dart';
 import 'archived_reports_page.dart';
 import 'report_detail_sheet.dart';
+import 'report_preview_sheet.dart';
 import 'map_notification_panel.dart';
 import 'my_reports_page.dart';
 import 'member_detail_sheet.dart';
@@ -529,7 +530,7 @@ class _MapPageState extends ConsumerState<MapPage>
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (_) => ReportDetailSheet(
+      builder: (_) => ReportPreviewSheet(
         report: report,
         userLat: _userLocation?.latitude,
         userLng: _userLocation?.longitude,

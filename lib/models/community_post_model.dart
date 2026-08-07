@@ -1,51 +1,104 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:freezed_annotation/freezed_annotation.dart';
+import 'model_extensions.dart';
 
-part 'community_post_model.freezed.dart';
+class CommunityPostModel {
+  final String id;
+  final String title;
+  final String description;
+  final String authorId;
+  final String authorName;
+  final String authorImageUrl;
+  final String originType;
+  final String groupId;
+  final String groupName;
+  final int likeCount;
+  final int commentCount;
+  final int viewCount;
+  final int repostCount;
+  final String originalPostId;
+  final String originalAuthorName;
+  final String imageUrl;
+  final DateTime? createdAt;
+  final bool isPoll;
+  final List<String> pollOptions;
+  final String pollType;
+  final Map<String, List<String>> pollVotes;
 
-/// Nullable timestamp converter for Firestore.
-class NullableTimestampConverter implements JsonConverter<DateTime, Timestamp?> {
-  const NullableTimestampConverter();
-
-  @override
-  DateTime fromJson(Timestamp? timestamp) => timestamp?.toDate() ?? DateTime.now();
-
-  @override
-  Timestamp toJson(DateTime date) => Timestamp.fromDate(date);
-}
-
-@freezed
-abstract class CommunityPostModel with _$CommunityPostModel {
-  const CommunityPostModel._();
-
-  const factory CommunityPostModel({
-    @Default('') String id,
-    @Default('') String title,
-    @Default('') String description,
-    @Default('') String authorId,
-    @Default('') String authorName,
-    @Default('') String authorImageUrl,
-    @Default('public') String originType,
-    @Default('') String groupId,
-    @Default('Public') String groupName,
-    @Default(0) int likeCount,
-    @Default(0) int commentCount,
-    @Default(0) int viewCount,
-    @Default(0) int repostCount,
-    @Default('') String originalPostId,
-    @Default('') String originalAuthorName,
-    @Default('') String imageUrl,
-    @Default(null) DateTime? createdAt,
-    // Poll fields
-    @Default(false) bool isPoll,
-    @Default([]) List<String> pollOptions,
-    @Default('single') String pollType, // 'single' or 'multi'
-    @Default({}) Map<String, List<String>> pollVotes, // optionIndex -> [userIds]
-  }) = _CommunityPostModel;
+  CommunityPostModel({
+    this.id = '',
+    this.title = '',
+    this.description = '',
+    this.authorId = '',
+    this.authorName = '',
+    this.authorImageUrl = '',
+    this.originType = 'public',
+    this.groupId = '',
+    this.groupName = 'Public',
+    this.likeCount = 0,
+    this.commentCount = 0,
+    this.viewCount = 0,
+    this.repostCount = 0,
+    this.originalPostId = '',
+    this.originalAuthorName = '',
+    this.imageUrl = '',
+    this.createdAt,
+    this.isPoll = false,
+    this.pollOptions = const [],
+    this.pollType = 'single',
+    this.pollVotes = const {},
+  });
 
   bool get isPublic => originType == 'public';
   bool get isRepost => originalPostId.isNotEmpty;
   int get totalPollVotes => pollVotes.values.fold(0, (sum, list) => sum + list.length);
+
+  CommunityPostModel copyWith({
+    String? id,
+    String? title,
+    String? description,
+    String? authorId,
+    String? authorName,
+    String? authorImageUrl,
+    String? originType,
+    String? groupId,
+    String? groupName,
+    int? likeCount,
+    int? commentCount,
+    int? viewCount,
+    int? repostCount,
+    String? originalPostId,
+    String? originalAuthorName,
+    String? imageUrl,
+    DateTime? createdAt,
+    bool? isPoll,
+    List<String>? pollOptions,
+    String? pollType,
+    Map<String, List<String>>? pollVotes,
+  }) {
+    return CommunityPostModel(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      authorId: authorId ?? this.authorId,
+      authorName: authorName ?? this.authorName,
+      authorImageUrl: authorImageUrl ?? this.authorImageUrl,
+      originType: originType ?? this.originType,
+      groupId: groupId ?? this.groupId,
+      groupName: groupName ?? this.groupName,
+      likeCount: likeCount ?? this.likeCount,
+      commentCount: commentCount ?? this.commentCount,
+      viewCount: viewCount ?? this.viewCount,
+      repostCount: repostCount ?? this.repostCount,
+      originalPostId: originalPostId ?? this.originalPostId,
+      originalAuthorName: originalAuthorName ?? this.originalAuthorName,
+      imageUrl: imageUrl ?? this.imageUrl,
+      createdAt: createdAt ?? this.createdAt,
+      isPoll: isPoll ?? this.isPoll,
+      pollOptions: pollOptions ?? this.pollOptions,
+      pollType: pollType ?? this.pollType,
+      pollVotes: pollVotes ?? this.pollVotes,
+    );
+  }
 
   factory CommunityPostModel.fromMap(String id, Map<String, dynamic> map) {
     return CommunityPostModel(
@@ -71,7 +124,7 @@ abstract class CommunityPostModel with _$CommunityPostModel {
       pollVotes: (map['pollVotes'] as Map<String, dynamic>?)?.map(
         (k, v) => MapEntry(k, List<String>.from(v ?? [])),
       ) ?? {},
-      createdAt: (map['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      createdAt: map.parseTimestamp('createdAt'),
     );
   }
 
@@ -101,27 +154,34 @@ abstract class CommunityPostModel with _$CommunityPostModel {
   }
 }
 
-@freezed
-abstract class CommunityCommentModel with _$CommunityCommentModel {
-  const CommunityCommentModel._();
+class CommunityCommentModel {
+  final String id;
+  final String content;
+  final String authorId;
+  final String authorName;
+  final String authorImageUrl;
+  final String parentId;
+  final DateTime? createdAt;
 
-  const factory CommunityCommentModel({
-    @Default('') String id,
-    @Default('') String content,
-    @Default('') String authorId,
-    @Default('') String authorName,
-    @Default('') String authorImageUrl,
-    @Default(null) DateTime? createdAt,
-  }) = _CommunityCommentModel;
+  CommunityCommentModel({
+    this.id = '',
+    this.content = '',
+    this.authorId = '',
+    this.authorName = '',
+    this.authorImageUrl = '',
+    this.parentId = '',
+    this.createdAt,
+  });
 
   factory CommunityCommentModel.fromMap(String id, Map<String, dynamic> map) {
     return CommunityCommentModel(
       id: id,
-      content: map['content'] ?? '',
+      content: map['content'] ?? map['text'] ?? '',
       authorId: map['authorId'] ?? '',
       authorName: map['authorName'] ?? '',
       authorImageUrl: map['authorImageUrl'] ?? '',
-      createdAt: (map['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      parentId: map['parentId'] ?? map['reportId'] ?? '',
+      createdAt: map.parseTimestamp('createdAt'),
     );
   }
 }

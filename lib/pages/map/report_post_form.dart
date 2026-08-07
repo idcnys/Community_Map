@@ -1,6 +1,8 @@
 
 import 'dart:io';
 import 'package:flutter/material.dart';
+import '../../widgets/voice_record_button.dart';
+import '../../services/supabase_storage_service.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../services/report_post_service.dart';
@@ -24,6 +26,7 @@ class _ReportPostFormState extends State<ReportPostForm> {
   final _reportService = ReportPostService();
   final _groupService = GroupService();
   final _cloudinary = CloudinaryService();
+  final _supabaseStorage = SupabaseStorageService();
   final _picker = ImagePicker();
 
   String _reportType = ReportTypes.options[0];
@@ -32,6 +35,8 @@ class _ReportPostFormState extends State<ReportPostForm> {
   bool _submitting = false;
   bool _uploading = false;
   File? _selectedImage;
+  File? _audioFile;
+  bool _uploadingAudio = false;
   List<GroupModel> _myGroups = [];
 
   @override
@@ -201,6 +206,19 @@ class _ReportPostFormState extends State<ReportPostForm> {
                 ),
               const SizedBox(height: 16),
 
+              // ─── VOICE RECORDER ────────────────────────────────────
+              VoiceRecordButton(
+                existingRecording: _audioFile,
+                onRecorded: (file, duration) {
+                  setState(() => _audioFile = file);
+                },
+                onRemoveRecording: () {
+                  setState(() => _audioFile = null);
+                },
+                maxDurationSeconds: 100,
+              ),
+              const SizedBox(height: 16),
+
               // Location display
               Card(
                 child: Padding(
@@ -267,7 +285,7 @@ class _ReportPostFormState extends State<ReportPostForm> {
 
               // Submit
               FilledButton.icon(
-                onPressed: (_submitting || _uploading || _locating || _currentPosition == null)
+                onPressed: (_submitting || _uploading || _uploadingAudio || _locating || _currentPosition == null)
                     ? null
                     : _submit,
                 icon: (_submitting || _uploading)
@@ -277,7 +295,7 @@ class _ReportPostFormState extends State<ReportPostForm> {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : Icon(LucideIcons.alertTriangle),
-                label: Text(_uploading ? 'Uploading photo...' : 'Submit Report'),
+                label: Text(_uploading ? 'Uploading photo...' : (_uploadingAudio ? 'Uploading voice...' : 'Submit Report')),
                 style: FilledButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   backgroundColor: theme.colorScheme.tertiary,
@@ -318,6 +336,27 @@ class _ReportPostFormState extends State<ReportPostForm> {
       imageUrl = url;
     }
 
+    // Upload audio to Supabase if recorded
+    String audioUrl = '';
+    if (_audioFile != null) {
+      setState(() => _uploadingAudio = true);
+      final (url, error) = await _supabaseStorage.uploadAudioFile(_audioFile!);
+      setState(() => _uploadingAudio = false);
+      if (url == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Voice upload failed: $error'),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 5),
+            ),
+          );
+        }
+      } else {
+        audioUrl = url;
+      }
+    }
+
     final groupIds = _myGroups.map((g) => g.id).toList();
 
     final error = await _reportService.createReport(
@@ -328,6 +367,7 @@ class _ReportPostFormState extends State<ReportPostForm> {
       longitude: _currentPosition!.longitude,
       sharedGroupIds: groupIds,
       imageUrl: imageUrl,
+      audioUrl: audioUrl,
     );
 
     setState(() => _submitting = false);

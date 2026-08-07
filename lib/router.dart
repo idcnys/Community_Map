@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
+
 import 'pages/login_page.dart';
 import 'pages/signup_page.dart';
 import 'pages/verify_email_page.dart';
@@ -17,7 +18,9 @@ import 'pages/onboarding_page.dart';
 /// re-evaluates its redirect whenever the user signs in/out or reloads.
 class _GoRouterRefreshStream extends ChangeNotifier {
   _GoRouterRefreshStream(Stream<dynamic> stream) {
-    _sub = stream.asBroadcastStream().listen((_) => notifyListeners());
+    _sub = stream.asBroadcastStream().listen(
+      (dataFromStream) => notifyListeners(),
+    );
   }
 
   late final StreamSubscription<dynamic> _sub;
@@ -105,10 +108,7 @@ final router = GoRouter(
           builder: (context, state) {
             final postId = state.pathParameters['postId']!;
             final postAuthorId = state.uri.queryParameters['authorId'] ?? '';
-            return CommentsPage(
-              postId: postId,
-              postAuthorId: postAuthorId,
-            );
+            return CommentsPage(postId: postId, postAuthorId: postAuthorId);
           },
         ),
         GoRoute(

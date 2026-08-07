@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:geolocator/geolocator.dart';
 import '../models/report_post_model.dart';
+import '../models/community_post_model.dart';
 import '../shared/services/user_group_service.dart';
 
 class ReportPostService {
@@ -22,6 +23,7 @@ class ReportPostService {
     List<String> sharedGroupIds = const [],
     String origin = 'public',
     String imageUrl = '',
+    String audioUrl = '',
   }) async {
     try {
       await _firestore.collection('report_posts').add({
@@ -35,6 +37,7 @@ class ReportPostService {
         'sharedGroupIds': sharedGroupIds,
         'origin': origin,
         'imageUrl': imageUrl,
+        'audioUrl': audioUrl,
         'status': 'active',
         'votes': <String, String>{},
         'createdAt': FieldValue.serverTimestamp(),
@@ -183,9 +186,11 @@ class ReportPostService {
           .doc(reportId)
           .collection('comments')
           .add({
+        'parentId': reportId,
         'reportId': reportId,
         'authorId': currentUid,
         'authorName': currentName,
+        'content': text,
         'text': text,
         'createdAt': FieldValue.serverTimestamp(),
       });
@@ -195,7 +200,7 @@ class ReportPostService {
     }
   }
 
-  Stream<List<ReportComment>> getComments(String reportId) {
+  Stream<List<CommunityCommentModel>> getComments(String reportId) {
     return _firestore
         .collection('report_posts')
         .doc(reportId)
@@ -203,7 +208,7 @@ class ReportPostService {
         .orderBy('createdAt', descending: false)
         .snapshots()
         .map((snap) => snap.docs
-            .map((d) => ReportComment.fromMap(d.id, d.data()))
+            .map((d) => CommunityCommentModel.fromMap(d.id, d.data()))
             .toList());
   }
 

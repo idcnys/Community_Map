@@ -31,7 +31,8 @@ class PostService {
   static const int pageSize = 20;
 
   /// Posts older than 2 days are excluded from the feed.
-  static final _feedCutoff = Timestamp.fromDate(
+  /// Computed fresh per query so the cutoff never goes stale.
+  Timestamp get _feedCutoff => Timestamp.fromDate(
     DateTime.now().subtract(const Duration(days: 2)),
   );
 
@@ -128,10 +129,13 @@ class PostService {
   Future<PaginatedResult<CommunityPostModel>> getAllFeedPage(
     List<String> myGroupIds, {
     DocumentSnapshot? publicCursor,
-    DocumentSnapshot? groupCursor,
   }) async {
+    // Fetch public posts (groupId='') + posts from user's groups only.
+    // whereIn supports up to 30 values; sufficient for typical group counts.
+    final allowedGroupIds = ['', ...myGroupIds];
     var query = _firestore
         .collection('community_posts')
+        .where('groupId', whereIn: allowedGroupIds)
         .where('createdAt', isGreaterThanOrEqualTo: _feedCutoff)
         .orderBy('createdAt', descending: true)
         .limit(pageSize);
