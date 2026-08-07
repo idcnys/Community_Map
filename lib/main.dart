@@ -3,13 +3,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'firebase_options.dart';
 import 'router.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  final binding = WidgetsFlutterBinding.ensureInitialized();
+
+  // Keep native splash visible until we're ready
+  FlutterNativeSplash.preserve(widgetsBinding: binding);
 
   final options = DefaultFirebaseOptions.currentPlatform;
   if (options != null) {
@@ -21,6 +25,9 @@ void main() async {
       cacheSizeBytes: 104857600, // 100 MB cache for offline-first
     );
   }
+
+  // Remove native splash — Flutter splash page takes over
+  FlutterNativeSplash.remove();
 
   if (Platform.isLinux || Platform.isWindows || Platform.isMacOS) {
     runApp(const MaterialApp(

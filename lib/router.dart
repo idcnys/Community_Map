@@ -10,6 +10,8 @@ import 'pages/feed/comments_page.dart';
 import 'pages/feed/community_post_form.dart';
 import 'pages/manage/profile_editor_page.dart';
 import 'pages/manage/group_detail_page.dart';
+import 'pages/splash_page.dart';
+import 'pages/onboarding_page.dart';
 
 /// Converts the Firebase auth-state stream into a [Listenable] so GoRouter
 /// re-evaluates its redirect whenever the user signs in/out or reloads.
@@ -29,7 +31,7 @@ class _GoRouterRefreshStream extends ChangeNotifier {
 
 /// Centralized router configuration with an email-verification guard.
 final router = GoRouter(
-  initialLocation: '/login',
+  initialLocation: '/splash',
   refreshListenable: _GoRouterRefreshStream(
     FirebaseAuth.instance.authStateChanges(),
   ),
@@ -40,8 +42,14 @@ final router = GoRouter(
     final isVerified = user?.emailVerified ?? false;
 
     final loc = state.matchedLocation;
+    final isSplash = loc == '/splash';
     final isAuthScreen = loc == '/login' || loc == '/signup';
     final isVerifyScreen = loc == '/verify-email';
+
+    final isOnboarding = loc == '/onboarding';
+
+    // Allow splash and onboarding to show without redirect
+    if (isSplash || isOnboarding) return null;
 
     // Not signed in -> force to login (unless already there / signing up).
     if (!isLoggedIn) {
@@ -61,6 +69,16 @@ final router = GoRouter(
     return null;
   },
   routes: [
+    GoRoute(
+      path: '/splash',
+      name: 'splash',
+      builder: (context, state) => const SplashPage(),
+    ),
+    GoRoute(
+      path: '/onboarding',
+      name: 'onboarding',
+      builder: (context, state) => const OnboardingPage(),
+    ),
     GoRoute(
       path: '/login',
       name: 'login',

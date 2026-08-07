@@ -61,6 +61,9 @@ dependencies:
   image_picker: ^1.1.2
   http: ^1.2.2
   cached_network_image: ^3.4.1
+
+  # Local storage
+  shared_preferences: ^2.3.5
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -70,6 +73,10 @@ dev_dependencies:
   build_runner: ^2.4.15
   freezed: ^3.0.6
   json_serializable: ^6.9.4
+
+  # Splash screen & app icon
+  flutter_native_splash: ^2.4.6
+  flutter_launcher_icons: ^0.14.3
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -83,9 +90,9 @@ flutter:
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
-  # assets:
-  #   - images/a_dot_burr.jpeg
-  #   - images/a_dot_ham.jpeg
+  assets:
+    - assets/splash/
+    - assets/icon/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
@@ -112,3 +119,29 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+
+# ─── Flutter Native Splash ─────────────────────────────────────────────
+flutter_native_splash:
+  color: "#FFFFFF"
+  color_dark: "#09090B"
+  image: assets/splash/splash_logo_white.png
+  image_dark: assets/splash/splash_logo_dark.png
+  android_12:
+    color: "#FFFFFF"
+    color_dark: "#09090B"
+    image: assets/splash/splash_logo_white.png
+    image_dark: assets/splash/splash_logo_dark.png
+  ios: true
+  android: true
+  web: false
+
+# ─── Flutter Launcher Icons ────────────────────────────────────────────
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon/icon_white.png"
+  image_path_ios: "assets/icon/icon_white.png"
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/icon/icon_white.png"
+  remove_alpha_ios: true
