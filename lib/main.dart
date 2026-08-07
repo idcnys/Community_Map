@@ -34,16 +34,20 @@ class MyApp extends StatelessWidget {
       themeMode: ThemeMode.system,
       builder: (context, child) {
         final isDark = Theme.of(context).brightness == Brightness.dark;
-        SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-          systemNavigationBarColor: isDark
-              ? const Color(0xFF09090B)
-              : const Color(0xFFFFFFFF),
-          systemNavigationBarIconBrightness:
-              isDark ? Brightness.light : Brightness.dark,
-          statusBarColor: Colors.transparent,
-          statusBarIconBrightness:
-              isDark ? Brightness.light : Brightness.dark,
-        ));
+        SystemChrome.setSystemUIOverlayStyle(
+          SystemUiOverlayStyle(
+            systemNavigationBarColor: isDark
+                ? Colors.black
+                : const Color(0xFFFFFFFF),
+            systemNavigationBarIconBrightness: isDark
+                ? Brightness.light
+                : Brightness.dark,
+            statusBarColor: Colors.transparent,
+            statusBarIconBrightness: isDark
+                ? Brightness.light
+                : Brightness.dark,
+          ),
+        );
         return child!;
       },
     );
@@ -84,17 +88,25 @@ class MyApp extends StatelessWidget {
       primary: isDark ? _zinc.darkPrimary : _zinc.lightPrimary,
       onPrimary: isDark ? _zinc.darkPrimaryFg : _zinc.lightPrimaryFg,
       primaryContainer: isDark ? _zinc.darkSecondary : _zinc.lightSecondary,
-      onPrimaryContainer: isDark ? _zinc.darkSecondaryFg : _zinc.lightSecondaryFg,
+      onPrimaryContainer: isDark
+          ? _zinc.darkSecondaryFg
+          : _zinc.lightSecondaryFg,
       // Secondary
       secondary: isDark ? _zinc.darkSecondary : _zinc.lightSecondary,
       onSecondary: isDark ? _zinc.darkSecondaryFg : _zinc.lightSecondaryFg,
       secondaryContainer: isDark ? _zinc.darkSecondary : _zinc.lightSecondary,
-      onSecondaryContainer: isDark ? _zinc.darkSecondaryFg : _zinc.lightSecondaryFg,
+      onSecondaryContainer: isDark
+          ? _zinc.darkSecondaryFg
+          : _zinc.lightSecondaryFg,
       // Tertiary (subtle accent)
       tertiary: isDark ? const Color(0xFF3F3F46) : const Color(0xFFD4D4D8),
       onTertiary: isDark ? const Color(0xFFFAFAFA) : const Color(0xFF18181B),
-      tertiaryContainer: isDark ? const Color(0xFF27272A) : const Color(0xFFF4F4F5),
-      onTertiaryContainer: isDark ? const Color(0xFFD4D4D8) : const Color(0xFF3F3F46),
+      tertiaryContainer: isDark
+          ? const Color(0xFF27272A)
+          : const Color(0xFFF4F4F5),
+      onTertiaryContainer: isDark
+          ? const Color(0xFFD4D4D8)
+          : const Color(0xFF3F3F46),
       // Surface
       surface: isDark ? _zinc.darkBg : _zinc.lightBg,
       onSurface: isDark ? _zinc.darkFg : _zinc.lightFg,
@@ -104,15 +116,27 @@ class MyApp extends StatelessWidget {
       // Error
       error: isDark ? _zinc.darkDestructive : _zinc.lightDestructive,
       onError: const Color(0xFFFFFFFF),
-      errorContainer: isDark ? const Color(0xFF450A0A) : const Color(0xFFFEE2E2),
-      onErrorContainer: isDark ? const Color(0xFFFECACA) : const Color(0xFF991B1B),
+      errorContainer: isDark
+          ? const Color(0xFF450A0A)
+          : const Color(0xFFFEE2E2),
+      onErrorContainer: isDark
+          ? const Color(0xFFFECACA)
+          : const Color(0xFF991B1B),
       // Outline / borders
       outline: isDark ? _zinc.darkBorder : _zinc.lightBorder,
-      outlineVariant: isDark ? const Color(0xFF3F3F46) : const Color(0xFFE4E4E7),
+      outlineVariant: isDark
+          ? const Color(0xFF3F3F46)
+          : const Color(0xFFE4E4E7),
       // Inverse
-      inverseSurface: isDark ? const Color(0xFFFAFAFA) : const Color(0xFF18181B),
-      onInverseSurface: isDark ? const Color(0xFF18181B) : const Color(0xFFFAFAFA),
-      inversePrimary: isDark ? const Color(0xFF18181B) : const Color(0xFFFAFAFA),
+      inverseSurface: isDark
+          ? const Color(0xFFFAFAFA)
+          : const Color(0xFF18181B),
+      onInverseSurface: isDark
+          ? const Color(0xFF18181B)
+          : const Color(0xFFFAFAFA),
+      inversePrimary: isDark
+          ? const Color(0xFF18181B)
+          : const Color(0xFFFAFAFA),
       // Scrim & shadow
       scrim: const Color(0xFF000000),
       shadow: const Color(0xFF000000),
@@ -146,10 +170,7 @@ class MyApp extends StatelessWidget {
               fontSize: 12,
             );
           }
-          return TextStyle(
-            color: colorScheme.onSurfaceVariant,
-            fontSize: 12,
-          );
+          return TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 12);
         }),
       ),
 
@@ -174,9 +195,7 @@ class MyApp extends StatelessWidget {
       // ─── Input fields ───
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: isDark
-            ? const Color(0xFF18181B)
-            : const Color(0xFFFAFAFA),
+        fillColor: isDark ? const Color(0xFF18181B) : const Color(0xFFFAFAFA),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
           borderSide: BorderSide(color: colorScheme.primary, width: 1.5),
@@ -193,7 +212,10 @@ class MyApp extends StatelessWidget {
           borderRadius: BorderRadius.circular(10),
           borderSide: BorderSide(color: colorScheme.error, width: 1.5),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
       ),
 
       // ─── Chips ───
@@ -232,9 +254,7 @@ class MyApp extends StatelessWidget {
 
       // ─── Text Buttons ───
       textButtonTheme: TextButtonThemeData(
-        style: TextButton.styleFrom(
-          foregroundColor: colorScheme.primary,
-        ),
+        style: TextButton.styleFrom(foregroundColor: colorScheme.primary),
       ),
 
       // ─── Snackbar ───
@@ -255,10 +275,7 @@ class MyApp extends StatelessWidget {
       ),
 
       // ─── Divider ───
-      dividerTheme: DividerThemeData(
-        color: colorScheme.outline,
-        thickness: 1,
-      ),
+      dividerTheme: DividerThemeData(color: colorScheme.outline, thickness: 1),
 
       // ─── Scaffold ───
       scaffoldBackgroundColor: colorScheme.surface,
