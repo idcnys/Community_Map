@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../models/report_post_model.dart';
 import '../../services/report_post_service.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class ReportDetailSheet extends StatefulWidget {
   final ReportPostModel report;
@@ -125,6 +126,32 @@ class _ReportDetailSheetState extends State<ReportDetailSheet> {
             Text(
               report.description,
               style: const TextStyle(fontSize: 15, height: 1.5),
+            ),
+            const SizedBox(height: 16),
+          ],
+
+          // ─── REPORT IMAGE ───────────────────────────────────────
+          if (report.imageUrl.isNotEmpty) ...[
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: CachedNetworkImage(
+                imageUrl: report.imageUrl,
+                width: double.infinity,
+                maxHeightDiskCache: 350,
+                fit: BoxFit.cover,
+                placeholder: (context, url) => Container(
+                  height: 150,
+                  color: theme.colorScheme.surfaceContainerHighest,
+                  child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                ),
+                errorWidget: (context, url, error) => Container(
+                  height: 80,
+                  color: theme.colorScheme.errorContainer,
+                  child: Center(
+                    child: Icon(LucideIcons.imageOff, color: theme.colorScheme.onErrorContainer),
+                  ),
+                ),
+              ),
             ),
             const SizedBox(height: 16),
           ],

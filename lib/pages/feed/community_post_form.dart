@@ -1,9 +1,12 @@
 
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../providers/feed_providers.dart';
 import '../../providers/service_providers.dart';
+import '../../services/cloudinary_service.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class CommunityPostForm extends ConsumerStatefulWidget {
@@ -17,16 +20,56 @@ class _CommunityPostFormState extends ConsumerState<CommunityPostForm> {
   final _formKey = GlobalKey<FormState>();
   final _titleCtrl = TextEditingController();
   final _descCtrl = TextEditingController();
+  final _cloudinary = CloudinaryService();
+  final _picker = ImagePicker();
 
   String _originType = 'public';
   String? _selectedGroupId;
   bool _submitting = false;
+  File? _selectedImage;
+  bool _uploading = false;
 
   @override
   void dispose() {
     _titleCtrl.dispose();
     _descCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickImage() async {
+    final source = await showModalBottomSheet<String>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(LucideIcons.camera),
+              title: const Text('Camera'),
+              onTap: () => Navigator.of(ctx).pop('camera'),
+            ),
+            ListTile(
+              leading: const Icon(LucideIcons.image),
+              title: const Text('Gallery'),
+              onTap: () => Navigator.of(ctx).pop('gallery'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (source == null) return;
+
+    final picked = await _picker.pickImage(
+      source: source == 'camera' ? ImageSource.camera : ImageSource.gallery,
+      maxWidth: 1600,
+      maxHeight: 1600,
+      imageQuality: 85,
+    );
+
+    if (picked != null) {
+      setState(() => _selectedImage = File(picked.path));
+    }
   }
 
   @override
@@ -67,6 +110,45 @@ class _CommunityPostFormState extends ConsumerState<CommunityPostForm> {
                     ? 'Description is required'
                     : null,
               ),
+              const SizedBox(height: 16),
+
+              // ─── IMAGE PICKER ─────────────────────────────────────
+              if (_selectedImage != null)
+                Stack(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.file(
+                        _selectedImage!,
+                        height: 200,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: IconButton(
+                        icon: const Icon(LucideIcons.x, color: Colors.white),
+                        style: IconButton.styleFrom(
+                          backgroundColor: Colors.black54,
+                          padding: const EdgeInsets.all(6),
+                          minimumSize: const Size(32, 32),
+                        ),
+                        onPressed: () => setState(() => _selectedImage = null),
+                      ),
+                    ),
+                  ],
+                )
+              else
+                OutlinedButton.icon(
+                  onPressed: _pickImage,
+                  icon: const Icon(LucideIcons.imagePlus),
+                  label: const Text('Add Image (optional)'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                ),
               const SizedBox(height: 24),
 
               Text(
@@ -125,15 +207,15 @@ class _CommunityPostFormState extends ConsumerState<CommunityPostForm> {
               const SizedBox(height: 32),
 
               FilledButton.icon(
-                onPressed: _submitting ? null : _submit,
-                icon: _submitting
+                onPressed: (_submitting || _uploading) ? null : _submit,
+                icon: (_submitting || _uploading)
                     ? const SizedBox(
                         width: 20,
                         height: 20,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : const Icon(LucideIcons.send),
-                label: const Text('Publish Post'),
+                label: Text(_uploading ? 'Uploading image...' : 'Publish Post'),
                 style: FilledButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
@@ -149,6 +231,27 @@ class _CommunityPostFormState extends ConsumerState<CommunityPostForm> {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _submitting = true);
+
+    // Upload image first if selected
+    String imageUrl = '';
+    if (_selectedImage != null) {
+      setState(() => _uploading = true);
+      final url = await _cloudinary.uploadImage(
+        _selectedImage!,
+        folder: 'cmap/community',
+        onError: (err) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Image upload failed: $err'), backgroundColor: Colors.red),
+          );
+        },
+      );
+      setState(() => _uploading = false);
+      if (url == null) {
+        setState(() => _submitting = false);
+        return;
+      }
+      imageUrl = url;
+    }
 
     final myGroups = ref.read(myJoinedGroupsProvider).value ?? [];
     String groupId = '';
@@ -167,6 +270,7 @@ class _CommunityPostFormState extends ConsumerState<CommunityPostForm> {
       originType: _originType,
       groupId: groupId,
       groupName: groupName,
+      imageUrl: imageUrl,
     );
 
     setState(() => _submitting = false);
@@ -180,7 +284,6 @@ class _CommunityPostFormState extends ConsumerState<CommunityPostForm> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Post published!')),
         );
-        // Invalidate feed to show new post
         ref.invalidate(paginatedFeedProvider);
         context.pop();
       }

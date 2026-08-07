@@ -92,6 +92,7 @@ class UserProfile {
   final String phone;
   final String location;
   final String dateOfBirth;
+  final String imageUrl;
   final DateTime createdAt;
 
   UserProfile({
@@ -102,6 +103,7 @@ class UserProfile {
     this.phone = '',
     this.location = '',
     this.dateOfBirth = '',
+    this.imageUrl = '',
     required this.createdAt,
   });
 
@@ -114,6 +116,7 @@ class UserProfile {
       phone: map['phone'] ?? '',
       location: map['location'] ?? '',
       dateOfBirth: map['dateOfBirth'] ?? '',
+      imageUrl: map['imageUrl'] ?? '',
       createdAt: (map['createdAt'] as dynamic)?.toDate() ?? DateTime.now(),
     );
   }
@@ -126,6 +129,7 @@ class UserProfile {
       'phone': phone,
       'location': location,
       'dateOfBirth': dateOfBirth,
+      'imageUrl': imageUrl,
       'createdAt': createdAt,
     };
   }

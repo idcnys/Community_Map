@@ -1,8 +1,11 @@
 
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../services/report_post_service.dart';
 import '../../services/group_service.dart';
+import '../../services/cloudinary_service.dart';
 import '../../models/report_post_model.dart';
 import '../../models/group_model.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -20,11 +23,15 @@ class _ReportPostFormState extends State<ReportPostForm> {
   final _descCtrl = TextEditingController();
   final _reportService = ReportPostService();
   final _groupService = GroupService();
+  final _cloudinary = CloudinaryService();
+  final _picker = ImagePicker();
 
   String _reportType = ReportTypes.options[0];
   Position? _currentPosition;
   bool _locating = true;
   bool _submitting = false;
+  bool _uploading = false;
+  File? _selectedImage;
   List<GroupModel> _myGroups = [];
 
   @override
@@ -52,6 +59,42 @@ class _ReportPostFormState extends State<ReportPostForm> {
     } catch (_) {}
   }
 
+  Future<void> _pickImage() async {
+    final source = await showModalBottomSheet<String>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(LucideIcons.camera),
+              title: const Text('Camera'),
+              onTap: () => Navigator.of(ctx).pop('camera'),
+            ),
+            ListTile(
+              leading: const Icon(LucideIcons.image),
+              title: const Text('Gallery'),
+              onTap: () => Navigator.of(ctx).pop('gallery'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (source == null) return;
+
+    final picked = await _picker.pickImage(
+      source: source == 'camera' ? ImageSource.camera : ImageSource.gallery,
+      maxWidth: 1600,
+      maxHeight: 1600,
+      imageQuality: 85,
+    );
+
+    if (picked != null) {
+      setState(() => _selectedImage = File(picked.path));
+    }
+  }
+
   @override
   void dispose() {
     _contactCtrl.dispose();
@@ -65,8 +108,9 @@ class _ReportPostFormState extends State<ReportPostForm> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Submit Report')),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+      body: SafeArea(
+        child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
         child: Form(
           key: _formKey,
           child: Column(
@@ -116,6 +160,45 @@ class _ReportPostFormState extends State<ReportPostForm> {
                     ? 'Description is required'
                     : null,
               ),
+              const SizedBox(height: 16),
+
+              // ─── IMAGE PICKER ─────────────────────────────────────
+              if (_selectedImage != null)
+                Stack(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.file(
+                        _selectedImage!,
+                        height: 180,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: IconButton(
+                        icon: const Icon(LucideIcons.x, color: Colors.white),
+                        style: IconButton.styleFrom(
+                          backgroundColor: Colors.black54,
+                          padding: const EdgeInsets.all(6),
+                          minimumSize: const Size(32, 32),
+                        ),
+                        onPressed: () => setState(() => _selectedImage = null),
+                      ),
+                    ),
+                  ],
+                )
+              else
+                OutlinedButton.icon(
+                  onPressed: _pickImage,
+                  icon: const Icon(LucideIcons.camera),
+                  label: const Text('Attach Photo (optional)'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                ),
               const SizedBox(height: 16),
 
               // Location display
@@ -184,17 +267,17 @@ class _ReportPostFormState extends State<ReportPostForm> {
 
               // Submit
               FilledButton.icon(
-                onPressed: (_submitting || _locating || _currentPosition == null)
+                onPressed: (_submitting || _uploading || _locating || _currentPosition == null)
                     ? null
                     : _submit,
-                icon: _submitting
+                icon: (_submitting || _uploading)
                     ? const SizedBox(
                         width: 20,
                         height: 20,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : Icon(LucideIcons.alertTriangle),
-                label: const Text('Submit Report'),
+                label: Text(_uploading ? 'Uploading photo...' : 'Submit Report'),
                 style: FilledButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   backgroundColor: theme.colorScheme.tertiary,
@@ -203,6 +286,7 @@ class _ReportPostFormState extends State<ReportPostForm> {
             ],
           ),
         ),
+      ),
       ),
     );
   }
@@ -213,6 +297,27 @@ class _ReportPostFormState extends State<ReportPostForm> {
 
     setState(() => _submitting = true);
 
+    // Upload image first if selected
+    String imageUrl = '';
+    if (_selectedImage != null) {
+      setState(() => _uploading = true);
+      final url = await _cloudinary.uploadImage(
+        _selectedImage!,
+        folder: 'cmap/reports',
+        onError: (err) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Image upload failed: $err'), backgroundColor: Colors.red),
+          );
+        },
+      );
+      setState(() => _uploading = false);
+      if (url == null) {
+        setState(() => _submitting = false);
+        return;
+      }
+      imageUrl = url;
+    }
+
     final groupIds = _myGroups.map((g) => g.id).toList();
 
     final error = await _reportService.createReport(
@@ -222,6 +327,7 @@ class _ReportPostFormState extends State<ReportPostForm> {
       latitude: _currentPosition!.latitude,
       longitude: _currentPosition!.longitude,
       sharedGroupIds: groupIds,
+      imageUrl: imageUrl,
     );
 
     setState(() => _submitting = false);

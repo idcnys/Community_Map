@@ -24,6 +24,7 @@ class ProfileService {
     String phone = '',
     String location = '',
     String dateOfBirth = '',
+    String? imageUrl,
   }) async {
     try {
       await _firestore.collection('users').doc(currentUid).update({
@@ -32,6 +33,7 @@ class ProfileService {
         'phone': phone,
         'location': location,
         'dateOfBirth': dateOfBirth,
+        if (imageUrl != null) 'imageUrl': imageUrl,
       });
       // Also update Firebase Auth display name
       await _auth.currentUser?.updateDisplayName(fullName);

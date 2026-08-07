@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../services/post_service.dart';
 import '../../models/community_post_model.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class CommentsPage extends StatefulWidget {
   final String postId;
@@ -68,12 +69,17 @@ class _CommentsPageState extends State<CommentsPage> {
                         CircleAvatar(
                           radius: 16,
                           backgroundColor: theme.colorScheme.primaryContainer,
-                          child: Text(
-                            post.authorName.isNotEmpty
-                                ? post.authorName[0].toUpperCase()
-                                : '?',
-                            style: const TextStyle(fontSize: 13),
-                          ),
+                          backgroundImage: post.authorImageUrl.isNotEmpty
+                              ? CachedNetworkImageProvider(post.authorImageUrl)
+                              : null,
+                          child: post.authorImageUrl.isEmpty
+                              ? Text(
+                                  post.authorName.isNotEmpty
+                                      ? post.authorName[0].toUpperCase()
+                                      : '?',
+                                  style: const TextStyle(fontSize: 13),
+                                )
+                              : null,
                         ),
                         const SizedBox(width: 8),
                         Expanded(
@@ -114,6 +120,24 @@ class _CommentsPageState extends State<CommentsPage> {
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(fontSize: 13, color: theme.colorScheme.onSurface),
                     ),
+                    if (post.imageUrl.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: CachedNetworkImage(
+                          imageUrl: post.imageUrl,
+                          width: double.infinity,
+                          height: 160,
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) => Container(
+                            height: 160,
+                            color: theme.colorScheme.surfaceContainerHighest,
+                            child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                          ),
+                          errorWidget: (context, url, error) => const SizedBox.shrink(),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               );
@@ -153,11 +177,16 @@ class _CommentsPageState extends State<CommentsPage> {
                         leading: CircleAvatar(
                           backgroundColor:
                               Theme.of(context).colorScheme.primaryContainer,
-                          child: Text(
-                            comment.authorName.isNotEmpty
-                                ? comment.authorName[0].toUpperCase()
-                                : '?',
-                          ),
+                          backgroundImage: comment.authorImageUrl.isNotEmpty
+                              ? CachedNetworkImageProvider(comment.authorImageUrl)
+                              : null,
+                          child: comment.authorImageUrl.isEmpty
+                              ? Text(
+                                  comment.authorName.isNotEmpty
+                                      ? comment.authorName[0].toUpperCase()
+                                      : '?',
+                                )
+                              : null,
                         ),
                         title: Text(comment.authorName,
                             style:

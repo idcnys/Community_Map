@@ -24,6 +24,7 @@ abstract class CommunityPostModel with _$CommunityPostModel {
     @Default('') String description,
     @Default('') String authorId,
     @Default('') String authorName,
+    @Default('') String authorImageUrl,
     @Default('public') String originType,
     @Default('') String groupId,
     @Default('Public') String groupName,
@@ -33,6 +34,7 @@ abstract class CommunityPostModel with _$CommunityPostModel {
     @Default(0) int repostCount,
     @Default('') String originalPostId,
     @Default('') String originalAuthorName,
+    @Default('') String imageUrl,
     @Default(null) DateTime? createdAt,
     // Poll fields
     @Default(false) bool isPoll,
@@ -52,6 +54,7 @@ abstract class CommunityPostModel with _$CommunityPostModel {
       description: map['description'] ?? '',
       authorId: map['authorId'] ?? '',
       authorName: map['authorName'] ?? '',
+      authorImageUrl: map['authorImageUrl'] ?? '',
       originType: map['originType'] ?? 'public',
       groupId: map['groupId'] ?? '',
       groupName: map['groupName'] ?? 'Public',
@@ -61,6 +64,7 @@ abstract class CommunityPostModel with _$CommunityPostModel {
       repostCount: map['repostCount'] ?? 0,
       originalPostId: map['originalPostId'] ?? '',
       originalAuthorName: map['originalAuthorName'] ?? '',
+      imageUrl: map['imageUrl'] ?? '',
       isPoll: map['isPoll'] ?? false,
       pollOptions: List<String>.from(map['pollOptions'] ?? []),
       pollType: map['pollType'] ?? 'single',
@@ -77,6 +81,7 @@ abstract class CommunityPostModel with _$CommunityPostModel {
       'description': description,
       'authorId': authorId,
       'authorName': authorName,
+      'authorImageUrl': authorImageUrl,
       'originType': originType,
       'groupId': groupId,
       'groupName': groupName,
@@ -86,6 +91,7 @@ abstract class CommunityPostModel with _$CommunityPostModel {
       'repostCount': repostCount,
       'originalPostId': originalPostId,
       'originalAuthorName': originalAuthorName,
+      'imageUrl': imageUrl,
       'isPoll': isPoll,
       'pollOptions': pollOptions,
       'pollType': pollType,
@@ -104,6 +110,7 @@ abstract class CommunityCommentModel with _$CommunityCommentModel {
     @Default('') String content,
     @Default('') String authorId,
     @Default('') String authorName,
+    @Default('') String authorImageUrl,
     @Default(null) DateTime? createdAt,
   }) = _CommunityCommentModel;
 
@@ -113,6 +120,7 @@ abstract class CommunityCommentModel with _$CommunityCommentModel {
       content: map['content'] ?? '',
       authorId: map['authorId'] ?? '',
       authorName: map['authorName'] ?? '',
+      authorImageUrl: map['authorImageUrl'] ?? '',
       createdAt: (map['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
   }

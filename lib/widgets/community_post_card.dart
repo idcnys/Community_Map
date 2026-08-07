@@ -7,6 +7,7 @@ import '../models/community_post_model.dart';
 import '../providers/service_providers.dart';
 import '../providers/guest_provider.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 /// Provider that checks if the current user liked a specific post.
 final hasLikedProvider = FutureProvider.family<bool, String>((ref, postId) async {
@@ -91,15 +92,20 @@ class _CommunityPostCardState extends ConsumerState<CommunityPostCard> {
                 CircleAvatar(
                   radius: 20,
                   backgroundColor: theme.colorScheme.primaryContainer,
-                  child: Text(
-                    widget.post.authorName.isNotEmpty
-                        ? widget.post.authorName[0].toUpperCase()
-                        : '?',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: theme.colorScheme.onPrimaryContainer,
-                    ),
-                  ),
+                  backgroundImage: widget.post.authorImageUrl.isNotEmpty
+                      ? CachedNetworkImageProvider(widget.post.authorImageUrl)
+                      : null,
+                  child: widget.post.authorImageUrl.isEmpty
+                      ? Text(
+                          widget.post.authorName.isNotEmpty
+                              ? widget.post.authorName[0].toUpperCase()
+                              : '?',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: theme.colorScheme.onPrimaryContainer,
+                          ),
+                        )
+                      : null,
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -176,6 +182,33 @@ class _CommunityPostCardState extends ConsumerState<CommunityPostCard> {
                 height: 1.4,
               ),
             ),
+
+            // ─── POST IMAGE ───────────────────────────────────────
+            if (widget.post.imageUrl.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: CachedNetworkImage(
+                  imageUrl: widget.post.imageUrl,
+                  width: double.infinity,
+                  maxHeightDiskCache: 400,
+                  fit: BoxFit.cover,
+                  placeholder: (context, url) => Container(
+                    height: 180,
+                    color: theme.colorScheme.surfaceContainerHighest,
+                    child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                  ),
+                  errorWidget: (context, url, error) => Container(
+                    height: 100,
+                    color: theme.colorScheme.errorContainer,
+                    child: Center(
+                      child: Icon(LucideIcons.imageOff, color: theme.colorScheme.onErrorContainer),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+
             const SizedBox(height: 12),
             const Divider(height: 1),
             const SizedBox(height: 8),

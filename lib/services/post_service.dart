@@ -38,6 +38,15 @@ class PostService {
   String get currentUid => _auth.currentUser!.uid;
   String get currentName => _auth.currentUser?.displayName ?? 'User';
 
+  Future<String> _getMyImageUrl() async {
+    try {
+      final doc = await _firestore.collection('users').doc(currentUid).get();
+      return doc.data()?['imageUrl'] ?? '';
+    } catch (_) {
+      return '';
+    }
+  }
+
   // ─── CREATE POST ─────────────────────────────────────────────────
   Future<String?> createPost({
     required String title,
@@ -45,13 +54,16 @@ class PostService {
     required String originType,
     String groupId = '',
     String groupName = 'Public',
+    String imageUrl = '',
   }) async {
     try {
+      final authorImageUrl = await _getMyImageUrl();
       final docRef = await _firestore.collection('community_posts').add({
         'title': title,
         'description': description,
         'authorId': currentUid,
         'authorName': currentName,
+        'authorImageUrl': authorImageUrl,
         'originType': originType,
         'groupId': groupId,
         'groupName': groupName,
@@ -59,6 +71,7 @@ class PostService {
         'commentCount': 0,
         'viewCount': 0,
         'repostCount': 0,
+        'imageUrl': imageUrl,
         'createdAt': FieldValue.serverTimestamp(),
       });
 
@@ -225,11 +238,13 @@ class PostService {
       if (!doc.exists) return 'Post not found';
       final original = doc.data()!;
 
+      final authorImageUrl = await _getMyImageUrl();
       await _firestore.collection('community_posts').add({
         'title': original['title'] ?? '',
         'description': original['description'] ?? '',
         'authorId': currentUid,
         'authorName': currentName,
+        'authorImageUrl': authorImageUrl,
         'originType': originType,
         'groupId': groupId,
         'groupName': groupName,
@@ -239,6 +254,7 @@ class PostService {
         'repostCount': 0,
         'originalPostId': postId,
         'originalAuthorName': original['authorName'] ?? 'Unknown',
+        'imageUrl': original['imageUrl'] ?? '',
         'createdAt': FieldValue.serverTimestamp(),
       });
 
@@ -347,6 +363,7 @@ class PostService {
   Future<String?> addComment(
       String postId, String content, String postAuthorId) async {
     try {
+      final authorImageUrl = await _getMyImageUrl();
       await _firestore
           .collection('community_posts')
           .doc(postId)
@@ -355,6 +372,7 @@ class PostService {
         'content': content,
         'authorId': currentUid,
         'authorName': currentName,
+        'authorImageUrl': authorImageUrl,
         'createdAt': FieldValue.serverTimestamp(),
       });
       await _firestore.collection('community_posts').doc(postId).update({

@@ -22,6 +22,7 @@ class ReportPostService {
     required double longitude,
     List<String> sharedGroupIds = const [],
     String origin = 'public',
+    String imageUrl = '',
   }) async {
     try {
       await _firestore.collection('report_posts').add({
@@ -34,6 +35,7 @@ class ReportPostService {
         'authorName': currentName,
         'sharedGroupIds': sharedGroupIds,
         'origin': origin,
+        'imageUrl': imageUrl,
         'createdAt': FieldValue.serverTimestamp(),
       });
       return null;

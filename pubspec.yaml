@@ -56,6 +56,11 @@ dependencies:
   json_annotation: ^4.9.0
   google_fonts: ^8.2.1
   lucide_icons_flutter: ^3.1.15
+
+  # Image upload & display
+  image_picker: ^1.1.2
+  http: ^1.2.2
+  cached_network_image: ^3.4.1
 dev_dependencies:
   flutter_test:
     sdk: flutter

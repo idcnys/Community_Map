@@ -10,6 +10,7 @@ class ReportPostModel {
   final String authorName;
   final List<String> sharedGroupIds; // groups that can see contact
   final String origin; // 'public' or 'urgent'
+  final String imageUrl;
   final DateTime createdAt;
 
   ReportPostModel({
@@ -23,6 +24,7 @@ class ReportPostModel {
     required this.authorName,
     this.sharedGroupIds = const [],
     this.origin = 'public',
+    this.imageUrl = '',
     required this.createdAt,
   });
 
@@ -49,6 +51,7 @@ class ReportPostModel {
       authorName: map['authorName'] ?? '',
       sharedGroupIds: List<String>.from(map['sharedGroupIds'] ?? []),
       origin: map['origin'] ?? 'public',
+      imageUrl: map['imageUrl'] ?? '',
       createdAt: (map['createdAt'] as dynamic)?.toDate() ?? DateTime.now(),
     );
   }
@@ -64,6 +67,7 @@ class ReportPostModel {
       'authorName': authorName,
       'sharedGroupIds': sharedGroupIds,
       'origin': origin,
+      'imageUrl': imageUrl,
       'createdAt': createdAt,
     };
   }

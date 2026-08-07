@@ -9,6 +9,15 @@ class PollService {
   String get currentUid => _auth.currentUser!.uid;
   String get currentName => _auth.currentUser?.displayName ?? 'User';
 
+  Future<String> _getMyImageUrl() async {
+    try {
+      final doc = await _firestore.collection('users').doc(currentUid).get();
+      return doc.data()?['imageUrl'] ?? '';
+    } catch (_) {
+      return '';
+    }
+  }
+
   // ─── CREATE POLL POST ────────────────────────────────────────────
   Future<String?> createPollPost({
     required String title,
@@ -28,11 +37,13 @@ class PollService {
         pollVotes['$i'] = [];
       }
 
+      final authorImageUrl = await _getMyImageUrl();
       await _firestore.collection('community_posts').add({
         'title': title,
         'description': description,
         'authorId': user.uid,
         'authorName': user.displayName ?? user.email ?? 'Unknown',
+        'authorImageUrl': authorImageUrl,
         'originType': originType,
         'groupId': groupId,
         'groupName': groupName,
