@@ -4,6 +4,7 @@ import '../../core/utils/time_ago.dart';
 import '../../services/community_post_service.dart';
 import '../../models/notification_model.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'comments_page.dart';
 
 class NotificationPanel extends StatelessWidget {
   const NotificationPanel({super.key});
@@ -158,7 +159,16 @@ class NotificationPanel extends StatelessWidget {
                 shape: BoxShape.circle,
               ),
             ),
-      onTap: () => service.markNotificationRead(notif.id),
+      onTap: () {
+        service.markNotificationRead(notif.id);
+        if (notif.postId.isNotEmpty) {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => CommentsPage(postId: notif.postId),
+            ),
+          );
+        }
+      },
     );
   }
 

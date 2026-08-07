@@ -176,22 +176,28 @@ class _CommunityPostCardState extends ConsumerState<CommunityPostCard> {
                 height: 1.4,
               ),
             ),
-            // Poll UI
-            if (widget.post.isPoll) ...[
-              const SizedBox(height: 12),
-              _buildPollUI(theme),
-            ],
             const SizedBox(height: 12),
             const Divider(height: 1),
             const SizedBox(height: 8),
 
-            // Actions row — live counts via post stream
+            // Live counts via post stream (poll + actions)
             StreamBuilder<CommunityPostModel?>(
               stream: ref.read(communityPostServiceProvider).getPostById(widget.post.id),
               builder: (context, liveSnap) {
                 final livePost = liveSnap.data ?? widget.post;
                 final isGuest = ref.read(isGuestProvider);
-                return Row(
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Poll UI — uses live data
+                    if (widget.post.isPoll) ...[
+                      _buildPollUI(theme, livePost),
+                      const SizedBox(height: 12),
+                      const Divider(height: 1),
+                      const SizedBox(height: 8),
+                    ],
+                    // Actions row
+                    Row(
                   children: [
                     _actionButton(
                       icon: _isLiked ? Icons.thumb_up : LucideIcons.thumbsUp,
@@ -233,6 +239,8 @@ class _CommunityPostCardState extends ConsumerState<CommunityPostCard> {
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
                       ),
+                  ],
+                ),
                   ],
                 );
               },
@@ -278,8 +286,7 @@ class _CommunityPostCardState extends ConsumerState<CommunityPostCard> {
     );
   }
 
-  Widget _buildPollUI(ThemeData theme) {
-    final post = widget.post;
+  Widget _buildPollUI(ThemeData theme, CommunityPostModel post) {
     final totalVotes = post.totalPollVotes;
 
     return Column(

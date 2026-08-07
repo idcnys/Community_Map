@@ -6,6 +6,7 @@ import '../../providers/service_providers.dart';
 import '../../models/community_post_model.dart';
 import '../../services/community_post_service.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'comments_page.dart';
 
 class ManagePostsPage extends ConsumerStatefulWidget {
   const ManagePostsPage({super.key});
@@ -81,6 +82,18 @@ class _ManagePostsPageState extends ConsumerState<ManagePostsPage> {
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      IconButton(
+                        icon: Icon(LucideIcons.eye, size: 20, color: theme.colorScheme.onSurfaceVariant),
+                        tooltip: 'View comments',
+                        onPressed: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => CommentsPage(
+                              postId: post.id,
+                              postAuthorId: post.authorId,
+                            ),
+                          ),
+                        ),
+                      ),
                       IconButton(
                         icon: Icon(LucideIcons.pencil, size: 20, color: theme.colorScheme.primary),
                         onPressed: () => _editPost(post),

@@ -22,9 +22,12 @@ class _GroupChatPageState extends State<GroupChatPage> {
   int _prevMsgCount = 0;
   bool _isInitialLoad = true;
 
+  late final Stream<List<Map<String, dynamic>>> _messagesStream;
+
   @override
   void initState() {
     super.initState();
+    _messagesStream = _service.getGroupMessages(widget.groupId);
     _service.markGroupAsRead(widget.groupId);
   }
 
@@ -100,10 +103,10 @@ class _GroupChatPageState extends State<GroupChatPage> {
         children: [
           Expanded(
             child: StreamBuilder<List<Map<String, dynamic>>>(
-              stream: _service.getGroupMessages(widget.groupId),
+              stream: _messagesStream,
               builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
+                if (snapshot.connectionState == ConnectionState.waiting && snapshot.data == null) {
+                  return const SizedBox.shrink();
                 }
                 final messages = snapshot.data ?? [];
 
@@ -133,6 +136,7 @@ class _GroupChatPageState extends State<GroupChatPage> {
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   itemCount: messages.length,
                   itemBuilder: (ctx, i) => _MessageBubble(
+                    key: ValueKey(messages[i]['id']),
                     msg: messages[i],
                     isMine: messages[i]['senderId'] == myUid,
                     theme: theme,
@@ -216,6 +220,7 @@ class _MessageBubble extends StatelessWidget {
   final double maxWidth;
 
   const _MessageBubble({
+    super.key,
     required this.msg,
     required this.isMine,
     required this.theme,

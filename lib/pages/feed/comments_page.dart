@@ -12,7 +12,7 @@ class CommentsPage extends StatefulWidget {
   const CommentsPage({
     super.key,
     required this.postId,
-    required this.postAuthorId,
+    this.postAuthorId = '',
   });
 
   @override
@@ -23,6 +23,7 @@ class _CommentsPageState extends State<CommentsPage> {
   final _service = CommunityPostService();
   final _commentCtrl = TextEditingController();
   bool _sending = false;
+  String _resolvedAuthorId = '';
 
   @override
   void dispose() {
@@ -44,6 +45,11 @@ class _CommentsPageState extends State<CommentsPage> {
             builder: (context, postSnap) {
               final post = postSnap.data;
               if (post == null) return const SizedBox.shrink();
+              if (_resolvedAuthorId.isEmpty && post.authorId.isNotEmpty) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (mounted) _resolvedAuthorId = post.authorId;
+                });
+              }
 
               return Container(
                 width: double.infinity,
@@ -249,8 +255,9 @@ class _CommentsPageState extends State<CommentsPage> {
     if (content.isEmpty) return;
 
     setState(() => _sending = true);
+    final authorId = widget.postAuthorId.isNotEmpty ? widget.postAuthorId : _resolvedAuthorId;
     final error = await _service.addComment(
-        widget.postId, content, widget.postAuthorId);
+        widget.postId, content, authorId);
     setState(() => _sending = false);
 
     if (error == null) {
