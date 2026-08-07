@@ -169,7 +169,7 @@ class _MapPageState extends ConsumerState<MapPage>
                 urlTemplate:
                     'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
                 subdomains: const ['a', 'b', 'c', 'd'],
-                userAgentPackageName: 'com.communityapp.app',
+                userAgentPackageName: 'com.communityapp',
                 retinaMode: RetinaMode.isHighDensity(context),
               ),
               // User's own location marker

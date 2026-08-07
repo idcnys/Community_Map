@@ -1,3 +1,4 @@
+import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -9,15 +10,26 @@ import 'router.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  // ─── Offline persistence configuration ───────────────────────────
-  FirebaseFirestore.instance.settings = const Settings(
-    persistenceEnabled: true,
-    cacheSizeBytes: 104857600, // 100 MB cache for offline-first
-  );
+  final options = DefaultFirebaseOptions.currentPlatform;
+  if (options != null) {
+    await Firebase.initializeApp(options: options);
 
-  runApp(const ProviderScope(child: MyApp()));
+    // ─── Offline persistence configuration ─────────────────────────
+    FirebaseFirestore.instance.settings = const Settings(
+      persistenceEnabled: true,
+      cacheSizeBytes: 104857600, // 100 MB cache for offline-first
+    );
+  }
+
+  if (Platform.isLinux || Platform.isWindows || Platform.isMacOS) {
+    runApp(const MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: _DesktopUnsupported(),
+    ));
+  } else {
+    runApp(const ProviderScope(child: MyApp()));
+  }
 }
 
 class MyApp extends StatelessWidget {
@@ -279,6 +291,45 @@ class MyApp extends StatelessWidget {
 
       // ─── Scaffold ───
       scaffoldBackgroundColor: colorScheme.surface,
+    );
+  }
+}
+
+
+class _DesktopUnsupported extends StatelessWidget {
+  const _DesktopUnsupported();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.phone_android, size: 64, color: Colors.grey),
+              const SizedBox(height: 24),
+              const Text(
+                'CMap',
+                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'This app requires Firebase, which is not available on desktop.\n'
+                'Please run on Android or iOS for the full experience.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.grey, fontSize: 14),
+              ),
+              const SizedBox(height: 32),
+              Text(
+                'Platform: ${Platform.operatingSystem}',
+                style: const TextStyle(color: Colors.grey, fontSize: 12),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
