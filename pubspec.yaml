@@ -59,7 +59,7 @@ dependencies:
   cached_network_image: ^3.4.1
 
   # Audio recording
-  record: ^6.1.1
+  record: ^6.2.1
 
   # Supabase (audio storage)
   supabase_flutter: ^2.9.0

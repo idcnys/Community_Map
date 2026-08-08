@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../core/utils/time_ago.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
@@ -42,6 +43,7 @@ class _MemberDetailSheetState extends State<MemberDetailSheet> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final imageUrl = (_profile?['imageUrl'] ?? '').toString();
 
     return SafeArea(
       child: SingleChildScrollView(
@@ -73,13 +75,32 @@ class _MemberDetailSheetState extends State<MemberDetailSheet> {
               Row(
                 children: [
                   Container(
-                    width: 52,
-                    height: 52,
-                    decoration: const BoxDecoration(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Color(0xFF2563EB),
+                      color: const Color(0xFF2563EB),
+                      border: Border.all(color: Colors.white, width: 2),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF2563EB).withAlpha(60),
+                          blurRadius: 8,
+                          spreadRadius: 1,
+                        ),
+                      ],
                     ),
-                    child: const Icon(LucideIcons.user, color: Colors.white, size: 26),
+                    child: (imageUrl.isNotEmpty)
+                        ? ClipOval(
+                            child: CachedNetworkImage(
+                              imageUrl: imageUrl,
+                              width: 56,
+                              height: 56,
+                              fit: BoxFit.cover,
+                              placeholder: (context, url) => const Icon(LucideIcons.user, color: Colors.white, size: 26),
+                              errorWidget: (context, url, error) => const Icon(LucideIcons.user, color: Colors.white, size: 26),
+                            ),
+                          )
+                        : const Icon(LucideIcons.user, color: Colors.white, size: 26),
                   ),
                   const SizedBox(width: 14),
                   Expanded(
@@ -131,6 +152,24 @@ class _MemberDetailSheetState extends State<MemberDetailSheet> {
                   icon: LucideIcons.mapPin,
                   label: 'Location',
                   value: _profile?['location'] ?? '',
+                  theme: theme,
+                ),
+              ],
+              if ((_profile?['bloodGroup'] ?? '').toString().isNotEmpty) ...[
+                const Divider(height: 24),
+                _buildInfoRow(
+                  icon: LucideIcons.droplets,
+                  label: 'Blood Group',
+                  value: _profile?['bloodGroup'] ?? '',
+                  theme: theme,
+                ),
+              ],
+              if ((_profile?['hobby'] ?? '').toString().isNotEmpty) ...[
+                const Divider(height: 24),
+                _buildInfoRow(
+                  icon: LucideIcons.heart,
+                  label: 'Hobby',
+                  value: _profile?['hobby'] ?? '',
                   theme: theme,
                 ),
               ],

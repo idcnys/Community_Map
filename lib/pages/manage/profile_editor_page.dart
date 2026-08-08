@@ -121,10 +121,11 @@ class _ProfileEditorPageState extends State<ProfileEditorPage> {
           final profile = snapshot.data;
           if (profile != null) _populateFields(profile);
 
-          return Form(
+          return SafeArea(
+            child: Form(
             key: _formKey,
             child: ListView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
               children: [
                 // ─── AVATAR ─────────────────────────────────────────
                 Center(
@@ -274,6 +275,7 @@ class _ProfileEditorPageState extends State<ProfileEditorPage> {
                 ),
               ],
             ),
+          ),
           );
         },
       ),

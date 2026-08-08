@@ -19,6 +19,7 @@ import 'map_notification_panel.dart';
 import 'my_reports_page.dart';
 import 'member_detail_sheet.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../providers/guest_provider.dart';
 
 class MapPage extends ConsumerStatefulWidget {
@@ -39,6 +40,7 @@ class _MapPageState extends ConsumerState<MapPage>
   String _selectedGroupFilter = 'global'; // 'global' or groupId
   List<Map<String, dynamic>> _memberLocations = [];
   List<String> _membersWithoutLocation = [];
+  Map<String, String> _memberAvatars = {};
   StreamSubscription? _locationSub;
   Timer? _debounceTimer;
   bool _hasShownMissingToast = false;
@@ -68,6 +70,7 @@ class _MapPageState extends ConsumerState<MapPage>
       _selectedGroupFilter = value;
       _memberLocations = [];
       _membersWithoutLocation = [];
+      _memberAvatars = {};
     });
     _locationSub?.cancel();
 
@@ -91,6 +94,9 @@ class _MapPageState extends ConsumerState<MapPage>
             _membersWithoutLocation = missing;
           });
 
+          // Fetch avatar URLs for members with locations
+          _fetchMemberAvatars(locations);
+
           // Show toast only once per group selection
           if (missing.isNotEmpty && !_hasShownMissingToast) {
             _hasShownMissingToast = true;
@@ -112,6 +118,22 @@ class _MapPageState extends ConsumerState<MapPage>
           }
         });
       });
+    }
+  }
+
+  Future<void> _fetchMemberAvatars(List<Map<String, dynamic>> locations) async {
+    final firestore = FirebaseFirestore.instance;
+    final uids = locations.map((l) => l['uid'] as String? ?? '').where((u) => u.isNotEmpty).toList();
+    
+    for (final uid in uids) {
+      if (_memberAvatars.containsKey(uid)) continue; // already fetched
+      try {
+        final doc = await firestore.collection('users').doc(uid).get();
+        final imageUrl = doc.data()?['imageUrl'] as String? ?? '';
+        if (imageUrl.isNotEmpty && mounted) {
+          setState(() => _memberAvatars[uid] = imageUrl);
+        }
+      } catch (_) {}
     }
   }
 
@@ -239,6 +261,7 @@ class _MapPageState extends ConsumerState<MapPage>
                     }
                     final uid = loc['uid'] ?? '';
                     final name = loc['name'] ?? 'Member';
+                    final avatarUrl = _memberAvatars[uid];
                     return Marker(
                       point: LatLng(lat, lng),
                       width: 44,
@@ -258,7 +281,18 @@ class _MapPageState extends ConsumerState<MapPage>
                               ),
                             ],
                           ),
-                          child: const Icon(LucideIcons.user, color: Colors.white, size: 20),
+                          child: (avatarUrl != null && avatarUrl.isNotEmpty)
+                              ? ClipOval(
+                                  child: CachedNetworkImage(
+                                    imageUrl: avatarUrl,
+                                    width: 44,
+                                    height: 44,
+                                    fit: BoxFit.cover,
+                                    placeholder: (context, url) => const Icon(LucideIcons.user, color: Colors.white, size: 20),
+                                    errorWidget: (context, url, error) => const Icon(LucideIcons.user, color: Colors.white, size: 20),
+                                  ),
+                                )
+                              : const Icon(LucideIcons.user, color: Colors.white, size: 20),
                         ),
                       ),
                     );
@@ -393,7 +427,33 @@ class _MapPageState extends ConsumerState<MapPage>
             ),
           ),
 
-          // Bottom right buttons
+          // Bottom left — map controls
+          Positioned(
+            bottom: 24,
+            left: 16,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                FloatingActionButton.small(
+                  heroTag: 'reset_map',
+                  onPressed: _resetMapView,
+                  backgroundColor: theme.colorScheme.surface,
+                  child: Icon(LucideIcons.crosshair,
+                      color: theme.colorScheme.primary),
+                ),
+                const SizedBox(height: 12),
+                FloatingActionButton.small(
+                  heroTag: 'my_location',
+                  onPressed: _goToMyLocation,
+                  backgroundColor: theme.colorScheme.surface,
+                  child: Icon(LucideIcons.locate,
+                      color: theme.colorScheme.primary),
+                ),
+              ],
+            ),
+          ),
+
+          // Bottom right — action buttons
           Positioned(
             bottom: 24,
             right: 16,
@@ -422,38 +482,17 @@ class _MapPageState extends ConsumerState<MapPage>
                   child: Icon(LucideIcons.siren, color: theme.colorScheme.onPrimary),
                 ),
                 const SizedBox(height: 12),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    FloatingActionButton.small(
-                      heroTag: 'reset_map',
-                      onPressed: _resetMapView,
-                      backgroundColor: theme.colorScheme.surface,
-                      child: Icon(LucideIcons.crosshair,
-                          color: theme.colorScheme.primary),
-                    ),
-                    const SizedBox(width: 8),
-                    FloatingActionButton.small(
-                      heroTag: 'my_location',
-                      onPressed: _goToMyLocation,
-                      backgroundColor: theme.colorScheme.surface,
-                      child: Icon(LucideIcons.locate,
-                          color: theme.colorScheme.primary),
-                    ),
-                    const SizedBox(width: 12),
-                    FloatingActionButton.extended(
-                      heroTag: 'post_report',
-                      onPressed: hasActiveReport
-                          ? null
-                          : () {
-                              Navigator.of(context).push(MaterialPageRoute(
-                                builder: (_) => const ReportPostForm(),
-                              ));
-                            },
-                      icon: const Icon(LucideIcons.plus),
-                      label: const Text('Report'),
-                    ),
-                  ],
+                FloatingActionButton.extended(
+                  heroTag: 'post_report',
+                  onPressed: hasActiveReport
+                      ? null
+                      : () {
+                          Navigator.of(context).push(MaterialPageRoute(
+                            builder: (_) => const ReportPostForm(),
+                          ));
+                        },
+                  icon: const Icon(LucideIcons.plus),
+                  label: const Text('Report'),
                 ),
               ],
             ),
