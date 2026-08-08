@@ -180,7 +180,24 @@ class _ReportDetailSheetState extends State<ReportDetailSheet> {
                         ],
                       ),
                     ),
-                    if (report.isUrgent)
+                    if (report.isSolved)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.green.shade50,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          'SOLVED',
+                          style: TextStyle(
+                            color: Colors.green.shade700,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 11,
+                          ),
+                        ),
+                      )
+                    else if (report.isUrgent)
                       Container(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 10, vertical: 4),

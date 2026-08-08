@@ -125,24 +125,41 @@ class MapNotificationPanel extends StatelessWidget {
           ),
         ],
       ),
-      trailing: report.isUrgent
+      trailing: report.isSolved
           ? Container(
               padding:
                   const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
-                color: theme.colorScheme.errorContainer,
+                color: Colors.green.shade50,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Text(
-                'URGENT',
+                'SOLVED',
                 style: TextStyle(
-                  color: theme.colorScheme.error,
+                  color: Colors.green.shade700,
                   fontSize: 10,
                   fontWeight: FontWeight.bold,
                 ),
               ),
             )
-          : null,
+          : report.isUrgent
+              ? Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.errorContainer,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    'URGENT',
+                    style: TextStyle(
+                      color: theme.colorScheme.error,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                )
+              : null,
       onTap: () {
         Navigator.of(context).pop(); // close sheet
         showModalBottomSheet(

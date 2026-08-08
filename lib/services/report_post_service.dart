@@ -94,12 +94,12 @@ class ReportPostService {
     final cutoff = DateTime.now().subtract(const Duration(hours: 48));
     return _firestore
         .collection('report_posts')
-        .where('createdAt', isLessThan: Timestamp.fromDate(cutoff))
         .orderBy('createdAt', descending: true)
-        .limit(50)
+        .limit(100)
         .snapshots()
         .map((snap) => snap.docs
             .map((d) => ReportPostModel.fromMap(d.id, d.data()))
+            .where((r) => r.isSolved || r.createdAt.isBefore(cutoff))
             .toList());
   }
 
@@ -114,6 +114,7 @@ class ReportPostService {
         .snapshots()
         .map((snap) => snap.docs
             .map((d) => ReportPostModel.fromMap(d.id, d.data()))
+            .where((r) => !r.isSolved)
             .toList());
   }
 

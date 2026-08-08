@@ -76,7 +76,9 @@ class _MapPageState extends ConsumerState<MapPage>
 
     if (value != 'global') {
       _hasShownMissingToast = false;
-      _locationSub = _chatService.getGroupMemberLocations(value).listen((locations) {
+      _locationSub = _chatService.getGroupMemberLocations(value).listen((
+        locations,
+      ) {
         // Debounce: wait 500ms after last emission before rebuilding
         _debounceTimer?.cancel();
         _debounceTimer = Timer(const Duration(milliseconds: 500), () {
@@ -86,8 +88,12 @@ class _MapPageState extends ConsumerState<MapPage>
           final group = myGroups.where((g) => g.id == value).firstOrNull;
           final allMembers = group?.members ?? [];
 
-          final locUids = locations.map((l) => l['uid'] as String? ?? '').toSet();
-          final missing = allMembers.where((m) => !locUids.contains(m)).toList();
+          final locUids = locations
+              .map((l) => l['uid'] as String? ?? '')
+              .toSet();
+          final missing = allMembers
+              .where((m) => !locUids.contains(m))
+              .toList();
 
           setState(() {
             _memberLocations = locations;
@@ -123,8 +129,11 @@ class _MapPageState extends ConsumerState<MapPage>
 
   Future<void> _fetchMemberAvatars(List<Map<String, dynamic>> locations) async {
     final firestore = FirebaseFirestore.instance;
-    final uids = locations.map((l) => l['uid'] as String? ?? '').where((u) => u.isNotEmpty).toList();
-    
+    final uids = locations
+        .map((l) => l['uid'] as String? ?? '')
+        .where((u) => u.isNotEmpty)
+        .toList();
+
     for (final uid in uids) {
       if (_memberAvatars.containsKey(uid)) continue; // already fetched
       try {
@@ -140,10 +149,12 @@ class _MapPageState extends ConsumerState<MapPage>
   void _fitToLocations(List<Map<String, dynamic>> locations) {
     if (locations.isEmpty) return;
     final points = locations
-        .map((l) => LatLng(
-              (l['latitude'] as num?)?.toDouble() ?? 0,
-              (l['longitude'] as num?)?.toDouble() ?? 0,
-            ))
+        .map(
+          (l) => LatLng(
+            (l['latitude'] as num?)?.toDouble() ?? 0,
+            (l['longitude'] as num?)?.toDouble() ?? 0,
+          ),
+        )
         .where((p) => p.latitude != 0 && p.longitude != 0)
         .toList();
     if (points.isEmpty) return;
@@ -181,10 +192,7 @@ class _MapPageState extends ConsumerState<MapPage>
                 flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
               ),
               cameraConstraint: CameraConstraint.contain(
-                bounds: LatLngBounds(
-                  LatLng(20.5, 88.0),
-                  LatLng(26.7, 92.7),
-                ),
+                bounds: LatLngBounds(LatLng(20.5, 88.0), LatLng(26.7, 92.7)),
               ),
             ),
             children: [
@@ -207,7 +215,10 @@ class _MapPageState extends ConsumerState<MapPage>
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: theme.colorScheme.primary,
-                          border: Border.all(color: theme.colorScheme.onPrimary, width: 3),
+                          border: Border.all(
+                            color: theme.colorScheme.onPrimary,
+                            width: 3,
+                          ),
                           boxShadow: [
                             BoxShadow(
                               color: theme.colorScheme.primary.withAlpha(77),
@@ -216,8 +227,11 @@ class _MapPageState extends ConsumerState<MapPage>
                             ),
                           ],
                         ),
-                        child: Icon(LucideIcons.locateFixed,
-                            color: theme.colorScheme.onPrimary, size: 20),
+                        child: Icon(
+                          LucideIcons.locateFixed,
+                          color: theme.colorScheme.onPrimary,
+                          size: 20,
+                        ),
                       ),
                     ),
                   ],
@@ -257,7 +271,12 @@ class _MapPageState extends ConsumerState<MapPage>
                     final lat = (loc['latitude'] as num?)?.toDouble() ?? 0;
                     final lng = (loc['longitude'] as num?)?.toDouble() ?? 0;
                     if (lat == 0 && lng == 0) {
-                      return Marker(point: const LatLng(0, 0), width: 0, height: 0, child: const SizedBox.shrink());
+                      return Marker(
+                        point: const LatLng(0, 0),
+                        width: 0,
+                        height: 0,
+                        child: const SizedBox.shrink(),
+                      );
                     }
                     final uid = loc['uid'] ?? '';
                     final name = loc['name'] ?? 'Member';
@@ -288,11 +307,24 @@ class _MapPageState extends ConsumerState<MapPage>
                                     width: 44,
                                     height: 44,
                                     fit: BoxFit.cover,
-                                    placeholder: (context, url) => const Icon(LucideIcons.user, color: Colors.white, size: 20),
-                                    errorWidget: (context, url, error) => const Icon(LucideIcons.user, color: Colors.white, size: 20),
+                                    placeholder: (context, url) => const Icon(
+                                      LucideIcons.user,
+                                      color: Colors.white,
+                                      size: 20,
+                                    ),
+                                    errorWidget: (context, url, error) =>
+                                        const Icon(
+                                          LucideIcons.user,
+                                          color: Colors.white,
+                                          size: 20,
+                                        ),
                                   ),
                                 )
-                              : const Icon(LucideIcons.user, color: Colors.white, size: 20),
+                              : const Icon(
+                                  LucideIcons.user,
+                                  color: Colors.white,
+                                  size: 20,
+                                ),
                         ),
                       ),
                     );
@@ -316,41 +348,85 @@ class _MapPageState extends ConsumerState<MapPage>
                       children: [
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 10),
+                            horizontal: 12,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
                             color: theme.colorScheme.onPrimary,
-                            borderRadius: BorderRadius.circular(24),
+                            borderRadius: BorderRadius.circular(12),
                             boxShadow: [
                               BoxShadow(
-                                color: theme.colorScheme.onSurface.withAlpha(26),
-                                blurRadius: 8,
+                                color: theme.colorScheme.onSurface.withAlpha(
+                                  20,
+                                ),
+                                blurRadius: 6,
                               ),
                             ],
                           ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(LucideIcons.map,
-                                  color: theme.colorScheme.primary),
-                              const SizedBox(width: 8),
-                              const Text(
-                                'Reports Map',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                ),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<String>(
+                              value: _selectedGroupFilter,
+                              isDense: true,
+                              icon: Icon(
+                                LucideIcons.chevronDown,
+                                size: 18,
+                                color: theme.colorScheme.primary,
                               ),
-                            ],
+                              style: TextStyle(
+                                color: isGuest
+                                    ? theme.colorScheme.onSurfaceVariant
+                                          .withAlpha(120)
+                                    : theme.colorScheme.onSurface,
+                                fontSize: 14,
+                              ),
+                              items: [
+                                const DropdownMenuItem(
+                                  value: 'global',
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(LucideIcons.globe, size: 16),
+                                      SizedBox(width: 6),
+                                      Text('Global'),
+                                    ],
+                                  ),
+                                ),
+                                if (!isGuest)
+                                  ...myGroups.map(
+                                    (g) => DropdownMenuItem(
+                                      value: g.id,
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const Icon(
+                                            LucideIcons.users,
+                                            size: 16,
+                                          ),
+                                          const SizedBox(width: 6),
+                                          Text(
+                                            g.name,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                              onChanged: isGuest ? null : _onGroupFilterChanged,
+                            ),
                           ),
                         ),
+
                         const Spacer(),
                         _circleButton(
                           icon: LucideIcons.archive,
                           tooltip: 'Archived Reports',
                           onPressed: () {
-                            Navigator.of(context).push(MaterialPageRoute(
-                              builder: (_) => const ArchivedReportsPage(),
-                            ));
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => const ArchivedReportsPage(),
+                              ),
+                            );
                           },
                         ),
                         const SizedBox(width: 8),
@@ -366,60 +442,6 @@ class _MapPageState extends ConsumerState<MapPage>
                           },
                         ),
                       ],
-                    ),
-                    const SizedBox(height: 8),
-                    // Group filter dropdown
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.onPrimary,
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: theme.colorScheme.onSurface.withAlpha(20),
-                            blurRadius: 6,
-                          ),
-                        ],
-                      ),
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<String>(
-                          value: _selectedGroupFilter,
-                          isDense: true,
-                          icon: Icon(LucideIcons.chevronDown, size: 18, color: theme.colorScheme.primary),
-                          style: TextStyle(
-                            color: isGuest
-                                ? theme.colorScheme.onSurfaceVariant.withAlpha(120)
-                                : theme.colorScheme.onSurface,
-                            fontSize: 14,
-                          ),
-                          items: [
-                            const DropdownMenuItem(
-                              value: 'global',
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(LucideIcons.globe, size: 16),
-                                  SizedBox(width: 6),
-                                  Text('Global'),
-                                ],
-                              ),
-                            ),
-                            if (!isGuest)
-                              ...myGroups.map((g) => DropdownMenuItem(
-                                    value: g.id,
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        const Icon(LucideIcons.users, size: 16),
-                                        const SizedBox(width: 6),
-                                        Text(g.name, overflow: TextOverflow.ellipsis),
-                                      ],
-                                    ),
-                                  )),
-                          ],
-                          onChanged: isGuest ? null : _onGroupFilterChanged,
-                        ),
-                      ),
                     ),
                   ],
                 ),
@@ -438,16 +460,20 @@ class _MapPageState extends ConsumerState<MapPage>
                   heroTag: 'reset_map',
                   onPressed: _resetMapView,
                   backgroundColor: theme.colorScheme.surface,
-                  child: Icon(LucideIcons.crosshair,
-                      color: theme.colorScheme.primary),
+                  child: Icon(
+                    LucideIcons.crosshair,
+                    color: theme.colorScheme.primary,
+                  ),
                 ),
                 const SizedBox(height: 12),
                 FloatingActionButton.small(
                   heroTag: 'my_location',
                   onPressed: _goToMyLocation,
                   backgroundColor: theme.colorScheme.surface,
-                  child: Icon(LucideIcons.locate,
-                      color: theme.colorScheme.primary),
+                  child: Icon(
+                    LucideIcons.locate,
+                    color: theme.colorScheme.primary,
+                  ),
                 ),
               ],
             ),
@@ -464,35 +490,41 @@ class _MapPageState extends ConsumerState<MapPage>
                 FloatingActionButton.small(
                   heroTag: 'my_reports',
                   onPressed: () {
-                    Navigator.of(context).push(MaterialPageRoute(
-                      builder: (_) => MyReportsPage(),
-                    ));
+                    Navigator.of(
+                      context,
+                    ).push(MaterialPageRoute(builder: (_) => MyReportsPage()));
                   },
                   backgroundColor: theme.colorScheme.surface,
-                  child: Icon(LucideIcons.folderOpen,
-                      color: theme.colorScheme.primary),
+                  child: Icon(
+                    LucideIcons.folderOpen,
+                    color: theme.colorScheme.primary,
+                  ),
                 ),
                 const SizedBox(height: 12),
-                FloatingActionButton.small(
+                FloatingActionButton(
                   heroTag: 'rush',
                   onPressed: hasActiveReport ? null : _submitRushReport,
                   backgroundColor: hasActiveReport
                       ? theme.colorScheme.onSurfaceVariant.withAlpha(150)
-                      : theme.colorScheme.error,
-                  child: Icon(LucideIcons.siren, color: theme.colorScheme.onPrimary),
+                      : const Color(0xFFFF1A1A),
+                  child: Icon(
+                    LucideIcons.send,
+                    color: theme.colorScheme.onPrimary,
+                  ),
                 ),
                 const SizedBox(height: 12),
-                FloatingActionButton.extended(
+                FloatingActionButton(
                   heroTag: 'post_report',
                   onPressed: hasActiveReport
                       ? null
                       : () {
-                          Navigator.of(context).push(MaterialPageRoute(
-                            builder: (_) => const ReportPostForm(),
-                          ));
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => const ReportPostForm(),
+                            ),
+                          );
                         },
-                  icon: const Icon(LucideIcons.plus),
-                  label: const Text('Report'),
+                  child: const Icon(LucideIcons.plus),
                 ),
               ],
             ),
@@ -614,7 +646,6 @@ class _MapPageState extends ConsumerState<MapPage>
       builder: (_) => MemberDetailSheet(uid: uid, name: name),
     );
   }
-
 
   Widget _circleButton({
     required IconData icon,

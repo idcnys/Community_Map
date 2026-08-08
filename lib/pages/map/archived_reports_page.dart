@@ -21,7 +21,7 @@ class ArchivedReportsPage extends StatelessWidget {
           children: [
             const Text('Archived Reports'),
             Text(
-              'Reports older than 48 hours',
+              'Solved or older than 48 hours',
               style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurfaceVariant),
             ),
           ],
@@ -74,10 +74,23 @@ class ArchivedReportsPage extends StatelessWidget {
                     '${report.authorName} • ${DateFormat('MMM d, h:mm a').format(report.createdAt)}',
                     style: const TextStyle(fontSize: 12),
                   ),
-                  trailing: Text(
-                    '${report.latitude.toStringAsFixed(4)}, ${report.longitude.toStringAsFixed(4)}',
-                    style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurfaceVariant),
-                  ),
+                  trailing: report.isSolved
+                      ? Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: Colors.green.shade50,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            'SOLVED',
+                            style: TextStyle(
+                              color: Colors.green.shade700,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        )
+                      : null,
                   onTap: () {
                     showModalBottomSheet(
                       context: context,
