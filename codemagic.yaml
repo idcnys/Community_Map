@@ -1,0 +1,30 @@
+workflows:
+  ios-build:
+    name: iOS Build (No Codesign)
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    environment:
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: "main"
+          include: true
+    scripts:
+      - name: Get Flutter packages
+        script: |
+          flutter pub get
+
+      - name: Setup CocoaPods
+        script: |
+          cd ios
+          rm -rf Pods
+          pod install --repo-update
+          cd ..
+
+      - name: Build iOS
+        script: |
+          flutter build ios --release --no-codesign
