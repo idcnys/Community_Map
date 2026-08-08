@@ -21,6 +21,9 @@ import 'member_detail_sheet.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../providers/guest_provider.dart';
+import '../../providers/nearby_providers.dart';
+import '../../models/nearby_place_model.dart';
+import 'nearby_service_sheet.dart';
 
 class MapPage extends ConsumerStatefulWidget {
   const MapPage({super.key});
@@ -176,12 +179,54 @@ class _MapPageState extends ConsumerState<MapPage>
     final isGuest = ref.watch(isGuestProvider);
     final reports = ref.watch(activeReportsProvider).value ?? [];
     final hasActiveReport = ref.watch(hasActiveReportProvider);
+    final nearbyState = ref.watch(nearbyProvider);
+
+    // Show feedback + auto-zoom when nearby places load
+    ref.listen(nearbyProvider, (prev, next) {
+      if (prev == null || !prev.isLoading) return;
+      if (next.isLoading) return;
+
+      if (next.error != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to load: ${next.error}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      } else if (next.places.isNotEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${next.places.length} places found nearby'),
+            duration: const Duration(seconds: 2),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        // Zoom to user's location to show results
+        if (_userLocation != null) {
+          _mapController.move(_userLocation!, 13);
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No places found in this area'),
+            duration: Duration(seconds: 2),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    });
     final myGroups = ref.watch(myJoinedGroupsProvider).value ?? [];
 
     return Scaffold(
       body: Stack(
         children: [
-          FlutterMap(
+          Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).padding.bottom,
+            ),
+            child: FlutterMap(
             mapController: _mapController,
             options: MapOptions(
               initialCenter: _initialCenter,
@@ -330,8 +375,56 @@ class _MapPageState extends ConsumerState<MapPage>
                     );
                   }).toList(),
                 ),
+              // Nearby services markers
+              if (nearbyState.places.isNotEmpty)
+                MarkerLayer(
+                  markers: nearbyState.places.map((place) {
+                    return Marker(
+                      point: LatLng(place.latitude, place.longitude),
+                      width: 40,
+                      height: 40,
+                      child: GestureDetector(
+                        onTap: () => _onNearbyMarkerTap(place),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Color(place.category.markerColor),
+                            border: Border.all(color: Colors.white, width: 2),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Color(place.category.markerColor).withAlpha(80),
+                                blurRadius: 6,
+                                spreadRadius: 1,
+                              ),
+                            ],
+                          ),
+                          child: Icon(
+                            _nearbyCategoryIcon(place.category),
+                            color: Colors.white,
+                            size: 18,
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
             ],
           ),
+          ),
+
+          // Nearby category filter chips
+          if (_selectedGroupFilter == 'global')
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 62, left: 12, right: 12),
+                  child: _buildNearbyCategoryChips(nearbyState),
+                ),
+              ),
+            ),
 
           // Top bar with dropdown
           Positioned(
@@ -653,21 +746,125 @@ class _MapPageState extends ConsumerState<MapPage>
     required VoidCallback onPressed,
   }) {
     return Container(
+      width: 32,
+      height: 32,
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.onPrimary,
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: Theme.of(context).colorScheme.onSurface.withAlpha(26),
-            blurRadius: 8,
+            color: Theme.of(context).colorScheme.onSurface.withAlpha(30),
+            blurRadius: 6,
           ),
         ],
       ),
       child: IconButton(
-        icon: Icon(icon, size: 20),
+        icon: Icon(icon, size: 15, color: Theme.of(context).colorScheme.onSurface.withAlpha(220)),
         tooltip: tooltip,
         onPressed: onPressed,
+        padding: EdgeInsets.zero,
+        constraints: const BoxConstraints(),
       ),
     );
+  }
+
+  // ─── Nearby Services ─────────────────────────────────────────────────
+
+  Widget _buildNearbyCategoryChips(NearbyState nearbyState) {
+    return Row(
+      children: [
+        Expanded(
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: NearbyCategory.values.map((cat) {
+                final isActive = nearbyState.activeCategories.contains(cat);
+                final color = Color(cat.markerColor);
+                return Padding(
+                  padding: const EdgeInsets.only(right: 6),
+                  child: FilterChip(
+                    label: Text(cat.label),
+                    selected: isActive,
+                    onSelected: (_) => _toggleNearbyCategory(cat),
+                    selectedColor: color.withAlpha(40),
+                    checkmarkColor: color,
+                    showCheckmark: false,
+                    backgroundColor: Theme.of(context).colorScheme.surface.withAlpha(230),
+                    labelStyle: TextStyle(
+                      fontSize: 11,
+                      fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
+                      color: isActive ? color : Theme.of(context).colorScheme.onSurface,
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        ),
+        if (nearbyState.isLoading)
+          const Padding(
+            padding: EdgeInsets.only(left: 6),
+            child: SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Future<void> _toggleNearbyCategory(NearbyCategory category) async {
+    // Use user's location; fetch it if not available yet
+    LatLng searchCenter;
+    if (_userLocation != null) {
+      searchCenter = _userLocation!;
+    } else {
+      final position = await ReportPostService.getCurrentLocation();
+      if (position == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Enable location to find nearby services'),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+        return;
+      }
+      searchCenter = LatLng(position.latitude, position.longitude);
+      setState(() => _userLocation = searchCenter);
+    }
+
+    ref.read(nearbyProvider.notifier).toggleCategory(
+      category,
+      searchCenter.latitude,
+      searchCenter.longitude,
+    );
+  }
+
+  void _onNearbyMarkerTap(NearbyPlace place) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => NearbyServiceSheet(place: place),
+    );
+  }
+
+  IconData _nearbyCategoryIcon(NearbyCategory category) {
+    switch (category) {
+      case NearbyCategory.hospital:
+        return LucideIcons.hospital;
+      case NearbyCategory.police:
+        return LucideIcons.shield;
+      case NearbyCategory.fireStation:
+        return LucideIcons.flame;
+      case NearbyCategory.pharmacy:
+        return LucideIcons.pill;
+    }
   }
 }

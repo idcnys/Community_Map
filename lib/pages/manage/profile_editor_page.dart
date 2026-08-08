@@ -161,11 +161,11 @@ class _ProfileEditorPageState extends State<ProfileEditorPage> {
                               shape: BoxShape.circle,
                             ),
                             child: _uploadingImage
-                                ? const SizedBox(
+                                ? SizedBox(
                                     width: 14, height: 14,
-                                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                    child: CircularProgressIndicator(strokeWidth: 2, color: theme.colorScheme.onPrimary),
                                   )
-                                : const Icon(LucideIcons.camera, size: 14, color: Colors.white),
+                                : Icon(LucideIcons.camera, size: 14, color: theme.colorScheme.onPrimary),
                           ),
                         ),
                       ],
@@ -263,7 +263,7 @@ class _ProfileEditorPageState extends State<ProfileEditorPage> {
                 FilledButton.icon(
                   onPressed: (_saving || _uploadingImage) ? null : _saveProfile,
                   icon: (_saving || _uploadingImage)
-                      ? const SizedBox(
+                      ? SizedBox(
                           width: 18, height: 18,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )

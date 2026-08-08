@@ -298,7 +298,6 @@ class _ReportPostFormState extends State<ReportPostForm> {
                 label: Text(_uploading ? 'Uploading photo...' : (_uploadingAudio ? 'Uploading voice...' : 'Submit Report')),
                 style: FilledButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  backgroundColor: theme.colorScheme.tertiary,
                 ),
               ),
             ],
