@@ -15,12 +15,15 @@ class NearbyServiceSheet extends StatelessWidget {
     final color = Color(place.category.markerColor);
 
     return Container(
-      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      child: Column(
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -79,21 +82,22 @@ class NearbyServiceSheet extends StatelessWidget {
 
           // Full address from display_name
           if (place.displayName != null)
-            _infoRow(LucideIcons.mapPin, place.displayName!),
+            _infoRow(context, LucideIcons.mapPin, place.displayName!),
 
           // Structured address (if different from displayName)
           if (place.address != null && place.address != place.displayName)
-            _infoRow(LucideIcons.navigation, place.address!),
+            _infoRow(context, LucideIcons.navigation, place.address!),
 
           // Contact info
-          if (place.phone != null) _infoRow(LucideIcons.phone, place.phone!),
+          if (place.phone != null) _infoRow(context, LucideIcons.phone, place.phone!),
           if (place.openingHours != null)
-            _infoRow(LucideIcons.clock, place.openingHours!),
+            _infoRow(context, LucideIcons.clock, place.openingHours!),
           if (place.website != null)
-            _infoRow(LucideIcons.globe, place.website!),
+            _infoRow(context, LucideIcons.globe, place.website!),
 
           // Coordinates
           _infoRow(
+            context,
             LucideIcons.crosshair,
             '${place.latitude.toStringAsFixed(5)}, ${place.longitude.toStringAsFixed(5)}',
           ),
@@ -115,24 +119,26 @@ class NearbyServiceSheet extends StatelessWidget {
             ),
           ),
 
-          const SizedBox(height: 8),
-        ],
+            const SizedBox(height: 8),
+          ],
+        ),
+        ),
       ),
     );
   }
 
-  Widget _infoRow(IconData icon, String text) {
+  Widget _infoRow(BuildContext context, IconData icon, String text) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 16, color: Colors.grey),
+          Icon(icon, size: 16, color: Theme.of(context).colorScheme.onSurfaceVariant),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
               text,
-              style: const TextStyle(fontSize: 14, color: Colors.black87),
+              style: TextStyle(fontSize: 14, color: Theme.of(context).colorScheme.onSurface),
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
             ),
