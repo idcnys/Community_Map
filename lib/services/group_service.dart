@@ -227,6 +227,19 @@ class GroupService {
     }
   }
 
+  // ─── REMOVE MEMBER (admin) ──────────────────────────────────────
+  Future<String?> removeMember(String groupId, String userId) async {
+    try {
+      await _firestore.collection('groups').doc(groupId).update({
+        'members': FieldValue.arrayRemove([userId]),
+        'memberCount': FieldValue.increment(-1),
+      });
+      return null;
+    } catch (e) {
+      return 'Failed to remove member: $e';
+    }
+  }
+
   // ─── LEAVE GROUP ─────────────────────────────────────────────────
   Future<String?> leaveGroup(String groupId) async {
     try {

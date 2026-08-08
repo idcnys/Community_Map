@@ -7,6 +7,7 @@ import '../../models/group_model.dart';
 import '../../core/utils/time_ago.dart';
 import 'group_chat_page.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class GroupDetailPage extends StatefulWidget {
   final String groupId;
@@ -21,30 +22,26 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
   final _chatService = GroupChatService();
   final _firestore = FirebaseFirestore.instance;
   final Map<String, String> _nameCache = {};
+  final Map<String, String> _memberAvatars = {};
   final Map<String, DateTime?> _lastActiveCache = {};
 
-  Future<String> _resolveName(String uid) async {
-    if (_nameCache.containsKey(uid)) return _nameCache[uid]!;
-    try {
-      final doc = await _firestore.collection('users').doc(uid).get();
-      final name = (doc.data()?['fullName'] as String?) ?? 'Unknown User';
-      _nameCache[uid] = name;
-      return name;
-    } catch (_) {
-      return 'Unknown User';
+  Future<Map<String, dynamic>> _resolveMemberInfo(String uid) async {
+    if (_nameCache.containsKey(uid) && _memberAvatars.containsKey(uid) && _lastActiveCache.containsKey(uid)) {
+      return {'name': _nameCache[uid]!, 'avatar': _memberAvatars[uid]!, 'lastActive': _lastActiveCache[uid]};
     }
-  }
-
-  Future<DateTime?> _resolveLastActive(String uid) async {
-    if (_lastActiveCache.containsKey(uid)) return _lastActiveCache[uid];
     try {
       final doc = await _firestore.collection('users').doc(uid).get();
-      final ts = doc.data()?['lastActive'] as Timestamp?;
-      final dt = ts?.toDate();
-      _lastActiveCache[uid] = dt;
-      return dt;
+      final data = doc.data();
+      final name = (data?['fullName'] as String?) ?? 'Unknown User';
+      final imageUrl = (data?['imageUrl'] as String?) ?? '';
+      final ts = data?['lastActive'] as Timestamp?;
+      final lastActive = ts?.toDate();
+      _nameCache[uid] = name;
+      _memberAvatars[uid] = imageUrl;
+      _lastActiveCache[uid] = lastActive;
+      return {'name': name, 'avatar': imageUrl, 'lastActive': lastActive};
     } catch (_) {
-      return null;
+      return {'name': 'Unknown User', 'avatar': '', 'lastActive': null};
     }
   }
 
@@ -79,7 +76,19 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(group.name, style: theme.textTheme.titleLarge),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(group.name, style: theme.textTheme.titleLarge),
+                          ),
+                          if (isAdmin)
+                            IconButton(
+                              icon: const Icon(LucideIcons.pencil, size: 18),
+                              tooltip: 'Edit group',
+                              onPressed: () => _showEditDialog(group),
+                            ),
+                        ],
+                      ),
                       if (group.description.isNotEmpty) ...[
                         const SizedBox(height: 4),
                         Text(group.description, style: TextStyle(color: theme.colorScheme.onSurface)),
@@ -120,10 +129,10 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                     margin: const EdgeInsets.only(bottom: 6),
                     child: ListTile(
                       leading: const Icon(LucideIcons.userPlus),
-                      title: FutureBuilder<String>(
-                        future: _resolveName(requestUid),
-                        builder: (ctx, nameSnap) => Text(
-                          nameSnap.data ?? 'Loading...',
+                      title: FutureBuilder<Map<String, dynamic>>(
+                        future: _resolveMemberInfo(requestUid),
+                        builder: (ctx, infoSnap) => Text(
+                          (infoSnap.data?['name'] as String?) ?? 'Loading...',
                         ),
                       ),
                       subtitle: const Text('Wants to join'),
@@ -158,25 +167,35 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                 final isOwner = memberUid == group.createdBy;
                 return Card(
                   margin: const EdgeInsets.only(bottom: 6),
-                  child: ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: theme.colorScheme.primaryContainer,
-                      child: const Icon(LucideIcons.user, size: 20),
-                    ),
-                    title: FutureBuilder<String>(
-                      future: _resolveName(memberUid),
-                      builder: (ctx, nameSnap) => Text(
-                        nameSnap.data ?? 'Loading...',
-                      ),
-                    ),
-                    subtitle: FutureBuilder<DateTime?>(
-                      future: _resolveLastActive(memberUid),
-                      builder: (ctx, activeSnap) {
-                        final lastActive = activeSnap.data;
-                        final activeText = lastActive != null
-                            ? 'Active ${timeAgo(lastActive)}'
-                            : 'No activity recorded';
-                        return Column(
+                  child: FutureBuilder<Map<String, dynamic>>(
+                    future: _resolveMemberInfo(memberUid),
+                    builder: (ctx, infoSnap) {
+                      final info = infoSnap.data;
+                      final name = (info?['name'] as String?) ?? 'Loading...';
+                      final avatarUrl = (info?['avatar'] as String?) ?? '';
+                      final lastActive = info?['lastActive'] as DateTime?;
+                      final activeText = lastActive != null
+                          ? 'Active ${timeAgo(lastActive)}'
+                          : 'No activity recorded';
+
+                      return ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor: theme.colorScheme.primaryContainer,
+                          child: (avatarUrl.isNotEmpty)
+                              ? ClipOval(
+                                  child: CachedNetworkImage(
+                                    imageUrl: avatarUrl,
+                                    width: 40,
+                                    height: 40,
+                                    fit: BoxFit.cover,
+                                    placeholder: (_, __) => const Icon(LucideIcons.user, size: 20),
+                                    errorWidget: (_, __, ___) => const Icon(LucideIcons.user, size: 20),
+                                  ),
+                                )
+                              : const Icon(LucideIcons.user, size: 20),
+                        ),
+                        title: Text(name),
+                        subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
@@ -188,15 +207,40 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                               style: TextStyle(fontSize: 11, color: theme.colorScheme.primary.withAlpha(180)),
                             ),
                           ],
-                        );
-                      },
-                    ),
-                    trailing: isOwner
-                        ? Chip(
-                            label: const Text('Admin'),
-                            visualDensity: VisualDensity.compact,
-                          )
-                        : null,
+                        ),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (isOwner)
+                              Chip(
+                                label: const Text('Admin'),
+                                visualDensity: VisualDensity.compact,
+                              ),
+                            if (isAdmin && memberUid != uid)
+                              PopupMenuButton<String>(
+                                icon: const Icon(LucideIcons.moreVertical, size: 20),
+                                onSelected: (value) {
+                                  if (value == 'remove') {
+                                    _confirmRemoveMember(context, memberUid, name);
+                                  }
+                                },
+                                itemBuilder: (_) => [
+                                  PopupMenuItem(
+                                    value: 'remove',
+                                    child: Row(
+                                      children: [
+                                        Icon(LucideIcons.userMinus, size: 18, color: theme.colorScheme.error),
+                                        const SizedBox(width: 8),
+                                        Text('Remove', style: TextStyle(color: theme.colorScheme.error)),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                          ],
+                        ),
+                      );
+                    },
                   ),
                 );
               }),
@@ -205,6 +249,96 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
         },
       ),
     );
+  }
+
+  void _showEditDialog(GroupModel group) {
+    final nameController = TextEditingController(text: group.name);
+    final descController = TextEditingController(text: group.description);
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Edit Group'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              decoration: const InputDecoration(
+                labelText: 'Group Name',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: descController,
+              decoration: const InputDecoration(
+                labelText: 'Description',
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 3,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () async {
+              final name = nameController.text.trim();
+              if (name.isEmpty) return;
+              Navigator.of(ctx).pop();
+              final error = await _groupService.updateGroup(
+                groupId: widget.groupId,
+                name: name,
+                description: descController.text.trim(),
+              );
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(error ?? 'Group updated')),
+                );
+              }
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmRemoveMember(BuildContext context, String memberUid, String memberName) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Remove Member'),
+        content: Text('Remove "$memberName" from this group?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Theme.of(ctx).colorScheme.error),
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              _removeMember(memberUid);
+            },
+            child: const Text('Remove'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _removeMember(String memberUid) async {
+    final error = await _groupService.removeMember(widget.groupId, memberUid);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error ?? 'Member removed')),
+      );
+    }
   }
 
   void _approve(BuildContext context, String groupId, String userId) async {
