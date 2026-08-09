@@ -1,4 +1,7 @@
-# Community Map
+<div align="center">
+  <img width="100" alt="dark_mode" src="https://github.com/user-attachments/assets/c77e78a3-903c-47b9-8d98-80eb69445277" />
+  <h1>Community Map</h1>
+</div>
 
 ## Features
 
