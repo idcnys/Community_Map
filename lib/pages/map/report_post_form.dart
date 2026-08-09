@@ -11,6 +11,8 @@ import '../../services/cloudinary_service.dart';
 import '../../models/report_post_model.dart';
 import '../../models/group_model.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ReportPostForm extends StatefulWidget {
   const ReportPostForm({super.key});
@@ -44,6 +46,20 @@ class _ReportPostFormState extends State<ReportPostForm> {
     super.initState();
     _detectLocation();
     _loadGroups();
+    _prefillContact();
+  }
+
+  /// Auto-fill contact number from user profile if phone is set.
+  Future<void> _prefillContact() async {
+    try {
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid == null) return;
+      final doc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
+      final phone = doc.data()?['phone'] as String? ?? '';
+      if (phone.isNotEmpty && mounted && _contactCtrl.text.isEmpty) {
+        setState(() => _contactCtrl.text = phone);
+      }
+    } catch (_) {}
   }
 
   Future<void> _detectLocation() async {

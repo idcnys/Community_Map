@@ -97,6 +97,23 @@ class _ProfileEditorPageState extends State<ProfileEditorPage> {
     }
   }
 
+  bool get _dobEditable => _dobCtrl.text.trim().isEmpty;
+
+  Future<void> _selectDob() async {
+    if (!_dobEditable) return;
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime(2000),
+      firstDate: DateTime(1900),
+      lastDate: DateTime.now(),
+    );
+    if (picked != null) {
+      setState(() {
+        _dobCtrl.text = '${picked.day}/${picked.month}/${picked.year}';
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -218,15 +235,22 @@ class _ProfileEditorPageState extends State<ProfileEditorPage> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                // Date of Birth — disabled, set at signup only
+                // Date of Birth — editable once if empty (e.g. Google sign-in)
                 TextFormField(
                   controller: _dobCtrl,
-                  enabled: false,
+                  readOnly: true,
+                  enabled: _dobEditable,
+                  onTap: _selectDob,
                   decoration: InputDecoration(
                     labelText: 'Date of Birth',
                     hintText: 'DD/MM/YYYY',
                     prefixIcon: const Icon(LucideIcons.cake),
-                    helperText: 'Set during signup — cannot be changed',
+                    suffixIcon: _dobEditable
+                        ? const Icon(LucideIcons.chevronDown)
+                        : null,
+                    helperText: _dobEditable
+                        ? 'Tap to set — can only be set once'
+                        : 'Cannot be changed',
                   ),
                 ),
                 const SizedBox(height: 16),

@@ -265,17 +265,23 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
       final userCredential =
           await FirebaseAuth.instance.signInWithCredential(credential);
-      PushNotificationService().registerToken();
 
-      // Auto-create profile on first Google sign-in
+      // Auto-create profile on first Google sign-in (BEFORE registerToken,
+      // because registerToken uses merge:true which creates a partial doc)
       final user = userCredential.user;
       if (user != null) {
+        // Update Firebase Auth display name (same as email sign-up)
+        final displayName = googleUser.displayName ?? '';
+        if (displayName.isNotEmpty) {
+          await user.updateDisplayName(displayName);
+        }
+
         final profileRef =
             FirebaseFirestore.instance.collection('users').doc(user.uid);
         final profileSnap = await profileRef.get();
         if (!profileSnap.exists) {
           await profileRef.set({
-            'fullName': googleUser.displayName ?? '',
+            'fullName': displayName,
             'email': googleUser.email,
             'imageUrl': googleUser.photoUrl ?? '',
             'bio': '',
@@ -289,6 +295,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           });
         }
       }
+
+      // Register FCM token AFTER profile creation
+      PushNotificationService().registerToken();
 
       if (mounted) context.go('/dashboard');
     } on FirebaseAuthException catch (e) {

@@ -306,6 +306,7 @@ class _CommunityPostCardState extends ConsumerState<CommunityPostCard> {
               Navigator.of(ctx).pop();
               final service = ref.read(communityPostServiceProvider);
               await service.deletePost(widget.post.id);
+              ref.read(paginatedFeedProvider.notifier).removePost(widget.post.id);
             },
             child: const Text('Delete'),
           ),

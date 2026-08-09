@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/community_post_model.dart';
@@ -73,9 +74,48 @@ final paginatedFeedProvider =
 );
 
 class PaginatedFeedNotifier extends AsyncNotifier<PaginatedFeedState> {
+  StreamSubscription<List<CommunityPostModel>>? _newPostsSub;
+  DateTime? _loadedAt;
+
   @override
   Future<PaginatedFeedState> build() async {
-    return _loadFirstPage();
+    ref.onDispose(() => _newPostsSub?.cancel());
+    final result = await _loadFirstPage();
+    _loadedAt = DateTime.now();
+    _listenForNewPosts();
+    return result;
+  }
+
+  /// Subscribe to Firestore for posts created after initial load.
+  /// New posts are prepended to the current list (deduplicated).
+  void _listenForNewPosts() {
+    _newPostsSub?.cancel();
+    final service = ref.read(communityPostServiceProvider);
+    final isGuest = ref.read(isGuestProvider);
+    final filter = isGuest ? 'public' : ref.read(feedFilterProvider);
+    final myGroupIds = ref.read(myGroupIdsProvider).value ?? [];
+
+    _newPostsSub = service
+        .streamNewPosts(filter: filter, myGroupIds: myGroupIds, since: _loadedAt!)
+        .listen((newPosts) {
+      final current = state.value;
+      if (current == null || newPosts.isEmpty) return;
+
+      final existingIds = current.posts.map((p) => p.id).toSet();
+      final fresh = newPosts.where((p) => !existingIds.contains(p.id)).toList();
+      if (fresh.isEmpty) return;
+
+      state = AsyncData(current.copyWith(posts: [...fresh, ...current.posts]));
+    });
+  }
+
+  /// Remove a post locally after deletion (no full reload needed).
+  void removePost(String postId) {
+    final current = state.value;
+    if (current == null) return;
+    state = AsyncData(current.copyWith(
+      posts: current.posts.where((p) => p.id != postId).toList(),
+    ));
   }
 
   Future<PaginatedFeedState> _loadFirstPage() async {

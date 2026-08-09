@@ -161,6 +161,34 @@ class PostService {
 
   // ─── REALTIME STREAMS ────────────────────────────────────────────
 
+  /// Streams posts created after [since], respecting the active filter.
+  /// Used by PaginatedFeedNotifier to prepend new posts in real-time.
+  Stream<List<CommunityPostModel>> streamNewPosts({
+    required String filter,
+    required List<String> myGroupIds,
+    required DateTime since,
+  }) {
+    Query<Map<String, dynamic>> query = _firestore
+        .collection('community_posts')
+        .where('createdAt', isGreaterThanOrEqualTo: Timestamp.fromDate(since))
+        .orderBy('createdAt', descending: true)
+        .limit(pageSize);
+
+    if (filter == 'public') {
+      query = query.where('originType', isEqualTo: 'public');
+    } else if (filter != 'all') {
+      query = query.where('groupId', isEqualTo: filter);
+    } else {
+      final allowedGroupIds = ['', ...myGroupIds];
+      query = query.where('groupId', whereIn: allowedGroupIds);
+    }
+
+    return query.snapshots().map((snap) => snap.docs
+        .map((d) => CommunityPostModel.fromMap(d.id, d.data()))
+        .toList());
+  }
+
+
   Stream<List<CommunityPostModel>> streamPublicFeed({int limit = 20}) {
     return _firestore
         .collection('community_posts')

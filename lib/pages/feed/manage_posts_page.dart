@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../core/utils/time_ago.dart';
 import '../../models/community_post_model.dart';
 import '../../services/post_service.dart';
+import '../../providers/feed_providers.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'comments_page.dart';
 
@@ -181,6 +182,7 @@ class _ManagePostsPageState extends ConsumerState<ManagePostsPage> {
             onPressed: () async {
               Navigator.of(ctx).pop();
               await _service.deletePost(post.id);
+              ref.read(paginatedFeedProvider.notifier).removePost(post.id);
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Post deleted')),
