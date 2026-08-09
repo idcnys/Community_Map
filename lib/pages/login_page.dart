@@ -1,6 +1,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import '../services/push_notification_service.dart';
 import 'package:go_router/go_router.dart';
 import '../core/utils/validators.dart';
@@ -185,6 +187,20 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   ),
                   const SizedBox(height: 12),
 
+                  // Google Sign-In Button
+                  OutlinedButton.icon(
+                    onPressed: _isLoading ? null : _handleGoogleSignIn,
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    icon: Image.asset('assets/icon/google_logo.png', width: 24, height: 24),
+                    label: const Text('Sign in with Google', style: TextStyle(fontSize: 16)),
+                  ),
+                  const SizedBox(height: 12),
+
                   // Guest Login Button
                   OutlinedButton.icon(
                     onPressed: _isLoading ? null : _handleGuestLogin,
@@ -228,6 +244,61 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     );
   }
 
+
+  static bool _googleSignInInitialized = false;
+
+  Future<void> _handleGoogleSignIn() async {
+    setState(() => _isLoading = true);
+    try {
+      final googleSignIn = GoogleSignIn.instance;
+      if (!_googleSignInInitialized) {
+        await googleSignIn.initialize();
+        _googleSignInInitialized = true;
+      }
+
+      final GoogleSignInAccount googleUser = await googleSignIn.authenticate();
+      final GoogleSignInAuthentication googleAuth = googleUser.authentication;
+
+      final credential = GoogleAuthProvider.credential(
+        idToken: googleAuth.idToken,
+      );
+
+      final userCredential =
+          await FirebaseAuth.instance.signInWithCredential(credential);
+      PushNotificationService().registerToken();
+
+      // Auto-create profile on first Google sign-in
+      final user = userCredential.user;
+      if (user != null) {
+        final profileRef =
+            FirebaseFirestore.instance.collection('users').doc(user.uid);
+        final profileSnap = await profileRef.get();
+        if (!profileSnap.exists) {
+          await profileRef.set({
+            'fullName': googleUser.displayName ?? '',
+            'email': googleUser.email,
+            'imageUrl': googleUser.photoUrl ?? '',
+            'bio': '',
+            'phone': '',
+            'location': '',
+            'dateOfBirth': '',
+            'bloodGroup': '',
+            'hobby': '',
+            'createdAt': FieldValue.serverTimestamp(),
+            'lastActive': FieldValue.serverTimestamp(),
+          });
+        }
+      }
+
+      if (mounted) context.go('/dashboard');
+    } on FirebaseAuthException catch (e) {
+      if (mounted) context.showError('Google sign-in failed: ${e.message}');
+    } catch (e) {
+      if (mounted) context.showError('Google sign-in failed: $e');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   Future<void> _handleGuestLogin() async {
     setState(() => _isLoading = true);
