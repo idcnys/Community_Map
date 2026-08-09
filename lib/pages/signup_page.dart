@@ -1,6 +1,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../services/push_notification_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:go_router/go_router.dart';
 import '../core/utils/validators.dart';
@@ -75,6 +76,9 @@ class _SignUpPageState extends State<SignUpPage> {
 
       // Update display name
       await user.updateDisplayName(_fullNameController.text.trim());
+
+      // Register FCM token for push notifications
+      PushNotificationService().registerToken();
 
       // Store profile in Firestore
       await FirebaseFirestore.instance.collection('users').doc(user.uid).set({

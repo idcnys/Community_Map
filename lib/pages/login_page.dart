@@ -1,6 +1,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../services/push_notification_service.dart';
 import 'package:go_router/go_router.dart';
 import '../core/utils/validators.dart';
 import '../core/utils/snackbar_helper.dart';
@@ -47,6 +48,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         if (mounted) context.go('/verify-email');
         return;
       }
+
+      // Register FCM token for push notifications
+      PushNotificationService().registerToken();
 
       if (mounted) {
         context.go('/dashboard');

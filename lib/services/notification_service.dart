@@ -1,11 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/notification_model.dart';
+import 'push_notification_service.dart';
 
 /// Handles all notification reads, writes, and group-broadcast logic.
+/// Also triggers push notifications via Supabase Edge Function.
 class NotificationService {
   final _firestore = FirebaseFirestore.instance;
   final _auth = FirebaseAuth.instance;
+  final _push = PushNotificationService();
 
   String get currentUid => _auth.currentUser!.uid;
   String get currentName => _auth.currentUser?.displayName ?? 'User';
@@ -59,7 +62,7 @@ class NotificationService {
   }
 
   // ─── SEND ────────────────────────────────────────────────────────
-  /// Send a single notification to one user.
+  /// Send a single notification to one user (Firestore + push).
   Future<void> send({
     required String targetUserId,
     required String type,
@@ -78,6 +81,14 @@ class NotificationService {
       'read': false,
       'createdAt': FieldValue.serverTimestamp(),
     });
+
+    // Fire push notification (non-blocking, won't fail the main flow)
+    _push.pushToUser(
+      targetUserId: targetUserId,
+      title: _pushTitle(type),
+      body: message,
+      data: {'type': type, 'postId': postId},
+    );
   }
 
   /// Notify all members of a group (except the actor).
@@ -95,8 +106,11 @@ class NotificationService {
       final groupName = groupSnap.data()?['name'] ?? 'group';
 
       final batch = _firestore.batch();
+      final targetMembers = <String>[];
+
       for (final memberId in members) {
         if (memberId == currentUid) continue;
+        targetMembers.add(memberId);
         final ref = _firestore.collection('notifications').doc();
         batch.set(ref, {
           'type': type,
@@ -111,6 +125,78 @@ class NotificationService {
         });
       }
       await batch.commit();
+
+      // Fire push to all group members (non-blocking)
+      if (targetMembers.isNotEmpty) {
+        _push.pushToUsers(
+          targetUserIds: targetMembers,
+          title: _pushTitle(type),
+          body: '$currentName posted in $groupName',
+          data: {'type': type, 'postId': postId, 'groupId': groupId},
+        );
+      }
     } catch (_) {}
+  }
+
+  /// Notify ALL registered users (except the actor) — used for new reports.
+  Future<void> notifyAllUsers({
+    required String reportId,
+    required String type,
+    required String message,
+  }) async {
+    try {
+      final usersSnap = await _firestore.collection('users').limit(200).get();
+
+      final batch = _firestore.batch();
+      final targetUsers = <String>[];
+
+      for (final doc in usersSnap.docs) {
+        if (doc.id == currentUid) continue;
+        targetUsers.add(doc.id);
+        final ref = _firestore.collection('notifications').doc();
+        batch.set(ref, {
+          'type': type,
+          'targetUserId': doc.id,
+          'actorId': currentUid,
+          'actorName': currentName,
+          'postId': reportId,
+          'postTitle': '',
+          'message': message,
+          'read': false,
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+      }
+      await batch.commit();
+
+      // Fire push to all users (non-blocking)
+      if (targetUsers.isNotEmpty) {
+        _push.pushToUsers(
+          targetUserIds: targetUsers,
+          title: _pushTitle(type),
+          body: message,
+          data: {'type': type, 'postId': reportId},
+        );
+      }
+    } catch (_) {}
+  }
+
+  // ─── HELPERS ─────────────────────────────────────────────────────
+  String _pushTitle(String type) {
+    switch (type) {
+      case 'like':
+        return 'New Like';
+      case 'comment':
+        return 'New Comment';
+      case 'new_post':
+        return 'New Post';
+      case 'new_report':
+        return '🚨 New Report';
+      case 'join_request':
+        return 'Join Request';
+      case 'member_approved':
+        return 'Request Approved';
+      default:
+        return 'Notification';
+    }
   }
 }

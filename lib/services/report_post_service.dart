@@ -4,11 +4,13 @@ import 'package:geolocator/geolocator.dart';
 import '../models/report_post_model.dart';
 import '../models/community_post_model.dart';
 import '../shared/services/user_group_service.dart';
+import 'notification_service.dart';
 
 class ReportPostService {
   final _firestore = FirebaseFirestore.instance;
   final _auth = FirebaseAuth.instance;
   final _userGroupService = UserGroupService();
+  final _notifications = NotificationService();
 
   String get currentUid => _auth.currentUser!.uid;
   String get currentName => _auth.currentUser?.displayName ?? 'User';
@@ -26,7 +28,7 @@ class ReportPostService {
     String audioUrl = '',
   }) async {
     try {
-      await _firestore.collection('report_posts').add({
+      final docRef = await _firestore.collection('report_posts').add({
         'contactNumber': contactNumber,
         'reportType': reportType,
         'description': description,
@@ -42,6 +44,14 @@ class ReportPostService {
         'votes': <String, String>{},
         'createdAt': FieldValue.serverTimestamp(),
       });
+
+      // Notify ALL users about the new report (non-blocking)
+      _notifications.notifyAllUsers(
+        reportId: docRef.id,
+        type: 'new_report',
+        message: '$currentName reported: $reportType',
+      );
+
       return null;
     } catch (e) {
       return 'Failed to submit report: $e';
@@ -54,7 +64,7 @@ class ReportPostService {
     required double longitude,
   }) async {
     try {
-      await _firestore.collection('report_posts').add({
+      final docRef = await _firestore.collection('report_posts').add({
         'contactNumber': '',
         'reportType': ReportTypes.urgentType,
         'description': 'Urgent emergency reported!',
@@ -68,6 +78,14 @@ class ReportPostService {
         'votes': <String, String>{},
         'createdAt': FieldValue.serverTimestamp(),
       });
+
+      // Notify ALL users about the urgent report (non-blocking)
+      _notifications.notifyAllUsers(
+        reportId: docRef.id,
+        type: 'new_report',
+        message: '$currentName reported an URGENT emergency!',
+      );
+
       return null;
     } catch (e) {
       return 'Failed to submit urgent report: $e';
@@ -195,6 +213,21 @@ class ReportPostService {
         'text': text,
         'createdAt': FieldValue.serverTimestamp(),
       });
+
+      // Notify the report author about the comment
+      try {
+        final reportDoc = await _firestore.collection('report_posts').doc(reportId).get();
+        final reportAuthorId = reportDoc.data()?['authorId'] as String? ?? '';
+        if (reportAuthorId.isNotEmpty && reportAuthorId != currentUid) {
+          await _notifications.send(
+            targetUserId: reportAuthorId,
+            type: 'comment',
+            postId: reportId,
+            message: '$currentName commented on your report',
+          );
+        }
+      } catch (_) {}
+
       return null;
     } catch (e) {
       return 'Failed to add comment: $e';

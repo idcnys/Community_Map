@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../../services/push_notification_service.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../services/profile_service.dart';
@@ -332,6 +333,7 @@ class _ProfileEditorPageState extends State<ProfileEditorPage> {
   }
 
   void _logout() async {
+    await PushNotificationService().unregisterToken();
     await FirebaseAuth.instance.signOut();
     if (mounted) {
       Navigator.of(context).pushAndRemoveUntil(
