@@ -12,6 +12,7 @@ import 'pages/feed/community_post_form.dart';
 import 'pages/manage/profile_editor_page.dart';
 import 'pages/manage/group_detail_page.dart';
 import 'pages/splash_page.dart';
+import 'providers/guest_provider.dart';
 import 'pages/onboarding_page.dart';
 
 /// Converts the Firebase auth-state stream into a [Listenable] so GoRouter
@@ -56,6 +57,11 @@ final router = GoRouter(
 
     // Not signed in -> force to login (unless already there / signing up).
     if (!isLoggedIn) {
+      return isAuthScreen ? null : '/login';
+    }
+
+    // Anonymous user with inactive guest session -> treat as logged out.
+    if (isAnonymous && !GuestSession.isActive) {
       return isAuthScreen ? null : '/login';
     }
 

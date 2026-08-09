@@ -312,7 +312,17 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   Future<void> _handleGuestLogin() async {
     setState(() => _isLoading = true);
     try {
-      await FirebaseAuth.instance.signInAnonymously();
+      final currentUser = FirebaseAuth.instance.currentUser;
+
+      if (currentUser != null && currentUser.isAnonymous) {
+        // Reuse existing anonymous session — no new profile created
+        await GuestSession.setActive(true);
+      } else {
+        // First guest login on this device
+        await FirebaseAuth.instance.signInAnonymously();
+        await GuestSession.setActive(true);
+      }
+
       ref.read(isGuestProvider.notifier).set(true);
       if (mounted) {
         context.go('/dashboard');

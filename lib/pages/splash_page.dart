@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../providers/guest_provider.dart';
 
 /// Animated splash with logo, app name & tagline.
 /// Shown briefly on every launch, then routes to onboarding or login.
@@ -72,6 +73,9 @@ class _SplashPageState extends State<SplashPage>
 
   Future<void> _navigate() async {
     if (!mounted) return;
+
+    // Hydrate guest session flag so router knows if guest was active
+    await GuestSession.init();
 
     final prefs = await SharedPreferences.getInstance();
     final onboardingDone = prefs.getBool('onboarding_complete') ?? false;

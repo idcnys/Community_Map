@@ -10,8 +10,6 @@ import 'poll_form.dart';
 import 'manage_posts_page.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../providers/guest_provider.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import '../../services/push_notification_service.dart';
 
 class FeedPage extends ConsumerStatefulWidget {
   const FeedPage({super.key});
@@ -132,8 +130,9 @@ class _FeedPageState extends ConsumerState<FeedPage> {
   }
 
   void _handleGuestLogout() async {
-    await PushNotificationService().unregisterToken();
-    await FirebaseAuth.instance.signOut();
+    // Don't sign out — keep the anonymous session alive so the same
+    // identity is reused on next guest login (one profile per device).
+    await GuestSession.setActive(false);
     ref.read(isGuestProvider.notifier).set(false);
     if (mounted) {
       context.go('/login');
