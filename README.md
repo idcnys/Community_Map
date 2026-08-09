@@ -1,6 +1,12 @@
 <div align="center">
   <img width="100" alt="dark_mode" src="https://github.com/user-attachments/assets/c77e78a3-903c-47b9-8d98-80eb69445277" />
   <h1>Community Map</h1>
+
+  <p>
+    <a href="#features"><b>Features</b></a> • 
+    <a href="#use-cases"><b>Use Cases</b></a> • 
+    <a href="#ui"><b>UI</b></a>
+  </p>
 </div>
 
 ## Features
@@ -59,6 +65,8 @@
 - Dedicated locked-state UI for unavailable actions
 - Seamless guest sign-out path back to authentication
 
+---
+
 ## Use Cases
 
 ### 1) Local Community Updates
@@ -90,6 +98,8 @@ A first-time visitor enters as a guest to explore feed/map content before creati
 
 ### 10) Ongoing Group Administration
 Group owners manage membership requests, monitor participation, and keep group communication organized through chat and moderation tools.
+
+---
 
 ## UI
 
