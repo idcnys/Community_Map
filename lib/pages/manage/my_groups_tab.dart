@@ -210,14 +210,15 @@ class _GroupTile extends StatelessWidget {
                   ],
                 ),
               ),
-            PopupMenuButton<String>(
-              onSelected: (value) {
-                if (value == 'leave') _leaveGroup(context, group.id);
-              },
-              itemBuilder: (_) => [
-                const PopupMenuItem(value: 'leave', child: Text('Leave Group')),
-              ],
-            ),
+            if (!isAdmin)
+              PopupMenuButton<String>(
+                onSelected: (value) {
+                  if (value == 'leave') _leaveGroup(context, group.id);
+                },
+                itemBuilder: (_) => [
+                  const PopupMenuItem(value: 'leave', child: Text('Leave Group')),
+                ],
+              ),
           ],
         ),
         onTap: () => Navigator.of(context).push(

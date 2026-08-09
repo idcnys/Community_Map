@@ -243,6 +243,13 @@ class GroupService {
   // ─── LEAVE GROUP ─────────────────────────────────────────────────
   Future<String?> leaveGroup(String groupId) async {
     try {
+      // Admin (creator) cannot leave their own group
+      final doc = await _firestore.collection('groups').doc(groupId).get();
+      final createdBy = doc.data()?['createdBy'] as String? ?? '';
+      if (createdBy == currentUid) {
+        return 'You cannot leave a group you created. Delete it instead.';
+      }
+
       await _firestore.collection('groups').doc(groupId).update({
         'members': FieldValue.arrayRemove([currentUid]),
         'memberCount': FieldValue.increment(-1),
