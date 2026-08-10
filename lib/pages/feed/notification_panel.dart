@@ -4,6 +4,9 @@ import '../../services/notification_service.dart';
 import '../../models/notification_model.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'comments_page.dart';
+import '../../services/report_post_service.dart';
+import '../../models/report_post_model.dart';
+import '../map/report_detail_sheet.dart';
 
 class NotificationPanel extends StatelessWidget {
   const NotificationPanel({super.key});
@@ -156,9 +159,23 @@ class NotificationPanel extends StatelessWidget {
                 shape: BoxShape.circle,
               ),
             ),
-      onTap: () {
+      onTap: () async {
         service.markRead(notif.id);
-        if (notif.postId.isNotEmpty) {
+        if (notif.postId.isEmpty) return;
+
+        if (notif.type == 'new_report') {
+          // Map report notification -> open ReportDetailSheet
+          final reportService = ReportPostService();
+          final report = await reportService.getReportById(notif.postId);
+          if (report == null || !context.mounted) return;
+          Navigator.of(context).pop(); // close notification sheet
+          showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            builder: (_) => ReportDetailSheet(report: report),
+          );
+        } else {
+          // Feed post notification -> open CommentsPage
           Navigator.of(context).push(
             MaterialPageRoute(
               builder: (_) => CommentsPage(postId: notif.postId),

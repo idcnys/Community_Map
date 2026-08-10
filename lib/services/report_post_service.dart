@@ -246,6 +246,13 @@ class ReportPostService {
             .toList());
   }
 
+  // ─── GET SINGLE REPORT (one-shot) ─────────────────────────────
+  Future<ReportPostModel?> getReportById(String reportId) async {
+    final doc = await _firestore.collection('report_posts').doc(reportId).get();
+    if (!doc.exists) return null;
+    return ReportPostModel.fromMap(doc.id, doc.data()!);
+  }
+
   // ─── GET SINGLE REPORT (live stream) ───────────────────────────
   Stream<ReportPostModel?> getReportStream(String reportId) {
     return _firestore
