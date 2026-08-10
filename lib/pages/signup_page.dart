@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../services/push_notification_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:go_router/go_router.dart';
 import '../core/utils/validators.dart';
@@ -79,6 +80,11 @@ class _SignUpPageState extends State<SignUpPage> {
 
       // Register FCM token for push notifications
       PushNotificationService().registerToken();
+
+      // Remember sign-in method for next launch
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('last_sign_in_method', 'email');
+      await prefs.setString('last_sign_in_email', _emailController.text.trim());
 
       // Store profile in Firestore
       await FirebaseFirestore.instance.collection('users').doc(user.uid).set({

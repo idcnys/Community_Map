@@ -10,6 +10,7 @@ import '../core/utils/snackbar_helper.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/guest_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
@@ -24,6 +25,35 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
   bool _isLoading = false;
+
+  // Previous sign-in detection
+  String? _lastSignInMethod; // 'email' | 'google'
+  String? _lastEmail;
+  bool _showFullForm = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkPreviousSignIn();
+  }
+
+  Future<void> _checkPreviousSignIn() async {
+    final prefs = await SharedPreferences.getInstance();
+    final method = prefs.getString('last_sign_in_method');
+    final email = prefs.getString('last_sign_in_email');
+    if (method != null && mounted) {
+      setState(() {
+        _lastSignInMethod = method;
+        _lastEmail = email;
+      });
+    }
+  }
+
+  static Future<void> storeSignInMethod(String method, {String? email}) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('last_sign_in_method', method);
+    if (email != null) await prefs.setString('last_sign_in_email', email);
+  }
 
   @override
   void dispose() {
@@ -53,6 +83,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
       // Register FCM token for push notifications
       PushNotificationService().registerToken();
+      storeSignInMethod('email', email: _emailController.text.trim());
 
       if (mounted) {
         context.go('/dashboard');
@@ -87,6 +118,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
+    // Show streamlined "Continue with..." screen if previous sign-in detected
+    if (_lastSignInMethod != null && !_showFullForm) {
+      return _buildWelcomeBack(theme);
+    }
 
     return Scaffold(
       body: SafeArea(
@@ -298,6 +334,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
       // Register FCM token AFTER profile creation
       PushNotificationService().registerToken();
+      storeSignInMethod('google', email: googleUser.email);
 
       if (mounted) context.go('/dashboard');
     } on FirebaseAuthException catch (e) {
@@ -332,6 +369,112 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  Widget _buildWelcomeBack(ThemeData theme) {
+    final isGoogle = _lastSignInMethod == 'google';
+    final displayEmail = _lastEmail ?? '';
+
+    return Scaffold(
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Icon(
+                  LucideIcons.lock,
+                  size: 72,
+                  color: theme.colorScheme.primary,
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  'Welcome Back',
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  isGoogle
+                      ? 'Continue with your Google account'
+                      : 'Continue with your email',
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                if (displayEmail.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    displayEmail,
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 48),
+
+                // Continue button
+                FilledButton.icon(
+                  onPressed: _isLoading ? null : (isGoogle ? _handleGoogleSignIn : _continueWithEmail),
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  icon: isGoogle
+                      ? Image.asset('assets/icon/google_logo.png', width: 22, height: 22)
+                      : const Icon(LucideIcons.mail, size: 20),
+                  label: Text(
+                    isGoogle ? 'Continue with Google' : 'Continue with Email',
+                    style: const TextStyle(fontSize: 16),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Guest option
+                OutlinedButton.icon(
+                  onPressed: _isLoading ? null : _handleGuestLogin,
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  icon: const Icon(LucideIcons.eye),
+                  label: const Text('Login as Guest', style: TextStyle(fontSize: 16)),
+                ),
+                const SizedBox(height: 32),
+
+                // Use different account
+                Center(
+                  child: TextButton(
+                    onPressed: () => setState(() => _showFullForm = true),
+                    child: const Text('Use a different account'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _continueWithEmail() {
+    setState(() {
+      _showFullForm = true;
+      if (_lastEmail != null) {
+        _emailController.text = _lastEmail!;
+      }
+    });
   }
 
   Future<void> _handleForgotPassword() async {
