@@ -1,13 +1,14 @@
 import 'dart:io';
+
+import '../core/config/app_config.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 /// Uploads images to Cloudinary using an unsigned upload preset.
-/// Cloud: s2r8pydh | Preset: cmap-flutter
 class CloudinaryService {
-  static const String _cloudName = 's2r8pydh';
-  static const String _uploadPreset = 'cmap-flutter';
-  static const String _uploadUrl =
+  static String get _cloudName => AppConfig.cloudinaryCloudName;
+  static String get _uploadPreset => AppConfig.cloudinaryUploadPreset;
+  static String get _uploadUrl =>
       'https://api.cloudinary.com/v1_1/$_cloudName/image/upload';
 
   /// Uploads an image file and returns the secure URL.

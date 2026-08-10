@@ -46,3 +46,6 @@ app.*.map.json
 
 # Editor backups
 .editor_tools_backups/
+
+# Environment secrets
+.env

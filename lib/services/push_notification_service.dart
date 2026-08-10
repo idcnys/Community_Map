@@ -5,13 +5,13 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
+import '../core/config/app_config.dart';
+
 /// Handles FCM token registration and push delivery via Supabase Edge Function.
 class PushNotificationService {
-  static const String _supabaseUrl =
-      'https://nvgvurjuztboepaihbsl.supabase.co';
-  static const String _supabaseKey =
-      'sb_publishable_04bL7uGgzqdDv-L7sevFEQ_9iDkdptf';
-  static const String _functionUrl = '$_supabaseUrl/functions/v1/send-push';
+  static String get _supabaseUrl => AppConfig.supabaseUrl;
+  static String get _supabaseKey => AppConfig.supabasePublishableKey;
+  static String get _functionUrl => '$_supabaseUrl/functions/v1/send-push';
 
   final _firestore = FirebaseFirestore.instance;
   final _auth = FirebaseAuth.instance;

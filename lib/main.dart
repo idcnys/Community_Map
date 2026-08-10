@@ -5,6 +5,8 @@ import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'core/config/app_config.dart';
+
 import 'core/init/firebase_init.dart';
 import 'core/theme/app_theme.dart';
 import 'router.dart';
@@ -17,10 +19,13 @@ void main() async {
 
   await initializeFirebaseServices();
 
+  // Load environment variables
+  await AppConfig.load();
+
   // Initialize Supabase (for audio storage)
   await Supabase.initialize(
-    url: 'https://nvgvurjuztboepaihbsl.supabase.co',
-    publishableKey: 'sb_publishable_04bL7uGgzqdDv-L7sevFEQ_9iDkdptf',
+    url: AppConfig.supabaseUrl,
+    publishableKey: AppConfig.supabasePublishableKey,
   );
 
   // Remove native splash — Flutter page takes over

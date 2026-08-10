@@ -68,6 +68,7 @@ dependencies:
 
   # Local storage
   shared_preferences: ^2.3.5
+  flutter_dotenv: ^5.2.1
   flutter_native_splash: ^2.4.8
   google_sign_in: ^7.2.0
 dev_dependencies:
@@ -94,6 +95,7 @@ flutter:
   assets:
     - assets/splash/
     - assets/icon/
+    - .env
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
