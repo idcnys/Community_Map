@@ -1,32 +1,31 @@
 
 import 'dart:io';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
 import '../../widgets/voice_record_button.dart';
 import '../../services/supabase_storage_service.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../services/report_post_service.dart';
-import '../../services/group_service.dart';
+import '../../providers/group_providers.dart';
 import '../../services/cloudinary_service.dart';
 import '../../models/report_post_model.dart';
-import '../../models/group_model.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-class ReportPostForm extends StatefulWidget {
+class ReportPostForm extends ConsumerStatefulWidget {
   const ReportPostForm({super.key});
 
   @override
-  State<ReportPostForm> createState() => _ReportPostFormState();
+  ConsumerState<ReportPostForm> createState() => _ReportPostFormState();
 }
 
-class _ReportPostFormState extends State<ReportPostForm> {
+class _ReportPostFormState extends ConsumerState<ReportPostForm> {
   final _formKey = GlobalKey<FormState>();
   final _contactCtrl = TextEditingController();
   final _descCtrl = TextEditingController();
   final _reportService = ReportPostService();
-  final _groupService = GroupService();
   final _cloudinary = CloudinaryService();
   final _supabaseStorage = SupabaseStorageService();
   final _picker = ImagePicker();
@@ -39,13 +38,11 @@ class _ReportPostFormState extends State<ReportPostForm> {
   File? _selectedImage;
   File? _audioFile;
   bool _uploadingAudio = false;
-  List<GroupModel> _myGroups = [];
 
   @override
   void initState() {
     super.initState();
     _detectLocation();
-    _loadGroups();
     _prefillContact();
   }
 
@@ -73,12 +70,6 @@ class _ReportPostFormState extends State<ReportPostForm> {
     }
   }
 
-  Future<void> _loadGroups() async {
-    try {
-      final snap = await _groupService.getMyJoinedGroups().first;
-      if (mounted) setState(() => _myGroups = snap);
-    } catch (_) {}
-  }
 
   Future<void> _pickImage() async {
     final source = await showModalBottomSheet<String>(
@@ -126,6 +117,7 @@ class _ReportPostFormState extends State<ReportPostForm> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final myGroups = ref.watch(myJoinedGroupsProvider).value ?? [];
 
     return Scaffold(
       appBar: AppBar(title: const Text('Submit Report')),
@@ -278,7 +270,7 @@ class _ReportPostFormState extends State<ReportPostForm> {
               const SizedBox(height: 16),
 
               // Shared groups info
-              if (_myGroups.isNotEmpty) ...[
+              if (myGroups.isNotEmpty) ...[
                 Text(
                   'Contact visible to members of:',
                   style: theme.textTheme.bodySmall
@@ -287,7 +279,7 @@ class _ReportPostFormState extends State<ReportPostForm> {
                 const SizedBox(height: 8),
                 Wrap(
                   spacing: 6,
-                  children: _myGroups
+                  children: myGroups
                       .map((g) => Chip(
                             label: Text(g.name,
                                 style: const TextStyle(fontSize: 12)),
@@ -372,7 +364,8 @@ class _ReportPostFormState extends State<ReportPostForm> {
       }
     }
 
-    final groupIds = _myGroups.map((g) => g.id).toList();
+    final myGroups = ref.read(myJoinedGroupsProvider).value ?? [];
+    final groupIds = myGroups.map((g) => g.id).toList();
 
     final error = await _reportService.createReport(
       contactNumber: _contactCtrl.text.trim(),

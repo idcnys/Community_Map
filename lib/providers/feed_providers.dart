@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/community_post_model.dart';
-import '../models/group_model.dart';
 import '../models/notification_model.dart';
 import '../services/post_service.dart';
 import 'service_providers.dart';
@@ -12,12 +11,6 @@ import 'guest_provider.dart';
 final myGroupIdsProvider = FutureProvider<List<String>>((ref) async {
   final service = ref.watch(userGroupServiceProvider);
   return service.getMyGroupIds();
-});
-
-/// User's joined groups for filter chips.
-final myJoinedGroupsProvider = StreamProvider<List<GroupModel>>((ref) {
-  final service = ref.watch(groupServiceProvider);
-  return service.getMyJoinedGroups();
 });
 
 /// Selected group filter: 'all', 'public', or a groupId.
