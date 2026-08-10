@@ -53,6 +53,7 @@ class _FeedPageState extends ConsumerState<FeedPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Feed'),
+        automaticallyImplyLeading: false,
         actions: [
           if (isGuest)
             IconButton(
@@ -129,9 +130,8 @@ class _FeedPageState extends ConsumerState<FeedPage> {
     );
   }
 
+
   void _handleGuestLogout() async {
-    // Don't sign out — keep the anonymous session alive so the same
-    // identity is reused on next guest login (one profile per device).
     await GuestSession.setActive(false);
     ref.read(isGuestProvider.notifier).set(false);
     if (mounted) {

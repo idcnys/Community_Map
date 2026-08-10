@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -6,7 +7,11 @@ final isGuestProvider = NotifierProvider<GuestNotifier, bool>(GuestNotifier.new)
 
 class GuestNotifier extends Notifier<bool> {
   @override
-  bool build() => false;
+  bool build() {
+    // Derive initial state from Firebase Auth so returning guests
+    // are correctly identified after app restart.
+    return FirebaseAuth.instance.currentUser?.isAnonymous ?? false;
+  }
 
   void set(bool value) => state = value;
 }
