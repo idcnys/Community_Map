@@ -523,17 +523,7 @@ class _MapPageState extends ConsumerState<MapPage>
                           },
                         ),
                         const SizedBox(width: 8),
-                        _circleButton(
-                          icon: LucideIcons.bell,
-                          tooltip: 'Latest Reports',
-                          onPressed: () {
-                            showModalBottomSheet(
-                              context: context,
-                              isScrollControlled: true,
-                              builder: (_) => const MapNotificationPanel(),
-                            );
-                          },
-                        ),
+                        _buildLatestReportsButton(),
                       ],
                     ),
                   ],
@@ -737,6 +727,28 @@ class _MapPageState extends ConsumerState<MapPage>
       context: context,
       isScrollControlled: true,
       builder: (_) => MemberDetailSheet(uid: uid, name: name),
+    );
+  }
+
+  Widget _buildLatestReportsButton() {
+    final latestReports = ref.watch(latestReportsProvider);
+    final count = latestReports.value?.length ?? 0;
+
+    return Badge.count(
+      count: count,
+      isLabelVisible: count > 0,
+      backgroundColor: Theme.of(context).colorScheme.error,
+      child: _circleButton(
+        icon: LucideIcons.bell,
+        tooltip: 'Latest Reports',
+        onPressed: () {
+          showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            builder: (_) => const MapNotificationPanel(),
+          );
+        },
+      ),
     );
   }
 
