@@ -15,6 +15,7 @@ class ManagePage extends StatelessWidget {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Manage'),
+          automaticallyImplyLeading: false,
           actions: [
             IconButton(
               icon: const Icon(LucideIcons.user),

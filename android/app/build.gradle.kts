@@ -15,9 +15,12 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
+
+
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.communityapp"
+
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion  // Firebase Auth requires min 23
@@ -28,18 +31,17 @@ android {
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
             signingConfig = signingConfigs.getByName("debug")
         }
     }
 
-    applicationVariants.all {
-        outputs.all {
-            val impl = this as com.android.build.gradle.internal.api.BaseVariantOutputImpl
-            impl.outputFileName = "cmap-${buildType.name}.apk"
-        }
-    }
+
 }
 
 kotlin {
@@ -50,4 +52,32 @@ kotlin {
 
 flutter {
     source = "../.."
+}
+
+// Strip unused Lucide variable font weights before compress step
+tasks.register("stripLucideVariableFonts") {
+    doLast {
+        val dirs = listOf(
+            "intermediates/assets/release/mergeReleaseAssets/flutter_assets/packages/lucide_icons_flutter/assets/build_font",
+            "intermediates/flutter/release/flutter_assets/packages/lucide_icons_flutter/assets/build_font"
+        )
+        var count = 0
+        dirs.forEach { rel ->
+            val dir = layout.buildDirectory.dir(rel).get().asFile
+            if (dir.exists()) {
+                dir.listFiles()?.filter { it.name.startsWith("LucideVariable") }?.forEach {
+                    // Replace with empty file (can't delete - compress task expects it)
+                    it.writeBytes(ByteArray(0))
+                    count++
+                }
+            }
+        }
+        if (count > 0) println("Zeroed $count LucideVariable font files")
+    }
+}
+// Hook before compressReleaseAssets
+tasks.configureEach {
+    if (name.contains("compressReleaseAssets")) {
+        dependsOn("stripLucideVariableFonts")
+    }
 }

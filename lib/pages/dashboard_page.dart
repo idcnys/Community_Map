@@ -87,7 +87,7 @@ class _GuestLockedPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Manage')),
+      appBar: AppBar(title: const Text('Manage'), automaticallyImplyLeading: false),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(32),
