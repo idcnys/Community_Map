@@ -32,24 +32,24 @@ dependencies:
     sdk: flutter
 
   # Firebase
-  firebase_core: ^3.15.2
-  firebase_auth: ^5.7.0
-  cloud_firestore: ^5.6.9
-  firebase_messaging: ^15.2.5
+  firebase_core: ^4.13.0
+  firebase_auth: ^6.5.7
+  cloud_firestore: ^6.8.0
+  firebase_messaging: ^16.5.0
 
   # Map
-  flutter_map: ^7.0.2
-  latlong2: ^0.9.1
+  flutter_map: ^8.3.1
+  latlong2: ^0.10.1
 
   # Location
-  geolocator: ^13.0.2
+  geolocator: ^14.0.3
 
   # Utils
-  intl: ^0.19.0
+  intl: ^0.20.3
   flutter_riverpod: ^3.4.2
 
   # Navigation
-  go_router: ^16.0.0
+  go_router: ^17.5.0
 
   google_fonts: ^8.2.1
   lucide_icons_flutter: ^3.1.15
@@ -60,7 +60,7 @@ dependencies:
   cached_network_image: ^3.4.1
 
   # Audio recording
-  record: ^6.2.1
+  record: ^7.1.1
 
   # Supabase (audio storage)
   supabase_flutter: ^2.9.0

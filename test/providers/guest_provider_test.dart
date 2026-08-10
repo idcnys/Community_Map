@@ -2,12 +2,22 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:cmap/providers/guest_provider.dart';
 
+/// Overrides Firebase-dependent build() with a deterministic false.
+class TestGuestNotifier extends GuestNotifier {
+  @override
+  bool build() => false;
+}
+
 void main() {
   group('GuestNotifier', () {
     late ProviderContainer container;
 
     setUp(() {
-      container = ProviderContainer();
+      container = ProviderContainer(
+        overrides: [
+          isGuestProvider.overrideWith(TestGuestNotifier.new),
+        ],
+      );
     });
 
     tearDown(() {
