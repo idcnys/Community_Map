@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'my_groups_tab.dart';
 import 'discover_groups_tab.dart';
-import 'requests_tab.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class ManagePage extends StatelessWidget {
@@ -11,7 +10,7 @@ class ManagePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 3,
+      length: 2,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Manage'),
@@ -27,7 +26,6 @@ class ManagePage extends StatelessWidget {
             tabs: [
               Tab(text: 'My Groups'),
               Tab(text: 'Discover'),
-              Tab(text: 'Requests'),
             ],
           ),
         ),
@@ -35,7 +33,6 @@ class ManagePage extends StatelessWidget {
           children: [
             MyGroupsTab(),
             DiscoverGroupsTab(),
-            RequestsTab(),
           ],
         ),
       ),
