@@ -1,74 +1,76 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:cmap/models/nearby_place_model.dart';
 import 'package:cmap/providers/nearby_providers.dart';
+import 'package:cmap/models/nearby_place_model.dart';
 
 void main() {
   group('NearbyState', () {
-    test('default state', () {
+    test('default state is empty', () {
       const state = NearbyState();
-
       expect(state.places, isEmpty);
       expect(state.isLoading, isFalse);
       expect(state.error, isNull);
       expect(state.activeCategories, isEmpty);
     });
 
-    test('copyWith updates places', () {
-      const state = NearbyState();
-      final places = [
-        const NearbyPlace(
-          id: 'node_1',
-          name: 'Hospital',
-          category: NearbyCategory.hospital,
-          latitude: 23.8,
-          longitude: 90.4,
-        ),
-      ];
-
-      final updated = state.copyWith(places: places);
-
-      expect(updated.places.length, 1);
-      expect(updated.places.first.name, 'Hospital');
-    });
-
     test('copyWith updates isLoading', () {
       const state = NearbyState();
-      final updated = state.copyWith(isLoading: true);
-
-      expect(updated.isLoading, isTrue);
+      final loading = state.copyWith(isLoading: true);
+      expect(loading.isLoading, isTrue);
+      expect(loading.places, isEmpty);
     });
 
     test('copyWith sets error', () {
       const state = NearbyState();
-      final updated = state.copyWith(error: 'Network error');
-
-      expect(updated.error, 'Network error');
+      final withError = state.copyWith(error: 'Location denied');
+      expect(withError.error, 'Location denied');
     });
 
-    test('copyWith clearError removes error', () {
-      final state = const NearbyState().copyWith(error: 'Some error');
-      final updated = state.copyWith(clearError: true);
+    test('copyWith clears error with clearError flag', () {
+      final state = NearbyState(error: 'Some error');
+      final cleared = state.copyWith(clearError: true);
+      expect(cleared.error, isNull);
+    });
 
-      expect(updated.error, isNull);
+    test('copyWith updates places', () {
+      const state = NearbyState();
+      final places = <NearbyPlace>[
+        NearbyPlace(id: '1', name: 'City Hospital', category: NearbyCategory.hospital, latitude: 23.78, longitude: 90.41),
+        NearbyPlace(id: '2', name: 'Police Station', category: NearbyCategory.police, latitude: 23.79, longitude: 90.42),
+      ];
+      final updated = state.copyWith(places: places);
+      expect(updated.places.length, 2);
+      expect(updated.places[0].name, 'City Hospital');
     });
 
     test('copyWith updates activeCategories', () {
       const state = NearbyState();
-      final updated = state.copyWith(
-        activeCategories: {NearbyCategory.hospital, NearbyCategory.police},
-      );
-
-      expect(updated.activeCategories.length, 2);
+      final updated = state.copyWith(activeCategories: {NearbyCategory.hospital});
       expect(updated.activeCategories, contains(NearbyCategory.hospital));
-      expect(updated.activeCategories, contains(NearbyCategory.police));
+    });
+  });
+
+  group('NearbyCategory', () {
+    test('has 4 categories', () {
+      expect(NearbyCategory.values.length, 4);
     });
 
-    test('copyWith preserves unchanged fields', () {
-      const state = NearbyState(isLoading: true);
-      final updated = state.copyWith(error: 'err');
+    test('hospital has correct label', () {
+      expect(NearbyCategory.hospital.label, 'Hospital');
+    });
 
-      expect(updated.isLoading, isTrue);
-      expect(updated.error, 'err');
+    test('fromTags identifies hospital', () {
+      final cat = NearbyCategory.fromTags({'amenity': 'hospital'});
+      expect(cat, NearbyCategory.hospital);
+    });
+
+    test('fromTags identifies police', () {
+      final cat = NearbyCategory.fromTags({'amenity': 'police'});
+      expect(cat, NearbyCategory.police);
+    });
+
+    test('fromTags falls back to hospital for unknown', () {
+      final cat = NearbyCategory.fromTags({'amenity': 'unknown'});
+      expect(cat, NearbyCategory.hospital);
     });
   });
 }
