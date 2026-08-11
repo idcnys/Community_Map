@@ -186,3 +186,4 @@ Group owners manage membership requests, monitor participation, and keep group c
 
 - [Terms and Conditions](/TERMS_AND_CONDITIONS.md)
 - [Privacy Policy](/PRIVACY_POLICY.md)
+- [License](/LICENSE)
