@@ -5,7 +5,8 @@
   <p>
     <a href="#features"><b>Features</b></a> • 
     <a href="#use-cases"><b>Use Cases</b></a> • 
-    <a href="#ui"><b>UI</b></a>
+    <a href="#ui"><b>UI</b></a> •
+    <a href="#legal"><b>Legal</b></a>
   </p>
 </div>
 
@@ -178,3 +179,10 @@ Group owners manage membership requests, monitor participation, and keep group c
 - Feed notification panel and map notification panel as modal bottom sheets
 - Badge counters in top app actions
 - Snackbar-based in-app push feedback
+
+---
+
+## Legal
+
+- [Terms and Conditions](/TERMS_AND_CONDITIONS.md)
+- [Privacy Policy](/PRIVACY_POLICY.md)
