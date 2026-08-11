@@ -6,7 +6,8 @@
     <a href="#features"><b>Features</b></a> • 
     <a href="#use-cases"><b>Use Cases</b></a> • 
     <a href="#ui"><b>UI</b></a> •
-    <a href="#legal"><b>Legal</b></a>
+    <a href="#legal"><b>Legal</b></a> •
+    <a href="#architecture-flowcharts"><b>Architecture Overview</b></a>
   </p>
 </div>
 
