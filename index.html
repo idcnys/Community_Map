@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Download Community Map APK release assets." />
+  <title>Community Map - Release Assets</title>
+
+  <!-- Inter Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+
+  <style>
+    :root {
+      --font-inter: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --glass-bg: rgba(22, 27, 34, 0.65);
+      --glass-border: rgba(255, 255, 255, 0.1);
+      --glass-blur: blur(16px);
+      --text-main: #f0f6fc;
+      --text-muted: #8b949e;
+      --accent-blue: #58a6ff;
+      --accent-green: #2ea043;
+      --accent-green-glow: rgba(46, 160, 67, 0.25);
+      --hover-bg: rgba(255, 255, 255, 0.05);
+      --mono-font: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      --warn-bg: rgba(210, 153, 34, 0.12);
+      --warn-border: rgba(210, 153, 34, 0.35);
+      --warn-text: #f2cc60;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: radial-gradient(circle at top left, #161b22, #0d1117);
+      color: var(--text-main);
+      font-family: var(--font-inter);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 24px;
+    }
+
+    .glass-card {
+      width: 100%;
+      max-width: 760px;
+      background: var(--glass-bg);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
+    }
+
+    /* Top Branding */
+    .brand-header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      margin-bottom: 20px;
+      gap: 10px;
+    }
+
+    .brand-logo {
+      width: 88px;
+      height: 88px;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      object-fit: cover;
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .brand-title {
+      font-size: 1.4rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-subtitle {
+      font-size: 0.92rem;
+      color: var(--text-muted);
+      max-width: 560px;
+      line-height: 1.5;
+    }
+
+    .warning-box {
+      margin: 0 auto 20px;
+      max-width: 680px;
+      background: var(--warn-bg);
+      border: 1px solid var(--warn-border);
+      color: var(--warn-text);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 0.85rem;
+      line-height: 1.45;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 0 0 16px;
+    }
+
+    .title-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .title-group h2 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+
+    .counter-badge {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text-main);
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 12px;
+    }
+
+    .assets-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+
+    .asset-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px 16px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+      transition: all 0.2s ease;
+    }
+
+    .asset-item:hover {
+      background: var(--hover-bg);
+      border-color: rgba(255, 255, 255, 0.15);
+      transform: translateY(-1px);
+    }
+
+    .asset-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .asset-icon {
+      fill: var(--text-muted);
+      flex-shrink: 0;
+    }
+
+    .asset-name {
+      color: var(--accent-blue);
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.95rem;
+      word-break: break-all;
+    }
+
+    .asset-name:hover {
+      text-decoration: underline;
+    }
+
+    .rec-tag {
+      display: none;
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: #3fb950;
+      background: var(--accent-green-glow);
+      border: 1px solid rgba(63, 185, 80, 0.3);
+      padding: 2px 8px;
+      border-radius: 6px;
+      margin-left: 8px;
+      white-space: nowrap;
+    }
+
+    .asset-item.recommended {
+      border-color: rgba(63, 185, 80, 0.4);
+      background: rgba(46, 160, 67, 0.08);
+    }
+
+    .asset-item.recommended .rec-tag {
+      display: inline-block;
+    }
+
+    .asset-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+
+    .size-tag {
+      font-family: var(--mono-font);
+    }
+
+    .download-guide {
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding-top: 20px;
+      margin-bottom: 20px;
+    }
+
+    .guide-title {
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .guide-intro {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+
+    .guide-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .guide-item {
+      font-size: 0.875rem;
+      line-height: 1.5;
+      padding-left: 12px;
+      border-left: 2px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .guide-item code {
+      font-family: var(--mono-font);
+      color: var(--accent-blue);
+      background: rgba(88, 166, 255, 0.1);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.825rem;
+    }
+
+    .guide-item strong {
+      color: var(--text-main);
+    }
+
+    .guide-detail {
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* Legal Footer */
+    .legal {
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding-top: 16px;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      line-height: 1.55;
+    }
+
+    .legal h4 {
+      font-size: 0.9rem;
+      color: var(--text-main);
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    .legal p + p {
+      margin-top: 8px;
+    }
+
+    .legal-links {
+      margin-top: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .legal-links a {
+      color: var(--accent-blue);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .legal-links a:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 640px) {
+      .asset-item {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .asset-meta {
+        margin-left: 28px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="glass-card">
+    <!-- Top Logo + Title -->
+    <header class="brand-header">
+      <img
+        class="brand-logo"
+        src="https://github.com/user-attachments/assets/c77e78a3-903c-47b9-8d98-80eb69445277"
+        alt="Community Map Logo"
+        loading="eager"
+      />
+      <h1 class="brand-title">Community Map</h1>
+      <p class="brand-subtitle">
+        Download official Community Map Android builds from GitHub Releases.
+      </p>
+    </header>
+
+    <div class="warning-box" role="note" aria-label="Installation warning">
+      ⚠️ Android may show a warning when installing APKs from outside the Play Store.
+      Download only from this page and verify the file name/version before installing.
+    </div>
+
+    <div class="card-header">
+      <div class="title-group">
+        <h2>Assets</h2>
+        <span class="counter-badge">4</span>
+      </div>
+    </div>
+
+    <!-- Assets List -->
+    <ul class="assets-list">
+      <!-- ARM64 APK -->
+      <li class="asset-item" data-arch="arm64-v8a">
+        <div class="asset-info">
+          <svg class="asset-icon" height="16" viewBox="0 0 16 16" width="16" aria-hidden="true">
+            <path d="m8.878.392 5.25 3.045c.54.314.872.89.872 1.514v6.098a1.75 1.75 0 0 1-.872 1.514l-5.25 3.045a1.75 1.75 0 0 1-1.756 0l-5.25-3.045A1.75 1.75 0 0 1 1 11.049V4.951c0-.624.332-1.201.872-1.514L7.122.392a1.75 1.75 0 0 1 1.756 0ZM7.875 1.69l-4.63 2.685L8 7.133l4.755-2.758-4.63-2.685a.248.248 0 0 0-.25 0ZM2.5 5.677v5.372c0 .09.047.171.125.216l4.625 2.683V8.432Zm6.25 8.271 4.625-2.683a.25.25 0 0 0 .125-.216V5.677L8.75 8.432Z"></path>
+          </svg>
+          <a href="https://github.com/idcnys/Community_Map/releases/download/Stable/Cmap-arm64-v8a.apk" class="asset-name">Cmap-arm64-v8a.apk</a>
+          <span class="rec-tag">Recommended for your device</span>
+        </div>
+        <div class="asset-meta">
+          <span class="size-tag">23.1 MB</span>
+        </div>
+      </li>
+
+      <!-- Universal APK -->
+      <li class="asset-item" data-arch="universal">
+        <div class="asset-info">
+          <svg class="asset-icon" height="16" viewBox="0 0 16 16" width="16" aria-hidden="true">
+            <path d="m8.878.392 5.25 3.045c.54.314.872.89.872 1.514v6.098a1.75 1.75 0 0 1-.872 1.514l-5.25 3.045a1.75 1.75 0 0 1-1.756 0l-5.25-3.045A1.75 1.75 0 0 1 1 11.049V4.951c0-.624.332-1.201.872-1.514L7.122.392a1.75 1.75 0 0 1 1.756 0ZM7.875 1.69l-4.63 2.685L8 7.133l4.755-2.758-4.63-2.685a.248.248 0 0 0-.25 0ZM2.5 5.677v5.372c0 .09.047.171.125.216l4.625 2.683V8.432Zm6.25 8.271 4.625-2.683a.25.25 0 0 0 .125-.216V5.677L8.75 8.432Z"></path>
+          </svg>
+          <a href="https://github.com/idcnys/Community_Map/releases/download/Stable/Cmap-release.apk" class="asset-name">Cmap-release.apk</a>
+          <span class="rec-tag">Universal</span>
+        </div>
+        <div class="asset-meta">
+          <span class="size-tag">62.6 MB</span>
+        </div>
+      </li>
+
+      <!-- ARM 32-bit APK -->
+      <li class="asset-item" data-arch="armeabi-v7a">
+        <div class="asset-info">
+          <svg class="asset-icon" height="16" viewBox="0 0 16 16" width="16" aria-hidden="true">
+            <path d="m8.878.392 5.25 3.045c.54.314.872.89.872 1.514v6.098a1.75 1.75 0 0 1-.872 1.514l-5.25 3.045a1.75 1.75 0 0 1-1.756 0l-5.25-3.045A1.75 1.75 0 0 1 1 11.049V4.951c0-.624.332-1.201.872-1.514L7.122.392a1.75 1.75 0 0 1 1.756 0ZM7.875 1.69l-4.63 2.685L8 7.133l4.755-2.758-4.63-2.685a.248.248 0 0 0-.25 0ZM2.5 5.677v5.372c0 .09.047.171.125.216l4.625 2.683V8.432Zm6.25 8.271 4.625-2.683a.25.25 0 0 0 .125-.216V5.677L8.75 8.432Z"></path>
+          </svg>
+          <a href="https://github.com/idcnys/Community_Map/releases/download/Stable/Cmap-armeabi-v7a.apk" class="asset-name">Cmap-armeabi-v7a.apk</a>
+          <span class="rec-tag">Recommended for your device</span>
+        </div>
+        <div class="asset-meta">
+          <span class="size-tag">20.5 MB</span>
+        </div>
+      </li>
+
+      <!-- x86_64 APK -->
+      <li class="asset-item" data-arch="x86_64">
+        <div class="asset-info">
+          <svg class="asset-icon" height="16" viewBox="0 0 16 16" width="16" aria-hidden="true">
+            <path d="m8.878.392 5.25 3.045c.54.314.872.89.872 1.514v6.098a1.75 1.75 0 0 1-.872 1.514l-5.25 3.045a1.75 1.75 0 0 1-1.756 0l-5.25-3.045A1.75 1.75 0 0 1 1 11.049V4.951c0-.624.332-1.201.872-1.514L7.122.392a1.75 1.75 0 0 1 1.756 0ZM7.875 1.69l-4.63 2.685L8 7.133l4.755-2.758-4.63-2.685a.248.248 0 0 0-.25 0ZM2.5 5.677v5.372c0 .09.047.171.125.216l4.625 2.683V8.432Zm6.25 8.271 4.625-2.683a.25.25 0 0 0 .125-.216V5.677L8.75 8.432Z"></path>
+          </svg>
+          <a href="https://github.com/idcnys/Community_Map/releases/download/Stable/Cmap-x86_64.apk" class="asset-name">Cmap-x86_64.apk</a>
+          <span class="rec-tag">Recommended for your device</span>
+        </div>
+        <div class="asset-meta">
+          <span class="size-tag">24.4 MB</span>
+        </div>
+      </li>
+    </ul>
+
+    <!-- Download Guide -->
+    <div class="download-guide">
+      <h3 class="guide-title">📥 Download Guide — Which APK do I need?</h3>
+      <p class="guide-intro">
+        Please download the version matching your device architecture for optimal app size and performance:
+      </p>
+
+      <ul class="guide-list">
+        <li class="guide-item">
+          <code>Cmap-arm64-v8a.apk</code> <strong>(Recommended)</strong>
+          <div class="guide-detail"><strong>For:</strong> Most modern Android smartphones & tablets (64-bit ARM).</div>
+        </li>
+        <li class="guide-item">
+          <code>Cmap-release.apk</code> <strong>(Universal)</strong>
+          <div class="guide-detail"><strong>For:</strong> Any device. Download this if you're unsure which version your device supports.</div>
+        </li>
+        <li class="guide-item">
+          <code>Cmap-armeabi-v7a.apk</code>
+          <div class="guide-detail"><strong>For:</strong> Older or low-end 32-bit Android devices.</div>
+        </li>
+        <li class="guide-item">
+          <code>Cmap-x86_64.apk</code>
+          <div class="guide-detail"><strong>For:</strong> PC emulators (BlueStacks, LDPlayer), Android Studio emulator, or x86 Chromebooks/tablets.</div>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Legal Footer -->
+    <footer class="legal" id="legal">
+      <h4>Legal & Safety Notice</h4>
+      <p>
+        This page links to Community Map APK files hosted in the official GitHub repository.
+        By downloading and installing these files, you acknowledge that installation is performed
+        outside the Google Play Store and may require enabling installation from unknown sources.
+      </p>
+      <p>
+        The software is provided “as is”, without warranties of any kind, express or implied,
+        to the fullest extent permitted by applicable law. Use at your own risk.
+      </p>
+      <p>
+        Always verify that you are downloading from:
+        <strong>github.com/idcnys/Community_Map</strong> releases.
+      </p>
+
+      <div class="legal-links" aria-label="Legal links">
+        <a href="https://github.com/idcnys/Community_Map/blob/main/TERMS_AND_CONDITIONS.md" target="_blank" rel="noopener noreferrer">Terms & Conditions</a>
+        <a href="https://github.com/idcnys/Community_Map/blob/main/PRIVACY_POLICY.md" target="_blank" rel="noopener noreferrer">Privacy Policy</a>
+        <a href="https://github.com/idcnys/Community_Map/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">License</a>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    async function detectArchitecture() {
+      let targetArch = 'arm64-v8a';
+
+      if (navigator.userAgentData && navigator.userAgentData.getHighEntropyValues) {
+        try {
+          const ua = await navigator.userAgentData.getHighEntropyValues(['architecture', 'bitness']);
+          if (ua.architecture === 'arm') {
+            targetArch = ua.bitness === '64' ? 'arm64-v8a' : 'armeabi-v7a';
+          } else if (ua.architecture === 'x86') {
+            targetArch = 'x86_64';
+          }
+        } catch (e) {
+          console.warn('UA detection fallback used.');
+        }
+      }
+
+      const match = document.querySelector(`.asset-item[data-arch="${targetArch}"]`);
+      if (match) {
+        match.classList.add('recommended');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', detectArchitecture);
+  </script>
+</body>
+</html>
