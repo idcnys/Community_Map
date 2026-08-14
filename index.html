@@ -111,6 +111,11 @@
       <p class="text-[0.85rem] sm:text-[0.92rem] text-text-muted max-w-[560px] leading-relaxed">
         Official Android builds from GitHub Releases.
       </p>
+      <!-- Latest commit info (injected by JS) -->
+      <div id="commit-info" class="flex items-center gap-2 text-[0.75rem] sm:text-[0.8rem] text-text-muted mt-1">
+        <i class="fa-solid fa-code-commit text-accent-green"></i>
+        <span id="commit-text">Loading commit info…</span>
+      </div>
     </header>
 
     <div
@@ -139,7 +144,7 @@
       <li class="asset-item" data-arch="arm64-v8a">
         <div class="flex items-center gap-2 sm:gap-3 min-w-0">
           <i class="fa-solid fa-cube text-text-muted text-sm sm:text-base flex-shrink-0"></i>
-          <a href="https://github.com/idcnys/Community_Map/releases/download/Stable/Cmap-arm64-v8a.apk"
+          <a href="https://github.com/idcnys/Community_Map/releases/download/v1.7.0%2B/Cmap-arm64-v8a.apk"
             class="text-accent-blue no-underline font-medium text-[0.85rem] sm:text-[0.95rem] break-all hover:underline">Cmap-arm64-v8a.apk</a>
           <span class="rec-tag">Recommended</span>
         </div>
@@ -152,7 +157,7 @@
       <li class="asset-item" data-arch="universal">
         <div class="flex items-center gap-3 min-w-0">
           <i class="fa-solid fa-cube text-text-muted text-sm sm:text-base flex-shrink-0"></i>
-          <a href="https://github.com/idcnys/Community_Map/releases/download/Stable/Cmap-release.apk"
+          <a href="https://github.com/idcnys/Community_Map/releases/download/v1.7.0%2B/Cmap-release.apk"
             class="text-accent-blue no-underline font-medium text-[0.85rem] sm:text-[0.95rem] break-all hover:underline">Cmap-release.apk</a>
           <span class="inline-block text-[0.65rem] sm:text-[0.7rem] font-semibold text-accent-blue bg-[rgba(88,166,255,0.15)] border border-[rgba(88,166,255,0.3)] px-2 py-0.5 rounded-md ml-2 whitespace-nowrap">Universal</span>
         </div>
@@ -165,7 +170,7 @@
       <li class="asset-item" data-arch="armeabi-v7a">
         <div class="flex items-center gap-3 min-w-0">
           <i class="fa-solid fa-cube text-text-muted text-sm sm:text-base flex-shrink-0"></i>
-          <a href="https://github.com/idcnys/Community_Map/releases/download/Stable/Cmap-armeabi-v7a.apk"
+          <a href="https://github.com/idcnys/Community_Map/releases/download/v1.7.0%2B/Cmap-armeabi-v7a.apk"
             class="text-accent-blue no-underline font-medium text-[0.85rem] sm:text-[0.95rem] break-all hover:underline">Cmap-armeabi-v7a.apk</a>
           <span class="rec-tag">Recommended for your device</span>
         </div>
@@ -178,7 +183,7 @@
       <li class="asset-item" data-arch="x86_64">
         <div class="flex items-center gap-3 min-w-0">
           <i class="fa-solid fa-cube text-text-muted text-sm sm:text-base flex-shrink-0"></i>
-          <a href="https://github.com/idcnys/Community_Map/releases/download/Stable/Cmap-x86_64.apk"
+          <a href="https://github.com/idcnys/Community_Map/releases/download/v1.7.0%2B/Cmap-x86_64.apk"
             class="text-accent-blue no-underline font-medium text-[0.85rem] sm:text-[0.95rem] break-all hover:underline">Cmap-x86_64.apk</a>
           <span class="rec-tag">Recommended for your device</span>
         </div>
@@ -224,6 +229,17 @@
       </ul>
     </div>
 
+    <!-- All Releases (dynamic) -->
+    <div class="border-t border-white/[0.08] pt-5 mb-5">
+      <h3 class="text-[0.95rem] sm:text-[1.05rem] font-semibold mb-3 text-text-main flex items-center gap-1.5">
+        <i class="fa-solid fa-tags text-accent-blue"></i>
+        All Releases
+      </h3>
+      <div id="releases-list" class="flex flex-col gap-2">
+        <p class="text-text-muted text-[0.82rem]"><i class="fa-solid fa-spinner fa-spin mr-1.5"></i>Loading releases…</p>
+      </div>
+    </div>
+
     <!-- Legal Footer -->
     <footer class="border-t border-white/[0.08] pt-4 text-text-muted text-[0.75rem] sm:text-[0.8rem] leading-relaxed">
       <div class="mt-2.5 flex flex-wrap gap-2 sm:gap-3" aria-label="Legal links">
@@ -242,6 +258,124 @@
       </p>
     </footer>
   </div>
+
+  <script>
+    const REPO_API = 'https://api.github.com/repos/idcnys/Community_Map';
+
+    async function fetchLatestCommit() {
+      try {
+        const res = await fetch(`${REPO_API}/commits?per_page=1`);
+        if (!res.ok) throw new Error(res.statusText);
+        const [commit] = await res.json();
+        const sha = commit.sha.slice(0, 7);
+        const date = new Date(commit.commit.author.date);
+        const timeStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        const msg = commit.commit.message.split('\n')[0];
+        const truncated = msg.length > 60 ? msg.slice(0, 60) + '…' : msg;
+        document.getElementById('commit-text').innerHTML =
+          `<a href="${commit.html_url}" target="_blank" rel="noopener" class="text-accent-blue hover:underline font-mono">${sha}</a>` +
+          ` <span class="text-text-muted">· ${timeStr}</span>` +
+          ` <span class="hidden sm:inline text-text-muted">· ${truncated}</span>`;
+      } catch (e) {
+        document.getElementById('commit-text').textContent = 'Unable to fetch commit info.';
+      }
+    }
+
+    function formatSize(bytes) {
+      if (bytes >= 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+      if (bytes >= 1024) return (bytes / 1024).toFixed(0) + ' KB';
+      return bytes + ' B';
+    }
+
+    function timeAgo(dateStr) {
+      const diff = Date.now() - new Date(dateStr).getTime();
+      const mins = Math.floor(diff / 60000);
+      if (mins < 60) return `${mins}m ago`;
+      const hrs = Math.floor(mins / 60);
+      if (hrs < 24) return `${hrs}h ago`;
+      const days = Math.floor(hrs / 24);
+      if (days < 30) return `${days}d ago`;
+      return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    function getArchFromName(name) {
+      const lower = name.toLowerCase();
+      if (lower.includes('arm64') || lower.includes('aarch64')) return 'arm64-v8a';
+      if (lower.includes('armeabi') || lower.includes('armv7')) return 'armeabi-v7a';
+      if (lower.includes('x86_64') || lower.includes('amd64')) return 'x86_64';
+      return 'universal';
+    }
+
+    async function fetchReleases() {
+      const container = document.getElementById('releases-list');
+      try {
+        const res = await fetch(`${REPO_API}/releases?per_page=10`);
+        if (!res.ok) throw new Error(res.statusText);
+        const releases = await res.json();
+
+        if (!releases.length) {
+          container.innerHTML = '<p class="text-text-muted text-[0.82rem]">No releases found.</p>';
+          return;
+        }
+
+        // Update the main assets section with latest release
+        const latest = releases[0];
+        updateAssetsFromRelease(latest);
+
+        // Render all releases list
+        container.innerHTML = releases.map((rel, i) => {
+          const isLatest = i === 0;
+          const date = new Date(rel.published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+          const assetCount = rel.assets.filter(a => a.name.endsWith('.apk')).length;
+          return `
+            <a href="${rel.html_url}" target="_blank" rel="noopener"
+              class="flex items-center justify-between px-3 py-2.5 rounded-[10px] border transition-all duration-200 no-underline group
+                ${isLatest
+                  ? 'border-[rgba(63,185,80,0.3)] bg-[rgba(46,160,67,0.06)] hover:bg-[rgba(46,160,67,0.12)]'
+                  : 'border-white/5 bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/15'}">
+              <div class="flex items-center gap-2.5">
+                <i class="fa-solid fa-tag ${isLatest ? 'text-[#3fb950]' : 'text-text-muted'} text-sm"></i>
+                <span class="text-[0.85rem] font-medium ${isLatest ? 'text-text-main' : 'text-text-muted'} group-hover:text-text-main transition-colors">${rel.tag_name}</span>
+                ${isLatest ? '<span class="text-[0.6rem] font-bold text-[#3fb950] bg-[rgba(46,160,67,0.2)] px-1.5 py-0.5 rounded uppercase tracking-wide">Latest</span>' : ''}
+              </div>
+              <div class="flex items-center gap-3 text-[0.75rem] text-text-muted">
+                <span>${assetCount} APK${assetCount !== 1 ? 's' : ''}</span>
+                <span>${date}</span>
+              </div>
+            </a>`;
+        }).join('');
+
+      } catch (e) {
+        container.innerHTML = '<p class="text-text-muted text-[0.82rem]"><i class="fa-solid fa-triangle-exclamation mr-1 text-warn-text"></i>Failed to load releases. <a href="https://github.com/idcnys/Community_Map/releases" target="_blank" class="text-accent-blue hover:underline">View on GitHub</a></p>';
+      }
+    }
+
+    function updateAssetsFromRelease(release) {
+      const apkAssets = release.assets.filter(a => a.name.endsWith('.apk'));
+      const assetList = document.querySelector('.asset-item')?.closest('ul');
+      if (!assetList) return;
+
+      // Update the download links in the existing static asset items
+      apkAssets.forEach(asset => {
+        const arch = getArchFromName(asset.name);
+        const item = document.querySelector(`.asset-item[data-arch="${arch}"]`);
+        if (item) {
+          const link = item.querySelector('a[href]');
+          const sizeEl = item.querySelector('.font-mono');
+          if (link) link.href = asset.browser_download_url;
+          if (sizeEl) sizeEl.textContent = formatSize(asset.size);
+        }
+      });
+
+      // Update the asset count badge
+      const badge = document.querySelector('.bg-white\\/10.text-xs');
+      if (badge) badge.textContent = apkAssets.length;
+    }
+
+    // Run on load
+    fetchLatestCommit();
+    fetchReleases();
+  </script>
 
   <script>
     async function detectArchitecture() {
