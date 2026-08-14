@@ -13,634 +13,196 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
-  <style>
-    :root {
-      --font-inter: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      --glass-bg: rgba(22, 27, 34, 0.65);
-      --glass-border: rgba(255, 255, 255, 0.1);
-      --glass-blur: blur(16px);
-      --text-main: #f0f6fc;
-      --text-muted: #8b949e;
-      --accent-blue: #58a6ff;
-      --accent-green: #2ea043;
-      --accent-green-glow: rgba(46, 160, 67, 0.25);
-      --hover-bg: rgba(255, 255, 255, 0.05);
-      --mono-font: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-      --warn-bg: rgba(210, 153, 34, 0.12);
-      --warn-border: rgba(210, 153, 34, 0.35);
-      --warn-text: #f2cc60;
-    }
+  <!-- Font Awesome 6 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            inter: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+            mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Consolas', 'monospace'],
+          },
+          colors: {
+            surface: '#0d1117',
+            card: 'rgba(22, 27, 34, 0.65)',
+            border: 'rgba(255, 255, 255, 0.1)',
+            'text-main': '#f0f6fc',
+            'text-muted': '#8b949e',
+            'accent-blue': '#58a6ff',
+            'accent-green': '#2ea043',
+            'warn-text': '#f2cc60',
+          },
+        },
+      },
     }
+  </script>
 
-    body {
-      background: radial-gradient(circle at top left, #161b22, #0d1117);
-      color: var(--text-main);
-      font-family: var(--font-inter);
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 24px;
-    }
-
+  <style type="text/tailwindcss">
     .glass-card {
-      width: 100%;
-      max-width: 760px;
-      background: var(--glass-bg);
-      backdrop-filter: var(--glass-blur);
-      -webkit-backdrop-filter: var(--glass-blur);
-      border: 1px solid var(--glass-border);
-      border-radius: 16px;
-      padding: 24px;
-      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
+      @apply w-full max-w-[760px] bg-card backdrop-blur-[16px] border border-border rounded-2xl p-6 shadow-[0_16px_40px_rgba(0,0,0,0.4)] relative;
     }
-
-    /* Top Branding */
-    .brand-header {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-      margin-bottom: 20px;
-      gap: 10px;
-    }
-
-    .brand-logo {
-      width: 88px;
-      height: 88px;
-      border-radius: 20px;
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      object-fit: cover;
-      background: rgba(255, 255, 255, 0.03);
-    }
-
-    .brand-title {
-      font-size: 1.4rem;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-    }
-
-    .brand-subtitle {
-      font-size: 0.92rem;
-      color: var(--text-muted);
-      max-width: 560px;
-      line-height: 1.5;
-    }
-
-    .warning-box {
-      margin: 0 auto 20px;
-      max-width: 680px;
-      text-align: center;
-      background: var(--warn-bg);
-      border: 1px solid var(--warn-border);
-      color: var(--warn-text);
-      border-radius: 10px;
-      padding: 10px 12px;
-      font-size: 0.85rem;
-      line-height: 1.45;
-    }
-
-    .card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin: 0 0 16px;
-    }
-
-    .title-group {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .title-group h2 {
-      font-size: 1.15rem;
-      font-weight: 600;
-      letter-spacing: -0.02em;
-    }
-
-    .counter-badge {
-      background: rgba(255, 255, 255, 0.1);
-      color: var(--text-main);
-      font-size: 0.75rem;
-      font-weight: 600;
-      padding: 2px 8px;
-      border-radius: 12px;
-    }
-
-    .assets-list {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin-bottom: 24px;
-    }
-
     .asset-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      padding: 12px 16px;
-      background: rgba(255, 255, 255, 0.02);
-      border: 1px solid rgba(255, 255, 255, 0.05);
-      border-radius: 10px;
-      transition: all 0.2s ease;
+      @apply flex items-center justify-between gap-2.5 px-4 py-3 bg-white/[0.02] border border-white/5 rounded-[10px] transition-all duration-200;
     }
-
     .asset-item:hover {
-      background: var(--hover-bg);
-      border-color: rgba(255, 255, 255, 0.15);
-      transform: translateY(-1px);
+      @apply bg-white/5 border-white/15 -translate-y-px;
     }
-
-    .asset-info {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      min-width: 0;
-    }
-
-    .asset-icon {
-      fill: var(--text-muted);
-      flex-shrink: 0;
-    }
-
-    .asset-name {
-      color: var(--accent-blue);
-      text-decoration: none;
-      font-weight: 500;
-      font-size: 0.95rem;
-      word-break: break-all;
-    }
-
-    .asset-name:hover {
-      text-decoration: underline;
-    }
-
-    .rec-tag {
-      display: none;
-      font-size: 0.7rem;
-      font-weight: 600;
-      color: #3fb950;
-      background: var(--accent-green-glow);
-      border: 1px solid rgba(63, 185, 80, 0.3);
-      padding: 2px 8px;
-      border-radius: 6px;
-      margin-left: 8px;
-      white-space: nowrap;
-    }
-
     .asset-item.recommended {
-      border-color: rgba(63, 185, 80, 0.4);
-      background: rgba(46, 160, 67, 0.08);
+      @apply border-[rgba(63,185,80,0.4)] bg-[rgba(46,160,67,0.08)];
     }
-
     .asset-item.recommended .rec-tag {
-      display: inline-block;
+      @apply inline-block;
     }
-
-    .asset-meta {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      font-size: 0.82rem;
-      color: var(--text-muted);
-      flex-shrink: 0;
+    .rec-tag {
+      @apply hidden text-[0.7rem] font-semibold text-[#3fb950] bg-[rgba(46,160,67,0.25)] border border-[rgba(63,185,80,0.3)] px-2 py-0.5 rounded-md ml-2 whitespace-nowrap;
     }
-
-    .size-tag {
-      font-family: var(--mono-font);
-    }
-
-    .download-guide {
-      border-top: 1px solid rgba(255, 255, 255, 0.08);
-      padding-top: 20px;
-      margin-bottom: 20px;
-    }
-
-    .guide-title {
-      font-size: 1.05rem;
-      font-weight: 600;
-      margin-bottom: 8px;
-      color: var(--text-main);
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .guide-intro {
-      font-size: 0.875rem;
-      color: var(--text-muted);
-      margin-bottom: 16px;
-      line-height: 1.5;
-    }
-
-    .guide-list {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
     .guide-item {
-      font-size: 0.875rem;
-      line-height: 1.5;
-      padding-left: 12px;
-      border-left: 2px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .guide-item code {
-      font-family: var(--mono-font);
-      color: var(--accent-blue);
-      background: rgba(88, 166, 255, 0.1);
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-size: 0.825rem;
-    }
-
-    .guide-item strong {
-      color: var(--text-main);
-    }
-
-    .guide-detail {
-      color: var(--text-muted);
-      margin-top: 2px;
-    }
-
-    /* Legal Footer */
-    .legal {
-      border-top: 1px solid rgba(255, 255, 255, 0.08);
-      padding-top: 16px;
-      color: var(--text-muted);
-      font-size: 0.8rem;
-      line-height: 1.55;
-    }
-
-    .legal h4 {
-      font-size: 0.9rem;
-      color: var(--text-main);
-      margin-bottom: 8px;
-      font-weight: 600;
-    }
-
-    .legal p+p {
-      margin-top: 8px;
-    }
-
-    .legal-links {
-      margin-top: 10px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
-
-    .legal-links a {
-      color: var(--accent-blue);
-      text-decoration: none;
-      font-weight: 500;
-    }
-
-    .legal-links a:hover {
-      text-decoration: underline;
-    }
-
-    .copyright {
-      margin-top: 16px;
-      padding-top: 12px;
-      border-top: 1px solid rgba(255, 255, 255, 0.06);
-      text-align: center;
-      font-size: 0.78rem;
-      color: var(--text-muted);
-    }
-
-    @media (max-width: 640px) {
-      .asset-item {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-
-      .asset-meta {
-        margin-left: 28px;
-      }
-    }
-
-    /* GitHub Link (top-right) */
-    .github-link {
-      position: absolute;
-      top: 16px;
-      right: 16px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 14px;
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 8px;
-      color: var(--text-main);
-      text-decoration: none;
-      font-size: 0.82rem;
-      font-weight: 500;
-      transition: all 0.2s ease;
-    }
-
-    .github-link:hover {
-      background: rgba(255, 255, 255, 0.12);
-      border-color: rgba(255, 255, 255, 0.25);
-      transform: translateY(-1px);
-    }
-
-    .github-link svg {
-      fill: currentColor;
-    }
-
-    .github-link .gh-label {
-      display: inline;
-    }
-
-    /* Responsive: glass-card needs relative positioning */
-    .glass-card {
-      position: relative;
-    }
-
-    /* ── Responsive Breakpoints ── */
-    @media (max-width: 480px) {
-      body {
-        padding: 12px;
-        align-items: flex-start;
-      }
-
-      .glass-card {
-        padding: 16px;
-        border-radius: 12px;
-      }
-
-      .brand-logo {
-        width: 64px;
-        height: 64px;
-        border-radius: 14px;
-      }
-
-      .brand-title {
-        font-size: 1.15rem;
-      }
-
-      .brand-subtitle {
-        font-size: 0.82rem;
-      }
-
-      .brand-header {
-        margin-bottom: 14px;
-        padding-top: 28px;
-      }
-
-      .warning-box {
-        font-size: 0.78rem;
-        padding: 8px 10px;
-      }
-
-      .github-link {
-        top: 10px;
-        right: 10px;
-        padding: 6px 10px;
-        font-size: 0;
-        gap: 0;
-      }
-
-      .github-link .gh-label {
-        display: none;
-      }
-
-      .github-link svg {
-        width: 20px;
-        height: 20px;
-      }
-
-      .asset-item {
-        padding: 10px 12px;
-      }
-
-      .asset-name {
-        font-size: 0.85rem;
-      }
-
-      .size-tag {
-        font-size: 0.75rem;
-      }
-
-      .guide-item {
-        font-size: 0.8rem;
-      }
-
-      .legal {
-        font-size: 0.75rem;
-      }
-    }
-
-    @media (min-width: 481px) and (max-width: 768px) {
-      body {
-        padding: 16px;
-      }
-
-      .glass-card {
-        padding: 20px;
-      }
-
-      .brand-header {
-        padding-top: 24px;
-      }
-    }
-
-    @media (min-width: 1200px) {
-      .glass-card {
-        max-width: 820px;
-      }
-    }
-
-    @media (min-width: 1600px) {
-      .glass-card {
-        max-width: 880px;
-      }
-    }
-
-    /* Landscape phones */
-    @media (max-height: 500px) and (orientation: landscape) {
-      body {
-        align-items: flex-start;
-        padding: 16px;
-      }
-
-      .brand-logo {
-        width: 48px;
-        height: 48px;
-      }
-
-      .brand-header {
-        flex-direction: row;
-        justify-content: center;
-        gap: 14px;
-        padding-top: 20px;
-      }
-
-      .brand-title {
-        font-size: 1.1rem;
-      }
+      @apply text-sm leading-relaxed pl-3 border-l-2 border-white/10;
     }
   </style>
 </head>
 
-<body>
+<body class="bg-surface font-inter text-text-main min-h-screen flex justify-center items-center p-6 bg-[radial-gradient(circle_at_top_left,#161b22,#0d1117)]">
   <div class="glass-card">
 
     <!-- GitHub Repo Link -->
-    <a href="https://github.com/idcnys/Community_Map" target="_blank" rel="noopener noreferrer" class="github-link"
+    <a href="https://github.com/idcnys/Community_Map" target="_blank" rel="noopener noreferrer"
+      class="absolute top-4 right-4 flex items-center gap-2 px-3.5 py-2 bg-white/[0.06] border border-white/[0.12] rounded-lg text-text-main no-underline text-[0.82rem] font-medium transition-all duration-200 hover:bg-white/[0.12] hover:border-white/25 hover:-translate-y-px"
       aria-label="View on GitHub">
-      <svg height="18" width="18" viewBox="0 0 16 16" aria-hidden="true">
-        <path
-          d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z">
-        </path>
-      </svg>
-      <span class="gh-label">GitHub</span>
+      <i class="fa-brands fa-github text-lg"></i>
+      <span class="hidden sm:inline">GitHub</span>
     </a>
 
     <!-- Top Logo + Title -->
-    <header class="brand-header">
-      <img class="brand-logo" src="assets/icon/icon_white.png" alt="Community Map Logo" loading="eager" />
-      <h1 class="brand-title">Community Map</h1>
-      <p class="brand-subtitle">
+    <header class="flex flex-col items-center text-center mb-5 gap-2.5 pt-7">
+      <img class="w-[88px] h-[88px] rounded-[20px] border border-white/[0.12] object-cover bg-white/[0.03]"
+        src="assets/icon/icon_white.png" alt="Community Map Logo" loading="eager" />
+      <h1 class="text-[1.4rem] font-bold tracking-tight">Community Map</h1>
+      <p class="text-[0.92rem] text-text-muted max-w-[560px] leading-relaxed">
         Official Android builds from GitHub Releases.
       </p>
     </header>
 
-    <div class="warning-box" role="note" aria-label="Installation warning">
+    <div class="mx-auto mb-5 max-w-[680px] text-center bg-[rgba(210,153,34,0.12)] border border-[rgba(210,153,34,0.35)] text-warn-text rounded-[10px] px-3 py-2.5 text-[0.85rem] leading-snug"
+      role="note" aria-label="Installation warning">
+      <i class="fa-solid fa-triangle-exclamation mr-1.5"></i>
       Android may show a warning when installing APKs from outside the Play Store.
     </div>
 
-    <div class="card-header">
-      <div class="title-group">
-        <h2>Assets</h2>
-        <span class="counter-badge">4</span>
+    <div class="flex justify-between items-center mb-4">
+      <div class="flex items-center gap-2.5">
+        <h2 class="text-[1.15rem] font-semibold tracking-tight">Assets</h2>
+        <span class="bg-white/10 text-text-main text-xs font-semibold px-2 py-0.5 rounded-xl">4</span>
       </div>
     </div>
 
     <!-- Assets List -->
-    <ul class="assets-list">
+    <ul class="list-none flex flex-col gap-2 mb-6 p-0">
       <!-- ARM64 APK -->
       <li class="asset-item" data-arch="arm64-v8a">
-        <div class="asset-info">
-          <svg class="asset-icon" height="16" viewBox="0 0 16 16" width="16" aria-hidden="true">
-            <path
-              d="m8.878.392 5.25 3.045c.54.314.872.89.872 1.514v6.098a1.75 1.75 0 0 1-.872 1.514l-5.25 3.045a1.75 1.75 0 0 1-1.756 0l-5.25-3.045A1.75 1.75 0 0 1 1 11.049V4.951c0-.624.332-1.201.872-1.514L7.122.392a1.75 1.75 0 0 1 1.756 0ZM7.875 1.69l-4.63 2.685L8 7.133l4.755-2.758-4.63-2.685a.248.248 0 0 0-.25 0ZM2.5 5.677v5.372c0 .09.047.171.125.216l4.625 2.683V8.432Zm6.25 8.271 4.625-2.683a.25.25 0 0 0 .125-.216V5.677L8.75 8.432Z">
-            </path>
-          </svg>
+        <div class="flex items-center gap-3 min-w-0">
+          <i class="fa-solid fa-cube text-text-muted text-base flex-shrink-0"></i>
           <a href="https://github.com/idcnys/Community_Map/releases/download/Stable/Cmap-arm64-v8a.apk"
-            class="asset-name">Cmap-arm64-v8a.apk</a>
+            class="text-accent-blue no-underline font-medium text-[0.95rem] break-all hover:underline">Cmap-arm64-v8a.apk</a>
           <span class="rec-tag">Recommended</span>
         </div>
-        <div class="asset-meta">
-          <span class="size-tag">23.1 MB</span>
+        <div class="flex items-center gap-3 text-[0.82rem] text-text-muted flex-shrink-0">
+          <span class="font-mono">23.1 MB</span>
         </div>
       </li>
 
       <!-- Universal APK -->
       <li class="asset-item" data-arch="universal">
-        <div class="asset-info">
-          <svg class="asset-icon" height="16" viewBox="0 0 16 16" width="16" aria-hidden="true">
-            <path
-              d="m8.878.392 5.25 3.045c.54.314.872.89.872 1.514v6.098a1.75 1.75 0 0 1-.872 1.514l-5.25 3.045a1.75 1.75 0 0 1-1.756 0l-5.25-3.045A1.75 1.75 0 0 1 1 11.049V4.951c0-.624.332-1.201.872-1.514L7.122.392a1.75 1.75 0 0 1 1.756 0ZM7.875 1.69l-4.63 2.685L8 7.133l4.755-2.758-4.63-2.685a.248.248 0 0 0-.25 0ZM2.5 5.677v5.372c0 .09.047.171.125.216l4.625 2.683V8.432Zm6.25 8.271 4.625-2.683a.25.25 0 0 0 .125-.216V5.677L8.75 8.432Z">
-            </path>
-          </svg>
+        <div class="flex items-center gap-3 min-w-0">
+          <i class="fa-solid fa-cube text-text-muted text-base flex-shrink-0"></i>
           <a href="https://github.com/idcnys/Community_Map/releases/download/Stable/Cmap-release.apk"
-            class="asset-name">Cmap-release.apk</a>
+            class="text-accent-blue no-underline font-medium text-[0.95rem] break-all hover:underline">Cmap-release.apk</a>
           <span class="rec-tag">Universal</span>
         </div>
-        <div class="asset-meta">
-          <span class="size-tag">62.6 MB</span>
+        <div class="flex items-center gap-3 text-[0.82rem] text-text-muted flex-shrink-0">
+          <span class="font-mono">62.6 MB</span>
         </div>
       </li>
 
       <!-- ARM 32-bit APK -->
       <li class="asset-item" data-arch="armeabi-v7a">
-        <div class="asset-info">
-          <svg class="asset-icon" height="16" viewBox="0 0 16 16" width="16" aria-hidden="true">
-            <path
-              d="m8.878.392 5.25 3.045c.54.314.872.89.872 1.514v6.098a1.75 1.75 0 0 1-.872 1.514l-5.25 3.045a1.75 1.75 0 0 1-1.756 0l-5.25-3.045A1.75 1.75 0 0 1 1 11.049V4.951c0-.624.332-1.201.872-1.514L7.122.392a1.75 1.75 0 0 1 1.756 0ZM7.875 1.69l-4.63 2.685L8 7.133l4.755-2.758-4.63-2.685a.248.248 0 0 0-.25 0ZM2.5 5.677v5.372c0 .09.047.171.125.216l4.625 2.683V8.432Zm6.25 8.271 4.625-2.683a.25.25 0 0 0 .125-.216V5.677L8.75 8.432Z">
-            </path>
-          </svg>
+        <div class="flex items-center gap-3 min-w-0">
+          <i class="fa-solid fa-cube text-text-muted text-base flex-shrink-0"></i>
           <a href="https://github.com/idcnys/Community_Map/releases/download/Stable/Cmap-armeabi-v7a.apk"
-            class="asset-name">Cmap-armeabi-v7a.apk</a>
+            class="text-accent-blue no-underline font-medium text-[0.95rem] break-all hover:underline">Cmap-armeabi-v7a.apk</a>
           <span class="rec-tag">Recommended for your device</span>
         </div>
-        <div class="asset-meta">
-          <span class="size-tag">20.5 MB</span>
+        <div class="flex items-center gap-3 text-[0.82rem] text-text-muted flex-shrink-0">
+          <span class="font-mono">20.5 MB</span>
         </div>
       </li>
 
       <!-- x86_64 APK -->
       <li class="asset-item" data-arch="x86_64">
-        <div class="asset-info">
-          <svg class="asset-icon" height="16" viewBox="0 0 16 16" width="16" aria-hidden="true">
-            <path
-              d="m8.878.392 5.25 3.045c.54.314.872.89.872 1.514v6.098a1.75 1.75 0 0 1-.872 1.514l-5.25 3.045a1.75 1.75 0 0 1-1.756 0l-5.25-3.045A1.75 1.75 0 0 1 1 11.049V4.951c0-.624.332-1.201.872-1.514L7.122.392a1.75 1.75 0 0 1 1.756 0ZM7.875 1.69l-4.63 2.685L8 7.133l4.755-2.758-4.63-2.685a.248.248 0 0 0-.25 0ZM2.5 5.677v5.372c0 .09.047.171.125.216l4.625 2.683V8.432Zm6.25 8.271 4.625-2.683a.25.25 0 0 0 .125-.216V5.677L8.75 8.432Z">
-            </path>
-          </svg>
+        <div class="flex items-center gap-3 min-w-0">
+          <i class="fa-solid fa-cube text-text-muted text-base flex-shrink-0"></i>
           <a href="https://github.com/idcnys/Community_Map/releases/download/Stable/Cmap-x86_64.apk"
-            class="asset-name">Cmap-x86_64.apk</a>
+            class="text-accent-blue no-underline font-medium text-[0.95rem] break-all hover:underline">Cmap-x86_64.apk</a>
           <span class="rec-tag">Recommended for your device</span>
         </div>
-        <div class="asset-meta">
-          <span class="size-tag">24.4 MB</span>
+        <div class="flex items-center gap-3 text-[0.82rem] text-text-muted flex-shrink-0">
+          <span class="font-mono">24.4 MB</span>
         </div>
       </li>
     </ul>
 
     <!-- Download Guide -->
-    <div class="download-guide">
-      <h3 class="guide-title">📥 Download Guide — Which APK do I need?</h3>
-      <p class="guide-intro">
+    <div class="border-t border-white/[0.08] pt-5 mb-5">
+      <h3 class="text-[1.05rem] font-semibold mb-2 text-text-main flex items-center gap-1.5">
+        <i class="fa-solid fa-download text-accent-blue"></i>
+        Download Guide — Which APK do I need?
+      </h3>
+      <p class="text-sm text-text-muted mb-4 leading-relaxed">
         Please download the version matching your device architecture for optimal app size and performance:
       </p>
 
-      <ul class="guide-list">
+      <ul class="list-none flex flex-col gap-3 p-0">
         <li class="guide-item">
-          <code>Cmap-arm64-v8a.apk</code> <strong>(Recommended)</strong>
-          <div class="guide-detail"><strong>For:</strong> Most modern Android smartphones & tablets (64-bit ARM).</div>
+          <code class="font-mono text-accent-blue bg-[rgba(88,166,255,0.1)] px-1.5 py-0.5 rounded text-[0.825rem]">Cmap-arm64-v8a.apk</code>
+          <strong class="text-text-main">(Recommended)</strong>
+          <div class="text-text-muted mt-0.5"><strong class="text-text-main">For:</strong> Most modern Android smartphones & tablets (64-bit ARM).</div>
         </li>
         <li class="guide-item">
-          <code>Cmap-release.apk</code> <strong>(Universal)</strong>
-          <div class="guide-detail"><strong>For:</strong> Any device. Download this if you're unsure which version your
-            device supports.</div>
+          <code class="font-mono text-accent-blue bg-[rgba(88,166,255,0.1)] px-1.5 py-0.5 rounded text-[0.825rem]">Cmap-release.apk</code>
+          <strong class="text-text-main">(Universal)</strong>
+          <div class="text-text-muted mt-0.5"><strong class="text-text-main">For:</strong> Any device. Download this if you're unsure which version your device supports.</div>
         </li>
         <li class="guide-item">
-          <code>Cmap-armeabi-v7a.apk</code>
-          <div class="guide-detail"><strong>For:</strong> Older or low-end 32-bit Android devices.</div>
+          <code class="font-mono text-accent-blue bg-[rgba(88,166,255,0.1)] px-1.5 py-0.5 rounded text-[0.825rem]">Cmap-armeabi-v7a.apk</code>
+          <div class="text-text-muted mt-0.5"><strong class="text-text-main">For:</strong> Older or low-end 32-bit Android devices.</div>
         </li>
         <li class="guide-item">
-          <code>Cmap-x86_64.apk</code>
-          <div class="guide-detail"><strong>For:</strong> PC emulators (BlueStacks, LDPlayer), Android Studio emulator,
-            or x86 Chromebooks/tablets.</div>
+          <code class="font-mono text-accent-blue bg-[rgba(88,166,255,0.1)] px-1.5 py-0.5 rounded text-[0.825rem]">Cmap-x86_64.apk</code>
+          <div class="text-text-muted mt-0.5"><strong class="text-text-main">For:</strong> PC emulators (BlueStacks, LDPlayer), Android Studio emulator, or x86 Chromebooks/tablets.</div>
         </li>
       </ul>
     </div>
 
     <!-- Legal Footer -->
-    <footer class="legal" id="legal">
-
-      <div class="legal-links" aria-label="Legal links">
+    <footer class="border-t border-white/[0.08] pt-4 text-text-muted text-[0.8rem] leading-relaxed">
+      <div class="mt-2.5 flex flex-wrap gap-3" aria-label="Legal links">
         <a href="https://github.com/idcnys/Community_Map/blob/main/TERMS_AND_CONDITIONS.md" target="_blank"
-          rel="noopener noreferrer">Terms & Conditions</a>
+          rel="noopener noreferrer" class="text-accent-blue no-underline font-medium hover:underline">
+          <i class="fa-solid fa-file-contract mr-1"></i>Terms & Conditions</a>
         <a href="https://github.com/idcnys/Community_Map/blob/main/PRIVACY_POLICY.md" target="_blank"
-          rel="noopener noreferrer">Privacy Policy</a>
+          rel="noopener noreferrer" class="text-accent-blue no-underline font-medium hover:underline">
+          <i class="fa-solid fa-shield-halved mr-1"></i>Privacy Policy</a>
         <a href="https://github.com/idcnys/Community_Map/blob/main/LICENSE" target="_blank"
-          rel="noopener noreferrer">License</a>
+          rel="noopener noreferrer" class="text-accent-blue no-underline font-medium hover:underline">
+          <i class="fa-solid fa-scale-balanced mr-1"></i>License</a>
       </div>
-
-      <p class="copyright">&copy; 2026 Community Map. All rights reserved.</p>
+      <p class="mt-4 pt-3 border-t border-white/[0.06] text-center text-[0.78rem] text-text-muted">
+        &copy; 2026 Community Map. All rights reserved.
+      </p>
     </footer>
   </div>
 
