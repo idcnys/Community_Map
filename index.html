@@ -42,6 +42,10 @@
   </script>
 
   <style type="text/tailwindcss">
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translate(-50%, 8px); }
+      to { opacity: 1; transform: translate(-50%, 0); }
+    }
     .glass-card {
       @apply w-full max-w-[760px] bg-card backdrop-blur-[16px] border border-border rounded-2xl p-4 sm:p-6 shadow-[0_16px_40px_rgba(0,0,0,0.4)] relative overflow-hidden;
     }
@@ -62,6 +66,27 @@
     }
     .guide-item {
       @apply text-sm leading-relaxed pl-3 border-l-2 border-white/10;
+    }
+    #ctx-menu {
+      @apply fixed z-[9999] min-w-[190px] bg-[#1c2128] border border-white/[0.12] rounded-xl shadow-[0_12px_32px_rgba(0,0,0,0.55)] py-1.5 backdrop-blur-xl opacity-0 pointer-events-none scale-95 transition-all duration-150 origin-top-left;
+    }
+    #ctx-menu.visible {
+      @apply opacity-100 pointer-events-auto scale-100;
+    }
+    .ctx-item {
+      @apply flex items-center gap-2.5 w-full px-4 py-2.5 text-[0.82rem] text-text-main bg-transparent border-none cursor-pointer transition-colors duration-100 text-left;
+    }
+    .ctx-item:hover {
+      @apply bg-white/[0.08];
+    }
+    .ctx-item i {
+      @apply w-4 text-center text-text-muted text-[0.8rem];
+    }
+    .ctx-item:hover i {
+      @apply text-accent-blue;
+    }
+    .ctx-sep {
+      @apply h-px bg-white/[0.08] my-1.5 mx-3;
     }
   </style>
 </head>
@@ -305,6 +330,133 @@
     }
 
     document.addEventListener('DOMContentLoaded', detectArchitecture);
+  </script>
+
+  <!-- Custom Context Menu -->
+  <div id="ctx-menu" role="menu" aria-label="Context menu">
+    <button class="ctx-item" data-action="download" role="menuitem">
+      <i class="fa-solid fa-download"></i> Download
+    </button>
+    <button class="ctx-item" data-action="copy-link" role="menuitem">
+      <i class="fa-solid fa-link"></i> Copy download link
+    </button>
+    <div class="ctx-sep"></div>
+    <button class="ctx-item" data-action="github" role="menuitem">
+      <i class="fa-brands fa-github"></i> View on GitHub
+    </button>
+    <button class="ctx-item" data-action="report" role="menuitem">
+      <i class="fa-solid fa-flag"></i> Report issue
+    </button>
+    <div class="ctx-sep"></div>
+    <button class="ctx-item" data-action="check-arch" role="menuitem">
+      <i class="fa-solid fa-microchip"></i> My device arch
+    </button>
+  </div>
+
+  <script>
+    (() => {
+      const menu = document.getElementById('ctx-menu');
+      let ctxTarget = null; // the asset link href if right-clicked on an asset
+
+      function showMenu(x, y) {
+        menu.classList.add('visible');
+        // Keep within viewport
+        const rect = menu.getBoundingClientRect();
+        const vw = window.innerWidth, vh = window.innerHeight;
+        if (x + rect.width > vw) x = vw - rect.width - 8;
+        if (y + rect.height > vh) y = vh - rect.height - 8;
+        menu.style.left = x + 'px';
+        menu.style.top = y + 'px';
+      }
+
+      function hideMenu() {
+        menu.classList.remove('visible');
+        ctxTarget = null;
+      }
+
+      // Show on right-click
+      document.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        hideMenu();
+
+        // Determine if clicked on an asset item
+        const assetItem = e.target.closest('.asset-item');
+        if (assetItem) {
+          const link = assetItem.querySelector('a[href]');
+          ctxTarget = link ? link.href : null;
+          // Enable/disable asset-specific items
+          menu.querySelector('[data-action="download"]').style.display = ctxTarget ? '' : 'none';
+          menu.querySelector('[data-action="copy-link"]').style.display = ctxTarget ? '' : 'none';
+        } else {
+          ctxTarget = null;
+          menu.querySelector('[data-action="download"]').style.display = 'none';
+          menu.querySelector('[data-action="copy-link"]').style.display = 'none';
+        }
+
+        showMenu(e.clientX, e.clientY);
+      });
+
+      // Hide on click elsewhere / scroll / escape / resize
+      document.addEventListener('click', (e) => {
+        if (!menu.contains(e.target)) hideMenu();
+      });
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') hideMenu(); });
+      window.addEventListener('scroll', hideMenu, { passive: true });
+      window.addEventListener('resize', hideMenu);
+
+      // Handle menu actions
+      menu.addEventListener('click', (e) => {
+        const btn = e.target.closest('.ctx-item');
+        if (!btn) return;
+        const action = btn.dataset.action;
+
+        switch (action) {
+          case 'download':
+            if (ctxTarget) window.open(ctxTarget, '_blank');
+            break;
+          case 'copy-link':
+            if (ctxTarget) {
+              navigator.clipboard.writeText(ctxTarget).then(() => {
+                showToast('Link copied to clipboard');
+              }).catch(() => {
+                showToast('Failed to copy');
+              });
+            }
+            break;
+          case 'github':
+            window.open('https://github.com/idcnys/Community_Map', '_blank');
+            break;
+          case 'report':
+            window.open('https://github.com/idcnys/Community_Map/issues/new', '_blank');
+            break;
+          case 'check-arch': {
+            const ua = navigator.userAgent.toLowerCase();
+            let arch = 'Unknown';
+            if (/aarch64|arm64/.test(ua)) arch = 'arm64-v8a (64-bit ARM)';
+            else if (/armv7|armeabi/.test(ua)) arch = 'armeabi-v7a (32-bit ARM)';
+            else if (/x86_64|amd64/.test(ua)) arch = 'x86_64';
+            else if (/android/.test(ua)) arch = 'Likely arm64-v8a';
+            else arch = 'Desktop (use Universal or x86_64 for emulators)';
+            showToast('Device arch: ' + arch);
+            break;
+          }
+        }
+        hideMenu();
+      });
+
+      // Toast notification
+      function showToast(msg) {
+        const existing = document.getElementById('ctx-toast');
+        if (existing) existing.remove();
+
+        const toast = document.createElement('div');
+        toast.id = 'ctx-toast';
+        toast.className = 'fixed bottom-6 left-1/2 -translate-x-1/2 z-[10000] bg-[#1c2128] border border-white/[0.15] text-text-main text-[0.82rem] px-4 py-2.5 rounded-lg shadow-[0_8px_24px_rgba(0,0,0,0.5)] backdrop-blur-xl flex items-center gap-2 animate-[fadeInUp_0.2s_ease]';
+        toast.innerHTML = '<i class="fa-solid fa-circle-check text-[#3fb950]"></i>' + msg;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 2500);
+      }
+    })();
   </script>
 </body>
 
