@@ -43,10 +43,10 @@
 
   <style type="text/tailwindcss">
     .glass-card {
-      @apply w-full max-w-[760px] bg-card backdrop-blur-[16px] border border-border rounded-2xl p-6 shadow-[0_16px_40px_rgba(0,0,0,0.4)] relative;
+      @apply w-full max-w-[760px] bg-card backdrop-blur-[16px] border border-border rounded-2xl p-4 sm:p-6 shadow-[0_16px_40px_rgba(0,0,0,0.4)] relative overflow-hidden;
     }
     .asset-item {
-      @apply flex items-center justify-between gap-2.5 px-4 py-3 bg-white/[0.02] border border-white/5 rounded-[10px] transition-all duration-200;
+      @apply flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 sm:gap-2.5 px-3 sm:px-4 py-3 bg-white/[0.02] border border-white/5 rounded-[10px] transition-all duration-200;
     }
     .asset-item:hover {
       @apply bg-white/5 border-white/15 -translate-y-px;
@@ -58,7 +58,7 @@
       @apply inline-block;
     }
     .rec-tag {
-      @apply hidden text-[0.7rem] font-semibold text-[#3fb950] bg-[rgba(46,160,67,0.25)] border border-[rgba(63,185,80,0.3)] px-2 py-0.5 rounded-md ml-2 whitespace-nowrap;
+      @apply hidden text-[0.65rem] sm:text-[0.7rem] font-semibold text-[#3fb950] bg-[rgba(46,160,67,0.25)] border border-[rgba(63,185,80,0.3)] px-2 py-0.5 rounded-md ml-2 whitespace-nowrap;
     }
     .guide-item {
       @apply text-sm leading-relaxed pl-3 border-l-2 border-white/10;
@@ -66,36 +66,44 @@
   </style>
 </head>
 
-<body class="bg-surface font-inter text-text-main min-h-screen flex justify-center items-center p-6 bg-[radial-gradient(circle_at_top_left,#161b22,#0d1117)]">
+<body
+  class="bg-surface font-inter text-text-main min-h-screen flex justify-center items-center p-3 sm:p-6 bg-[radial-gradient(circle_at_top_left,#161b22,#0d1117)]">
   <div class="glass-card">
 
     <!-- GitHub Repo Link -->
     <a href="https://github.com/idcnys/Community_Map" target="_blank" rel="noopener noreferrer"
-      class="absolute top-4 right-4 flex items-center gap-2 px-3.5 py-2 bg-white/[0.06] border border-white/[0.12] rounded-lg text-text-main no-underline text-[0.82rem] font-medium transition-all duration-200 hover:bg-white/[0.12] hover:border-white/25 hover:-translate-y-px"
+      class="absolute top-3 right-3 sm:top-4 sm:right-4 flex items-center gap-2 px-2.5 sm:px-3.5 py-1.5 sm:py-2 bg-white/[0.06] border border-white/[0.12] rounded-lg text-text-main no-underline text-[0.82rem] font-medium transition-all duration-200 hover:bg-white/[0.12] hover:border-white/25 hover:-translate-y-px"
       aria-label="View on GitHub">
-      <i class="fa-brands fa-github text-lg"></i>
+      <i class="fa-brands fa-github text-base sm:text-lg"></i>
       <span class="hidden sm:inline">GitHub</span>
     </a>
 
     <!-- Top Logo + Title -->
-    <header class="flex flex-col items-center text-center mb-5 gap-2.5 pt-7">
-      <img class="w-[88px] h-[88px] rounded-[20px] border border-white/[0.12] object-cover bg-white/[0.03]"
+    <header class="flex flex-col items-center text-center mb-5 gap-2 pt-6 sm:pt-7">
+      <img class="w-[64px] h-[64px] sm:w-[88px] sm:h-[88px] rounded-[16px] sm:rounded-[20px] border border-white/[0.12] object-cover bg-white/[0.03]"
         src="assets/icon/icon_white.png" alt="Community Map Logo" loading="eager" />
-      <h1 class="text-[1.4rem] font-bold tracking-tight">Community Map</h1>
-      <p class="text-[0.92rem] text-text-muted max-w-[560px] leading-relaxed">
+      <h1 class="text-[1.2rem] sm:text-[1.4rem] font-bold tracking-tight">Community Map</h1>
+      <p class="text-[0.85rem] sm:text-[0.92rem] text-text-muted max-w-[560px] leading-relaxed">
         Official Android builds from GitHub Releases.
       </p>
     </header>
 
-    <div class="mx-auto mb-5 max-w-[680px] text-center bg-[rgba(210,153,34,0.12)] border border-[rgba(210,153,34,0.35)] text-warn-text rounded-[10px] px-3 py-2.5 text-[0.85rem] leading-snug"
+    <div
+      class="mx-auto mb-5 max-w-[680px] text-center bg-[rgba(210,153,34,0.12)] border border-[rgba(210,153,34,0.35)] text-warn-text rounded-[10px] px-3 py-2.5 text-[0.85rem] leading-snug"
       role="note" aria-label="Installation warning">
-      <i class="fa-solid fa-triangle-exclamation mr-1.5"></i>
+      <i class="fa-solid fa-triangle-exclamation mr-1"></i>
       Android may show a warning when installing APKs from outside the Play Store.
+    </div>
+
+    <!-- Detected arch banner (injected by JS) -->
+    <div id="detected-banner" class="hidden mx-auto mb-4 max-w-[680px] text-center bg-[rgba(46,160,67,0.1)] border border-[rgba(63,185,80,0.3)] text-[#3fb950] rounded-[10px] px-3 py-2 text-[0.82rem] leading-snug">
+      <i class="fa-solid fa-mobile-screen-button mr-1"></i>
+      <span id="detected-text"></span>
     </div>
 
     <div class="flex justify-between items-center mb-4">
       <div class="flex items-center gap-2.5">
-        <h2 class="text-[1.15rem] font-semibold tracking-tight">Assets</h2>
+        <h2 class="text-[1rem] sm:text-[1.15rem] font-semibold tracking-tight">Assets</h2>
         <span class="bg-white/10 text-text-main text-xs font-semibold px-2 py-0.5 rounded-xl">4</span>
       </div>
     </div>
@@ -104,10 +112,10 @@
     <ul class="list-none flex flex-col gap-2 mb-6 p-0">
       <!-- ARM64 APK -->
       <li class="asset-item" data-arch="arm64-v8a">
-        <div class="flex items-center gap-3 min-w-0">
-          <i class="fa-solid fa-cube text-text-muted text-base flex-shrink-0"></i>
+        <div class="flex items-center gap-2 sm:gap-3 min-w-0">
+          <i class="fa-solid fa-cube text-text-muted text-sm sm:text-base flex-shrink-0"></i>
           <a href="https://github.com/idcnys/Community_Map/releases/download/Stable/Cmap-arm64-v8a.apk"
-            class="text-accent-blue no-underline font-medium text-[0.95rem] break-all hover:underline">Cmap-arm64-v8a.apk</a>
+            class="text-accent-blue no-underline font-medium text-[0.85rem] sm:text-[0.95rem] break-all hover:underline">Cmap-arm64-v8a.apk</a>
           <span class="rec-tag">Recommended</span>
         </div>
         <div class="flex items-center gap-3 text-[0.82rem] text-text-muted flex-shrink-0">
@@ -118,10 +126,10 @@
       <!-- Universal APK -->
       <li class="asset-item" data-arch="universal">
         <div class="flex items-center gap-3 min-w-0">
-          <i class="fa-solid fa-cube text-text-muted text-base flex-shrink-0"></i>
+          <i class="fa-solid fa-cube text-text-muted text-sm sm:text-base flex-shrink-0"></i>
           <a href="https://github.com/idcnys/Community_Map/releases/download/Stable/Cmap-release.apk"
-            class="text-accent-blue no-underline font-medium text-[0.95rem] break-all hover:underline">Cmap-release.apk</a>
-          <span class="rec-tag">Universal</span>
+            class="text-accent-blue no-underline font-medium text-[0.85rem] sm:text-[0.95rem] break-all hover:underline">Cmap-release.apk</a>
+          <span class="inline-block text-[0.65rem] sm:text-[0.7rem] font-semibold text-accent-blue bg-[rgba(88,166,255,0.15)] border border-[rgba(88,166,255,0.3)] px-2 py-0.5 rounded-md ml-2 whitespace-nowrap">Universal</span>
         </div>
         <div class="flex items-center gap-3 text-[0.82rem] text-text-muted flex-shrink-0">
           <span class="font-mono">62.6 MB</span>
@@ -131,9 +139,9 @@
       <!-- ARM 32-bit APK -->
       <li class="asset-item" data-arch="armeabi-v7a">
         <div class="flex items-center gap-3 min-w-0">
-          <i class="fa-solid fa-cube text-text-muted text-base flex-shrink-0"></i>
+          <i class="fa-solid fa-cube text-text-muted text-sm sm:text-base flex-shrink-0"></i>
           <a href="https://github.com/idcnys/Community_Map/releases/download/Stable/Cmap-armeabi-v7a.apk"
-            class="text-accent-blue no-underline font-medium text-[0.95rem] break-all hover:underline">Cmap-armeabi-v7a.apk</a>
+            class="text-accent-blue no-underline font-medium text-[0.85rem] sm:text-[0.95rem] break-all hover:underline">Cmap-armeabi-v7a.apk</a>
           <span class="rec-tag">Recommended for your device</span>
         </div>
         <div class="flex items-center gap-3 text-[0.82rem] text-text-muted flex-shrink-0">
@@ -144,9 +152,9 @@
       <!-- x86_64 APK -->
       <li class="asset-item" data-arch="x86_64">
         <div class="flex items-center gap-3 min-w-0">
-          <i class="fa-solid fa-cube text-text-muted text-base flex-shrink-0"></i>
+          <i class="fa-solid fa-cube text-text-muted text-sm sm:text-base flex-shrink-0"></i>
           <a href="https://github.com/idcnys/Community_Map/releases/download/Stable/Cmap-x86_64.apk"
-            class="text-accent-blue no-underline font-medium text-[0.95rem] break-all hover:underline">Cmap-x86_64.apk</a>
+            class="text-accent-blue no-underline font-medium text-[0.85rem] sm:text-[0.95rem] break-all hover:underline">Cmap-x86_64.apk</a>
           <span class="rec-tag">Recommended for your device</span>
         </div>
         <div class="flex items-center gap-3 text-[0.82rem] text-text-muted flex-shrink-0">
@@ -157,50 +165,54 @@
 
     <!-- Download Guide -->
     <div class="border-t border-white/[0.08] pt-5 mb-5">
-      <h3 class="text-[1.05rem] font-semibold mb-2 text-text-main flex items-center gap-1.5">
+      <h3 class="text-[0.95rem] sm:text-[1.05rem] font-semibold mb-2 text-text-main flex items-center gap-1.5">
         <i class="fa-solid fa-download text-accent-blue"></i>
         Download Guide — Which APK do I need?
       </h3>
-      <p class="text-sm text-text-muted mb-4 leading-relaxed">
+      <p class="text-[0.82rem] sm:text-sm text-text-muted mb-4 leading-relaxed">
         Please download the version matching your device architecture for optimal app size and performance:
       </p>
 
-      <ul class="list-none flex flex-col gap-3 p-0">
+      <ul class="list-none flex flex-col gap-2.5 sm:gap-3 p-0">
         <li class="guide-item">
-          <code class="font-mono text-accent-blue bg-[rgba(88,166,255,0.1)] px-1.5 py-0.5 rounded text-[0.825rem]">Cmap-arm64-v8a.apk</code>
-          <strong class="text-text-main">(Recommended)</strong>
-          <div class="text-text-muted mt-0.5"><strong class="text-text-main">For:</strong> Most modern Android smartphones & tablets (64-bit ARM).</div>
+          <code
+            class="font-mono text-accent-blue bg-[rgba(88,166,255,0.1)] px-1.5 py-0.5 rounded text-[0.75rem] sm:text-[0.825rem] break-all">Cmap-arm64-v8a.apk</code>
+          <strong class="text-text-main text-[0.82rem] sm:text-sm">(Recommended)</strong>
+          <div class="text-text-muted mt-0.5 text-[0.8rem] sm:text-sm"><strong class="text-text-main">For:</strong> Most modern Android smartphones & tablets (64-bit ARM).</div>
         </li>
         <li class="guide-item">
-          <code class="font-mono text-accent-blue bg-[rgba(88,166,255,0.1)] px-1.5 py-0.5 rounded text-[0.825rem]">Cmap-release.apk</code>
-          <strong class="text-text-main">(Universal)</strong>
-          <div class="text-text-muted mt-0.5"><strong class="text-text-main">For:</strong> Any device. Download this if you're unsure which version your device supports.</div>
+          <code
+            class="font-mono text-accent-blue bg-[rgba(88,166,255,0.1)] px-1.5 py-0.5 rounded text-[0.75rem] sm:text-[0.825rem] break-all">Cmap-release.apk</code>
+          <strong class="text-text-main text-[0.82rem] sm:text-sm">(Universal)</strong>
+          <div class="text-text-muted mt-0.5 text-[0.8rem] sm:text-sm"><strong class="text-text-main">For:</strong> Any device. Download this if you're unsure.</div>
         </li>
         <li class="guide-item">
-          <code class="font-mono text-accent-blue bg-[rgba(88,166,255,0.1)] px-1.5 py-0.5 rounded text-[0.825rem]">Cmap-armeabi-v7a.apk</code>
-          <div class="text-text-muted mt-0.5"><strong class="text-text-main">For:</strong> Older or low-end 32-bit Android devices.</div>
+          <code
+            class="font-mono text-accent-blue bg-[rgba(88,166,255,0.1)] px-1.5 py-0.5 rounded text-[0.75rem] sm:text-[0.825rem] break-all">Cmap-armeabi-v7a.apk</code>
+          <div class="text-text-muted mt-0.5 text-[0.8rem] sm:text-sm"><strong class="text-text-main">For:</strong> Older or low-end 32-bit Android devices.</div>
         </li>
         <li class="guide-item">
-          <code class="font-mono text-accent-blue bg-[rgba(88,166,255,0.1)] px-1.5 py-0.5 rounded text-[0.825rem]">Cmap-x86_64.apk</code>
-          <div class="text-text-muted mt-0.5"><strong class="text-text-main">For:</strong> PC emulators (BlueStacks, LDPlayer), Android Studio emulator, or x86 Chromebooks/tablets.</div>
+          <code
+            class="font-mono text-accent-blue bg-[rgba(88,166,255,0.1)] px-1.5 py-0.5 rounded text-[0.75rem] sm:text-[0.825rem] break-all">Cmap-x86_64.apk</code>
+          <div class="text-text-muted mt-0.5 text-[0.8rem] sm:text-sm"><strong class="text-text-main">For:</strong> PC emulators (BlueStacks, LDPlayer), Android Studio emulator, or x86 Chromebooks.</div>
         </li>
       </ul>
     </div>
 
     <!-- Legal Footer -->
-    <footer class="border-t border-white/[0.08] pt-4 text-text-muted text-[0.8rem] leading-relaxed">
-      <div class="mt-2.5 flex flex-wrap gap-3" aria-label="Legal links">
+    <footer class="border-t border-white/[0.08] pt-4 text-text-muted text-[0.75rem] sm:text-[0.8rem] leading-relaxed">
+      <div class="mt-2.5 flex flex-wrap gap-2 sm:gap-3" aria-label="Legal links">
         <a href="https://github.com/idcnys/Community_Map/blob/main/TERMS_AND_CONDITIONS.md" target="_blank"
-          rel="noopener noreferrer" class="text-accent-blue no-underline font-medium hover:underline">
+          rel="noopener noreferrer" class="text-accent-blue no-underline font-medium hover:underline text-[0.75rem] sm:text-[0.8rem]">
           <i class="fa-solid fa-file-contract mr-1"></i>Terms & Conditions</a>
         <a href="https://github.com/idcnys/Community_Map/blob/main/PRIVACY_POLICY.md" target="_blank"
-          rel="noopener noreferrer" class="text-accent-blue no-underline font-medium hover:underline">
+          rel="noopener noreferrer" class="text-accent-blue no-underline font-medium hover:underline text-[0.75rem] sm:text-[0.8rem]">
           <i class="fa-solid fa-shield-halved mr-1"></i>Privacy Policy</a>
-        <a href="https://github.com/idcnys/Community_Map/blob/main/LICENSE" target="_blank"
-          rel="noopener noreferrer" class="text-accent-blue no-underline font-medium hover:underline">
+        <a href="https://github.com/idcnys/Community_Map/blob/main/LICENSE" target="_blank" rel="noopener noreferrer"
+          class="text-accent-blue no-underline font-medium hover:underline text-[0.75rem] sm:text-[0.8rem]">
           <i class="fa-solid fa-scale-balanced mr-1"></i>License</a>
       </div>
-      <p class="mt-4 pt-3 border-t border-white/[0.06] text-center text-[0.78rem] text-text-muted">
+      <p class="mt-4 pt-3 border-t border-white/[0.06] text-center text-[0.72rem] sm:text-[0.78rem] text-text-muted">
         &copy; 2026 Community Map. All rights reserved.
       </p>
     </footer>
@@ -208,24 +220,87 @@
 
   <script>
     async function detectArchitecture() {
-      let targetArch = 'arm64-v8a';
+      let targetArch = null;
+      let method = '';
 
+      // Strategy 1: User-Agent Client Hints (Chromium browsers)
       if (navigator.userAgentData && navigator.userAgentData.getHighEntropyValues) {
         try {
-          const ua = await navigator.userAgentData.getHighEntropyValues(['architecture', 'bitness']);
-          if (ua.architecture === 'arm') {
-            targetArch = ua.bitness === '64' ? 'arm64-v8a' : 'armeabi-v7a';
-          } else if (ua.architecture === 'x86') {
-            targetArch = 'x86_64';
+          const ua = await navigator.userAgentData.getHighEntropyValues(['architecture', 'bitness', 'platform']);
+          if (ua.architecture) {
+            if (ua.architecture === 'arm') {
+              targetArch = ua.bitness === '64' ? 'arm64-v8a' : 'armeabi-v7a';
+              method = 'UA Client Hints';
+            } else if (ua.architecture === 'x86') {
+              targetArch = ua.bitness === '64' ? 'x86_64' : 'universal';
+              method = 'UA Client Hints';
+            }
           }
         } catch (e) {
-          console.warn('UA detection fallback used.');
+          console.warn('UA Client Hints failed, falling back to UA string.');
         }
       }
 
+      // Strategy 2: UA string parsing (Firefox, Safari, WebView)
+      if (!targetArch) {
+        const uaStr = navigator.userAgent || '';
+        const uaLower = uaStr.toLowerCase();
+
+        if (/aarch64|arm64/.test(uaLower)) {
+          targetArch = 'arm64-v8a';
+          method = 'UA string';
+        } else if (/armv7|armeabi|arm(?!\w*64)/.test(uaLower)) {
+          targetArch = 'armeabi-v7a';
+          method = 'UA string';
+        } else if (/x86_64|amd64/.test(uaLower)) {
+          targetArch = 'x86_64';
+          method = 'UA string';
+        } else if (/android/.test(uaLower)) {
+          // Android device but no arch hint — most likely arm64
+          targetArch = 'arm64-v8a';
+          method = 'Android default';
+        } else {
+          // Non-Android (desktop browser) — suggest universal
+          targetArch = 'universal';
+          method = 'Desktop fallback';
+        }
+      }
+
+      // Strategy 3: Device memory heuristic for older 32-bit devices
+      if (targetArch === 'arm64-v8a' && navigator.deviceMemory && navigator.deviceMemory <= 2) {
+        targetArch = 'armeabi-v7a';
+        method = 'Low-memory heuristic';
+      }
+
+      // Highlight the recommended asset
       const match = document.querySelector(`.asset-item[data-arch="${targetArch}"]`);
       if (match) {
         match.classList.add('recommended');
+        // Update the tag text for context
+        const tag = match.querySelector('.rec-tag');
+        if (tag && targetArch !== 'arm64-v8a') {
+          tag.textContent = 'Recommended for your device';
+        }
+      }
+
+      // Show detection banner
+      const banner = document.getElementById('detected-banner');
+      const bannerText = document.getElementById('detected-text');
+      if (banner && bannerText) {
+        const isAndroid = /android/i.test(navigator.userAgent);
+        const archLabel = {
+          'arm64-v8a': 'ARM 64-bit',
+          'armeabi-v7a': 'ARM 32-bit',
+          'x86_64': 'x86_64',
+          'universal': 'Universal'
+        }[targetArch] || targetArch;
+
+        if (isAndroid) {
+          bannerText.textContent = `Detected your device as ${archLabel} — recommended build highlighted below.`;
+        } else {
+          bannerText.textContent = `Browsing from desktop — grab the Universal APK or use an emulator with x86_64.`;
+        }
+        banner.classList.remove('hidden');
       }
     }
 
