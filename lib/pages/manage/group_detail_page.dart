@@ -1,25 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../services/group_service.dart';
-import '../../services/group_chat_service.dart';
+import '../../providers/service_providers.dart';
+
 import '../../models/group_model.dart';
 import '../../core/utils/time_ago.dart';
 import 'group_chat_page.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
-class GroupDetailPage extends StatefulWidget {
+class GroupDetailPage extends ConsumerStatefulWidget {
   final String groupId;
   const GroupDetailPage({super.key, required this.groupId});
 
   @override
-  State<GroupDetailPage> createState() => _GroupDetailPageState();
+  ConsumerState<GroupDetailPage> createState() => _GroupDetailPageState();
 }
 
-class _GroupDetailPageState extends State<GroupDetailPage> {
-  final _groupService = GroupService();
-  final _chatService = GroupChatService();
+class _GroupDetailPageState extends ConsumerState<GroupDetailPage> {
   final _firestore = FirebaseFirestore.instance;
   final Map<String, String> _nameCache = {};
   final Map<String, String> _memberAvatars = {};
@@ -53,7 +52,7 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
     return Scaffold(
       appBar: AppBar(title: const Text('Group Details')),
       body: StreamBuilder<GroupModel?>(
-        stream: _groupService.getGroupById(widget.groupId),
+        stream: ref.read(groupServiceProvider).getGroupById(widget.groupId),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -290,7 +289,7 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
               final name = nameController.text.trim();
               if (name.isEmpty) return;
               Navigator.of(ctx).pop();
-              final error = await _groupService.updateGroup(
+              final error = await ref.read(groupServiceProvider).updateGroup(
                 groupId: widget.groupId,
                 name: name,
                 description: descController.text.trim(),
@@ -333,7 +332,7 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
   }
 
   void _removeMember(String memberUid) async {
-    final error = await _groupService.removeMember(widget.groupId, memberUid);
+    final error = await ref.read(groupServiceProvider).removeMember(widget.groupId, memberUid);
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(error ?? 'Member removed')),
@@ -342,7 +341,7 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
   }
 
   void _approve(BuildContext context, String groupId, String userId) async {
-    final error = await _groupService.approveMember(groupId, userId);
+    final error = await ref.read(groupServiceProvider).approveMember(groupId, userId);
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(error ?? 'Member approved')),
@@ -351,7 +350,7 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
   }
 
   void _reject(BuildContext context, String groupId, String userId) async {
-    final error = await _groupService.rejectMember(groupId, userId);
+    final error = await ref.read(groupServiceProvider).rejectMember(groupId, userId);
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(error ?? 'Request rejected')),

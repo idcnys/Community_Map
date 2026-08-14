@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:geolocator/geolocator.dart';
@@ -97,7 +98,7 @@ class GroupChatService {
       await _firestore.collection('users').doc(currentUid).update({
         'lastActive': FieldValue.serverTimestamp(),
       });
-    } catch (_) {}
+    } catch (e) { debugPrint('[] error: $e'); }
   }
 
   Future<DateTime?> getLastActive(String uid) async {
@@ -119,7 +120,7 @@ class GroupChatService {
           .collection('read_receipts')
           .doc(currentUid)
           .set({'lastReadAt': FieldValue.serverTimestamp()}, SetOptions(merge: true));
-    } catch (_) {}
+    } catch (e) { debugPrint('[] error: $e'); }
   }
 
   Stream<int> getUnreadCount(String groupId) {

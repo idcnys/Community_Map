@@ -12,7 +12,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 
 /// Provider that checks if the current user liked a specific post.
 final hasLikedProvider = FutureProvider.family<bool, String>((ref, postId) async {
-  final service = ref.read(communityPostServiceProvider);
+  final service = ref.read(postServiceProvider);
   return service.hasLiked(postId);
 });
 
@@ -48,15 +48,15 @@ class _CommunityPostCardState extends ConsumerState<CommunityPostCard> {
       final pollService = ref.read(pollServiceProvider);
       final votes = await pollService.getMyVotes(widget.post.id);
       if (mounted) setState(() => _myPollVotes = votes);
-    } catch (_) {}
+    } catch (e) { debugPrint('[] error: $e'); }
   }
 
   Future<void> _checkLiked() async {
     try {
-      final service = ref.read(communityPostServiceProvider);
+      final service = ref.read(postServiceProvider);
       final liked = await service.hasLiked(widget.post.id);
       if (mounted) setState(() => _isLiked = liked);
-    } catch (_) {}
+    } catch (e) { debugPrint('[] error: $e'); }
   }
 
   @override
@@ -284,7 +284,7 @@ class _CommunityPostCardState extends ConsumerState<CommunityPostCard> {
       _isLiked = !_isLiked;
       _loadingLike = true;
     });
-    final service = ref.read(communityPostServiceProvider);
+    final service = ref.read(postServiceProvider);
     await service.toggleLike(widget.post.id, widget.post.authorId);
     if (mounted) setState(() => _loadingLike = false);
   }
@@ -304,7 +304,7 @@ class _CommunityPostCardState extends ConsumerState<CommunityPostCard> {
             style: FilledButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () async {
               Navigator.of(ctx).pop();
-              final service = ref.read(communityPostServiceProvider);
+              final service = ref.read(postServiceProvider);
               await service.deletePost(widget.post.id);
               ref.read(paginatedFeedProvider.notifier).removePost(widget.post.id);
             },
@@ -493,7 +493,7 @@ class _CommunityPostCardState extends ConsumerState<CommunityPostCard> {
                 title: const Text('Public'),
                 onTap: () async {
                   Navigator.of(ctx).pop();
-                  final service = ref.read(communityPostServiceProvider);
+                  final service = ref.read(postServiceProvider);
                   await service.repost(widget.post.id);
                 },
               ),
@@ -502,7 +502,7 @@ class _CommunityPostCardState extends ConsumerState<CommunityPostCard> {
                     title: Text(g.name),
                     onTap: () async {
                       Navigator.of(ctx).pop();
-                      final service = ref.read(communityPostServiceProvider);
+                      final service = ref.read(postServiceProvider);
                       await service.repost(
                         widget.post.id,
                         originType: 'group',

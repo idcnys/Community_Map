@@ -83,7 +83,7 @@ class PaginatedFeedNotifier extends AsyncNotifier<PaginatedFeedState> {
   /// New posts are prepended to the current list (deduplicated).
   void _listenForNewPosts() {
     _newPostsSub?.cancel();
-    final service = ref.read(communityPostServiceProvider);
+    final service = ref.read(postServiceProvider);
     final isGuest = ref.read(isGuestProvider);
     final filter = isGuest ? 'public' : ref.read(feedFilterProvider);
     final myGroupIds = ref.read(myGroupIdsProvider).value ?? [];
@@ -113,7 +113,7 @@ class PaginatedFeedNotifier extends AsyncNotifier<PaginatedFeedState> {
 
   Future<PaginatedFeedState> _loadFirstPage() async {
     try {
-      final service = ref.read(communityPostServiceProvider);
+      final service = ref.read(postServiceProvider);
       final isGuest = ref.read(isGuestProvider);
       final filter = isGuest ? 'public' : ref.watch(feedFilterProvider);
       final myGroupIdsAsync = ref.watch(myGroupIdsProvider);
@@ -144,7 +144,7 @@ class PaginatedFeedNotifier extends AsyncNotifier<PaginatedFeedState> {
     state = AsyncData(current.copyWith(isLoadingMore: true, error: null));
 
     try {
-      final service = ref.read(communityPostServiceProvider);
+      final service = ref.read(postServiceProvider);
       final isGuest = ref.read(isGuestProvider);
       final filter = isGuest ? 'public' : ref.read(feedFilterProvider);
       final myGroupIds = ref.read(myGroupIdsProvider).value ?? [];
@@ -201,12 +201,12 @@ final notificationsProvider = StreamProvider<List<AppNotificationModel>>((ref) {
 
 /// Comments for a specific post.
 final commentsProvider = StreamProvider.family<List<CommunityCommentModel>, String>((ref, postId) {
-  final service = ref.watch(communityPostServiceProvider);
+  final service = ref.watch(postServiceProvider);
   return service.getComments(postId);
 });
 
 /// Single post by ID.
 final postByIdProvider = StreamProvider.family<CommunityPostModel?, String>((ref, postId) {
-  final service = ref.watch(communityPostServiceProvider);
+  final service = ref.watch(postServiceProvider);
   return service.getPostById(postId);
 });

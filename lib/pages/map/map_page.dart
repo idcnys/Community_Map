@@ -145,7 +145,7 @@ class _MapPageState extends ConsumerState<MapPage>
         if (imageUrl.isNotEmpty && mounted) {
           setState(() => _memberAvatars[uid] = imageUrl);
         }
-      } catch (_) {}
+      } catch (e) { debugPrint('[] error: $e'); }
     }
   }
 

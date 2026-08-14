@@ -1,19 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/utils/time_ago.dart';
+import '../../providers/service_providers.dart';
 import '../../services/notification_service.dart';
 import '../../models/notification_model.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'comments_page.dart';
-import '../../services/report_post_service.dart';
+
 import '../../models/report_post_model.dart';
 import '../map/report_detail_sheet.dart';
 
-class NotificationPanel extends StatelessWidget {
+class NotificationPanel extends ConsumerWidget {
   const NotificationPanel({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final service = NotificationService();
+  Widget build(BuildContext context, WidgetRef ref) {
+    final service = ref.read(notificationServiceProvider);
     final theme = Theme.of(context);
 
     return DraggableScrollableSheet(
@@ -90,7 +92,7 @@ class NotificationPanel extends StatelessWidget {
                 else
                   SliverList(
                     delegate: SliverChildBuilderDelegate(
-                      (ctx, i) => _buildNotificationTile(context, service, notifications[i]),
+                      (ctx, i) => _buildNotificationTile(context, ref, service, notifications[i]),
                       childCount: notifications.length,
                     ),
                   ),
@@ -104,6 +106,7 @@ class NotificationPanel extends StatelessWidget {
 
   Widget _buildNotificationTile(
     BuildContext context,
+    WidgetRef ref,
     NotificationService service,
     AppNotificationModel notif,
   ) {
@@ -165,7 +168,7 @@ class NotificationPanel extends StatelessWidget {
 
         if (notif.type == 'new_report') {
           // Map report notification -> open ReportDetailSheet
-          final reportService = ReportPostService();
+          final reportService = ref.read(reportPostServiceProvider);
           final report = await reportService.getReportById(notif.postId);
           if (report == null || !context.mounted) return;
           Navigator.of(context).pop(); // close notification sheet

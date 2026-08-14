@@ -1,12 +1,13 @@
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import '../../services/post_service.dart';
+import '../../providers/service_providers.dart';
 import '../../models/community_post_model.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
-class CommentsPage extends StatefulWidget {
+class CommentsPage extends ConsumerStatefulWidget {
   final String postId;
   final String postAuthorId;
 
@@ -17,11 +18,10 @@ class CommentsPage extends StatefulWidget {
   });
 
   @override
-  State<CommentsPage> createState() => _CommentsPageState();
+  ConsumerState<CommentsPage> createState() => _CommentsPageState();
 }
 
-class _CommentsPageState extends State<CommentsPage> {
-  final _service = PostService();
+class _CommentsPageState extends ConsumerState<CommentsPage> {
   final _commentCtrl = TextEditingController();
   bool _sending = false;
   String _resolvedAuthorId = '';
@@ -42,7 +42,7 @@ class _CommentsPageState extends State<CommentsPage> {
         children: [
           // ─── ORIGINAL POST CONTEXT ─────────────────────────────────
           StreamBuilder<CommunityPostModel?>(
-            stream: _service.getPostById(widget.postId),
+            stream: ref.read(postServiceProvider).getPostById(widget.postId),
             builder: (context, postSnap) {
               final post = postSnap.data;
               if (post == null) return const SizedBox.shrink();
@@ -147,7 +147,7 @@ class _CommentsPageState extends State<CommentsPage> {
           // ─── COMMENTS LIST ─────────────────────────────────────────
           Expanded(
             child: StreamBuilder<List<CommunityCommentModel>>(
-              stream: _service.getComments(widget.postId),
+              stream: ref.read(postServiceProvider).getComments(widget.postId),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
@@ -169,7 +169,7 @@ class _CommentsPageState extends State<CommentsPage> {
                   itemCount: comments.length,
                   itemBuilder: (ctx, i) {
                     final comment = comments[i];
-                    final isOwn = comment.authorId == _service.currentUid;
+                    final isOwn = comment.authorId == ref.read(postServiceProvider).currentUid;
 
                     return Card(
                       margin: const EdgeInsets.only(bottom: 12),
@@ -285,7 +285,7 @@ class _CommentsPageState extends State<CommentsPage> {
 
     setState(() => _sending = true);
     final authorId = widget.postAuthorId.isNotEmpty ? widget.postAuthorId : _resolvedAuthorId;
-    final error = await _service.addComment(
+    final error = await ref.read(postServiceProvider).addComment(
         widget.postId, content, authorId);
     setState(() => _sending = false);
 
@@ -299,7 +299,7 @@ class _CommentsPageState extends State<CommentsPage> {
   }
 
   Future<void> _deleteComment(String commentId) async {
-    final error = await _service.deleteComment(widget.postId, commentId);
+    final error = await ref.read(postServiceProvider).deleteComment(widget.postId, commentId);
     if (error != null && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(error), backgroundColor: Colors.red),

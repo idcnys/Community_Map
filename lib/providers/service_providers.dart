@@ -3,8 +3,11 @@ import '../services/post_service.dart';
 import '../services/notification_service.dart';
 import '../services/poll_service.dart';
 import '../services/group_service.dart';
+import '../services/group_chat_service.dart';
 import '../services/profile_service.dart';
 import '../services/report_post_service.dart';
+import '../services/cloudinary_service.dart';
+import '../services/push_notification_service.dart';
 import '../services/view_count_batcher.dart';
 import '../shared/services/user_group_service.dart';
 
@@ -28,6 +31,10 @@ final groupServiceProvider = Provider<GroupService>((ref) {
   return GroupService();
 });
 
+final groupChatServiceProvider = Provider<GroupChatService>((ref) {
+  return GroupChatService();
+});
+
 final profileServiceProvider = Provider<ProfileService>((ref) {
   return ProfileService();
 });
@@ -36,13 +43,16 @@ final reportPostServiceProvider = Provider<ReportPostService>((ref) {
   return ReportPostService();
 });
 
-final userGroupServiceProvider = Provider<UserGroupService>((ref) {
-  return UserGroupService();
+final cloudinaryServiceProvider = Provider<CloudinaryService>((ref) {
+  return CloudinaryService();
 });
 
-/// @deprecated Use [postServiceProvider] instead.
-final communityPostServiceProvider = Provider<PostService>((ref) {
-  return ref.watch(postServiceProvider);
+final pushNotificationServiceProvider = Provider<PushNotificationService>((ref) {
+  return PushNotificationService();
+});
+
+final userGroupServiceProvider = Provider<UserGroupService>((ref) {
+  return UserGroupService();
 });
 
 /// View count batcher: accumulates view events, flushes every 10s.

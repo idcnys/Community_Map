@@ -56,7 +56,7 @@ class _ReportPostFormState extends ConsumerState<ReportPostForm> {
       if (phone.isNotEmpty && mounted && _contactCtrl.text.isEmpty) {
         setState(() => _contactCtrl.text = phone);
       }
-    } catch (_) {}
+    } catch (e) { debugPrint('[] error: $e'); }
   }
 
   Future<void> _detectLocation() async {

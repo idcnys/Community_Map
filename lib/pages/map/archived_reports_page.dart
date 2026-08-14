@@ -1,18 +1,19 @@
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import '../../services/report_post_service.dart';
+import '../../providers/service_providers.dart';
 import '../../models/report_post_model.dart';
 import 'report_detail_sheet.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-class ArchivedReportsPage extends StatelessWidget {
+class ArchivedReportsPage extends ConsumerWidget {
   const ArchivedReportsPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final service = ReportPostService();
+    final service = ref.read(reportPostServiceProvider);
 
     return Scaffold(
       appBar: AppBar(

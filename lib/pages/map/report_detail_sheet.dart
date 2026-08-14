@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../models/report_post_model.dart';
 import '../../models/community_post_model.dart';
+import '../../providers/service_providers.dart';
 import '../../services/report_post_service.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../widgets/audio_player_widget.dart';
 
-class ReportDetailSheet extends StatefulWidget {
+class ReportDetailSheet extends ConsumerStatefulWidget {
   final ReportPostModel report;
   final VoidCallback? onZoomToLocation;
   final double? userLat;
@@ -22,11 +24,10 @@ class ReportDetailSheet extends StatefulWidget {
   });
 
   @override
-  State<ReportDetailSheet> createState() => _ReportDetailSheetState();
+  ConsumerState<ReportDetailSheet> createState() => _ReportDetailSheetState();
 }
 
-class _ReportDetailSheetState extends State<ReportDetailSheet> {
-  final _service = ReportPostService();
+class _ReportDetailSheetState extends ConsumerState<ReportDetailSheet> {
   final _commentController = TextEditingController();
   bool _canSeeContact = false;
   bool _loadingContact = true;
@@ -45,7 +46,7 @@ class _ReportDetailSheetState extends State<ReportDetailSheet> {
     );
   }
 
-  bool get _isOwnReport => widget.report.authorId == _service.currentUid;
+  bool get _isOwnReport => widget.report.authorId == ref.read(reportPostServiceProvider).currentUid;
 
   @override
   void initState() {
@@ -54,7 +55,7 @@ class _ReportDetailSheetState extends State<ReportDetailSheet> {
     _userLng = widget.userLng;
     _checkContactVisibility();
     _ensureLocation();
-    _service.incrementViewCount(widget.report.id);
+    ref.read(reportPostServiceProvider).incrementViewCount(widget.report.id);
   }
 
   @override
@@ -76,9 +77,9 @@ class _ReportDetailSheetState extends State<ReportDetailSheet> {
 
   Future<void> _checkContactVisibility() async {
     try {
-      final myGroupIds = await _service.getMyGroupIds();
+      final myGroupIds = await ref.read(reportPostServiceProvider).getMyGroupIds();
       final canSee =
-          widget.report.canSeeContact(_service.currentUid, myGroupIds);
+          widget.report.canSeeContact(ref.read(reportPostServiceProvider).currentUid, myGroupIds);
       if (mounted) {
         setState(() {
           _canSeeContact = canSee;
@@ -92,7 +93,7 @@ class _ReportDetailSheetState extends State<ReportDetailSheet> {
 
   Future<void> _vote(String voteType) async {
     setState(() => _voting = true);
-    final error = await _service.voteOnReport(widget.report.id, voteType);
+    final error = await ref.read(reportPostServiceProvider).voteOnReport(widget.report.id, voteType);
     if (mounted) {
       setState(() => _voting = false);
       if (error != null) {
@@ -107,7 +108,7 @@ class _ReportDetailSheetState extends State<ReportDetailSheet> {
     final text = _commentController.text.trim();
     if (text.isEmpty) return;
     setState(() => _sendingComment = true);
-    final error = await _service.addComment(widget.report.id, text);
+    final error = await ref.read(reportPostServiceProvider).addComment(widget.report.id, text);
     if (mounted) {
       setState(() => _sendingComment = false);
       if (error == null) {
@@ -126,7 +127,7 @@ class _ReportDetailSheetState extends State<ReportDetailSheet> {
 
     return SafeArea(
       child: StreamBuilder<ReportPostModel?>(
-        stream: _service.getReportStream(widget.report.id),
+        stream: ref.read(reportPostServiceProvider).getReportStream(widget.report.id),
         builder: (context, reportSnap) {
           final report = reportSnap.data ?? widget.report;
 
@@ -419,7 +420,7 @@ class _ReportDetailSheetState extends State<ReportDetailSheet> {
   }
 
   Widget _buildVoteSection(ThemeData theme, ReportPostModel report) {
-    final myVote = report.votes[_service.currentUid];
+    final myVote = report.votes[ref.read(reportPostServiceProvider).currentUid];
 
     // Already voted — show confirmation, no buttons
     if (myVote != null) {
@@ -576,7 +577,7 @@ class _ReportDetailSheetState extends State<ReportDetailSheet> {
 
   Widget _buildCommentsSection(ThemeData theme) {
     return StreamBuilder<List<CommunityCommentModel>>(
-      stream: _service.getComments(widget.report.id),
+      stream: ref.read(reportPostServiceProvider).getComments(widget.report.id),
       builder: (context, snapshot) {
         final comments = snapshot.data ?? [];
 

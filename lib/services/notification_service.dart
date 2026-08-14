@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/notification_model.dart';
@@ -135,7 +136,7 @@ class NotificationService {
           data: {'type': type, 'postId': postId, 'groupId': groupId},
         );
       }
-    } catch (_) {}
+    } catch (e) { debugPrint('[] error: $e'); }
   }
 
   /// Notify ALL registered users (except the actor) — used for new reports.
@@ -177,7 +178,7 @@ class NotificationService {
           data: {'type': type, 'postId': reportId},
         );
       }
-    } catch (_) {}
+    } catch (e) { debugPrint('[] error: $e'); }
   }
 
   // ─── HELPERS ─────────────────────────────────────────────────────

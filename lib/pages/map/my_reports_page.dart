@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../models/report_post_model.dart';
 import '../../models/community_post_model.dart';
+import '../../providers/service_providers.dart';
 import '../../services/report_post_service.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-class MyReportsPage extends StatelessWidget {
+class MyReportsPage extends ConsumerWidget {
   const MyReportsPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final service = ReportPostService();
+  Widget build(BuildContext context, WidgetRef ref) {
+    final service = ref.read(reportPostServiceProvider);
     final theme = Theme.of(context);
 
     return Scaffold(

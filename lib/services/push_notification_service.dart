@@ -161,11 +161,4 @@ class PushNotificationService {
     );
   }
 
-  /// Create the Android notification channel (required for Android 8+).
-  Future<void> createNotificationChannel() async {
-    // firebase_messaging auto-creates a default channel,
-    // but we ensure our custom one exists via the manifest meta-data.
-    // No extra code needed — the channel ID "cmap_notifications"
-    // is set in AndroidManifest.xml.
-  }
 }

@@ -264,7 +264,7 @@ class _CommunityPostFormState extends ConsumerState<CommunityPostForm> {
       groupName = group.name;
     }
 
-    final service = ref.read(communityPostServiceProvider);
+    final service = ref.read(postServiceProvider);
     final error = await service.createPost(
       title: _titleCtrl.text.trim(),
       description: _descCtrl.text.trim(),

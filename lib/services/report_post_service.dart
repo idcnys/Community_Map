@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:geolocator/geolocator.dart';
@@ -226,7 +227,7 @@ class ReportPostService {
             message: '$currentName commented on your report',
           );
         }
-      } catch (_) {}
+      } catch (e) { debugPrint('[] error: $e'); }
 
       return null;
     } catch (e) {
@@ -268,7 +269,7 @@ class ReportPostService {
       await _firestore.collection('report_posts').doc(reportId).update({
         'viewCount': FieldValue.increment(1),
       });
-    } catch (_) {}
+    } catch (e) { debugPrint('[] error: $e'); }
   }
 
   // ─── DISTANCE CHECK (within 1km) ────────────────────────────────

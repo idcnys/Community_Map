@@ -95,6 +95,7 @@ flutter:
   assets:
     - assets/splash/
     - assets/icon/
+    # Runtime config — populated from .env (gitignored). See .env.example
     - .env
 
   # An image asset can refer to one or more resolution-specific "variants", see

@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../core/utils/time_ago.dart';
 import '../../models/community_post_model.dart';
-import '../../services/post_service.dart';
+import '../../providers/service_providers.dart';
 import '../../providers/feed_providers.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'comments_page.dart';
@@ -16,7 +16,7 @@ class ManagePostsPage extends ConsumerStatefulWidget {
 }
 
 class _ManagePostsPageState extends ConsumerState<ManagePostsPage> {
-  final _service = PostService();
+  
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +26,7 @@ class _ManagePostsPageState extends ConsumerState<ManagePostsPage> {
     return Scaffold(
       appBar: AppBar(title: const Text('Manage My Posts')),
       body: StreamBuilder<List<CommunityPostModel>>(
-        stream: _service.getMyPosts(),
+        stream: ref.read(postServiceProvider).getMyPosts(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -145,7 +145,7 @@ class _ManagePostsPageState extends ConsumerState<ManagePostsPage> {
               FilledButton(
                 onPressed: () async {
                   Navigator.of(ctx).pop();
-                  await _service.updatePost(
+                  await ref.read(postServiceProvider).updatePost(
                     post.id,
                     title: titleCtrl.text.trim(),
                     description: descCtrl.text.trim(),
@@ -181,7 +181,7 @@ class _ManagePostsPageState extends ConsumerState<ManagePostsPage> {
             style: FilledButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () async {
               Navigator.of(ctx).pop();
-              await _service.deletePost(post.id);
+              await ref.read(postServiceProvider).deletePost(post.id);
               ref.read(paginatedFeedProvider.notifier).removePost(post.id);
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
