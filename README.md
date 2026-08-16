@@ -1,7 +1,6 @@
 <div align="center">
   <img width="100" alt="dark_mode" src="https://github.com/user-attachments/assets/c77e78a3-903c-47b9-8d98-80eb69445277" />
   <h1>Community Map</h1>
-  <h1>Community Map</h1>
 
 <p>
   A platform for connecting local communities and sharing important information, created by our goat, our very own Bitto Saha. I am thankful that he is allowing me to do something.
