@@ -1,6 +1,12 @@
 <div align="center">
   <img width="100" alt="dark_mode" src="https://github.com/user-attachments/assets/c77e78a3-903c-47b9-8d98-80eb69445277" />
   <h1>Community Map</h1>
+  <h1>Community Map</h1>
+
+<p>
+  A platform for connecting local communities and sharing important information, created by our goat, our very own Bitto Saha. I am thankful that he is allowing me to do something.
+    
+</p>
 
   <p>
     <a href="#features"><b>Features</b></a> • 
@@ -69,7 +75,7 @@
 - Dedicated locked-state UI for unavailable actions
 - Seamless guest sign-out path back to authentication
 
-<div align="center">
+<div align="justified">
   
 ## Use Cases
 </div>
@@ -105,7 +111,7 @@ A first-time visitor enters as a guest to explore feed/map content before creati
 Group owners manage membership requests, monitor participation, and keep group communication organized through chat and moderation tools.
 
 
-<div align="center">
+<div align="left">
   
 ## Architecture
 
