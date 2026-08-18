@@ -99,6 +99,7 @@ class PostService {
     var query = _firestore
         .collection('community_posts')
         .where('originType', isEqualTo: 'public')
+        .where('isSpam', isEqualTo: false)
         .where('createdAt', isGreaterThanOrEqualTo: _feedCutoff)
         .orderBy('createdAt', descending: true)
         .limit(pageSize);
@@ -116,6 +117,7 @@ class PostService {
     var query = _firestore
         .collection('community_posts')
         .where('groupId', isEqualTo: groupId)
+        .where('isSpam', isEqualTo: false)
         .where('createdAt', isGreaterThanOrEqualTo: _feedCutoff)
         .orderBy('createdAt', descending: true)
         .limit(pageSize);
@@ -136,6 +138,7 @@ class PostService {
     var query = _firestore
         .collection('community_posts')
         .where('groupId', whereIn: allowedGroupIds)
+        .where('isSpam', isEqualTo: false)
         .where('createdAt', isGreaterThanOrEqualTo: _feedCutoff)
         .orderBy('createdAt', descending: true)
         .limit(pageSize);
@@ -170,6 +173,7 @@ class PostService {
   }) {
     Query<Map<String, dynamic>> query = _firestore
         .collection('community_posts')
+        .where('isSpam', isEqualTo: false)
         .where('createdAt', isGreaterThanOrEqualTo: Timestamp.fromDate(since))
         .orderBy('createdAt', descending: true)
         .limit(pageSize);
@@ -424,6 +428,72 @@ class PostService {
     } catch (e) {
       return 'Failed to delete comment: $e';
     }
+  }
+
+  // ─── REPORT POST ─────────────────────────────────────────────────
+
+  /// Report causes shown in the UI dialog.
+  static const List<String> reportCauses = [
+    'Spam',
+    'Harassment',
+    'Hate Speech',
+    'Misinformation',
+    'Inappropriate Content',
+    'Other',
+  ];
+
+  /// Threshold at which a post is auto-marked as spam.
+  static const int spamThreshold = 10;
+
+  /// Submit a report on a post. Returns error string or null on success.
+  /// Also checks if the post should be marked as spam after this report.
+  Future<String?> reportPost(String postId, String cause) async {
+    try {
+      final reportRef = _firestore
+          .collection('community_posts')
+          .doc(postId)
+          .collection('reports')
+          .doc(currentUid);
+
+      // Prevent duplicate reports from same user
+      final existing = await reportRef.get();
+      if (existing.exists) return 'You have already reported this post';
+
+      // Write the report
+      await reportRef.set({
+        'cause': cause,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
+      // Increment report count on the post
+      await _firestore.collection('community_posts').doc(postId).update({
+        'reportCount': FieldValue.increment(1),
+      });
+
+      // Check if threshold reached → mark as spam
+      final postDoc = await _firestore.collection('community_posts').doc(postId).get();
+      final reportCount = postDoc.data()?['reportCount'] ?? 0;
+      if (reportCount >= spamThreshold) {
+        await _firestore.collection('community_posts').doc(postId).update({
+          'isSpam': true,
+        });
+      }
+
+      return null;
+    } catch (e) {
+      return 'Failed to report post: $e';
+    }
+  }
+
+  /// Check if current user has already reported this post.
+  Future<bool> hasReported(String postId) async {
+    final snap = await _firestore
+        .collection('community_posts')
+        .doc(postId)
+        .collection('reports')
+        .doc(currentUid)
+        .get();
+    return snap.exists;
   }
 
   // ─── GROUP IDS (delegation) ──────────────────────────────────────

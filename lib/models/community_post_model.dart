@@ -23,6 +23,8 @@ class CommunityPostModel {
   final List<String> pollOptions;
   final String pollType;
   final Map<String, List<String>> pollVotes;
+  final int reportCount;
+  final bool isSpam;
 
   CommunityPostModel({
     this.id = '',
@@ -46,6 +48,8 @@ class CommunityPostModel {
     this.pollOptions = const [],
     this.pollType = 'single',
     this.pollVotes = const {},
+    this.reportCount = 0,
+    this.isSpam = false,
   });
 
   bool get isPublic => originType == 'public';
@@ -74,6 +78,8 @@ class CommunityPostModel {
     List<String>? pollOptions,
     String? pollType,
     Map<String, List<String>>? pollVotes,
+    int? reportCount,
+    bool? isSpam,
   }) {
     return CommunityPostModel(
       id: id ?? this.id,
@@ -97,6 +103,8 @@ class CommunityPostModel {
       pollOptions: pollOptions ?? this.pollOptions,
       pollType: pollType ?? this.pollType,
       pollVotes: pollVotes ?? this.pollVotes,
+      reportCount: reportCount ?? this.reportCount,
+      isSpam: isSpam ?? this.isSpam,
     );
   }
 
@@ -124,6 +132,8 @@ class CommunityPostModel {
       pollVotes: (map['pollVotes'] as Map<String, dynamic>?)?.map(
         (k, v) => MapEntry(k, List<String>.from(v ?? [])),
       ) ?? {},
+      reportCount: map['reportCount'] ?? 0,
+      isSpam: map['isSpam'] ?? false,
       createdAt: map.parseTimestamp('createdAt'),
     );
   }
@@ -149,6 +159,8 @@ class CommunityPostModel {
       'pollOptions': pollOptions,
       'pollType': pollType,
       'pollVotes': pollVotes,
+      'reportCount': reportCount,
+      'isSpam': isSpam,
       'createdAt': createdAt != null ? Timestamp.fromDate(createdAt!) : FieldValue.serverTimestamp(),
     };
   }

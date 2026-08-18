@@ -5,6 +5,7 @@ import '../core/utils/time_ago.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/community_post_model.dart';
 import '../providers/service_providers.dart';
+import '../services/post_service.dart';
 import '../providers/feed_providers.dart';
 import '../providers/guest_provider.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -262,6 +263,15 @@ class _CommunityPostCardState extends ConsumerState<CommunityPostCard> {
                     ),
                   ),
                   const Spacer(),
+                  if (!isOwn && !isGuest)
+                    IconButton(
+                      icon: Icon(LucideIcons.flag,
+                          size: 20, color: theme.colorScheme.onSurfaceVariant),
+                      tooltip: 'Report',
+                      onPressed: () => _showReportDialog(context),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
                   if (isOwn)
                     IconButton(
                       icon: Icon(LucideIcons.trash2,
@@ -311,6 +321,60 @@ class _CommunityPostCardState extends ConsumerState<CommunityPostCard> {
             child: const Text('Delete'),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showReportDialog(BuildContext context) {
+    final service = ref.read(postServiceProvider);
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(LucideIcons.flag, color: Theme.of(ctx).colorScheme.error, size: 22),
+            const SizedBox(width: 8),
+            const Text('Report Post'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Why are you reporting this post?',
+              style: TextStyle(color: Theme.of(ctx).colorScheme.onSurfaceVariant, fontSize: 14),
+            ),
+            const SizedBox(height: 12),
+            ...PostService.reportCauses.map((cause) => ListTile(
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+              leading: Icon(LucideIcons.circleAlert, size: 18, color: Theme.of(ctx).colorScheme.onSurfaceVariant),
+              title: Text(cause, style: const TextStyle(fontSize: 14)),
+              onTap: () async {
+                Navigator.of(ctx).pop();
+                final error = await service.reportPost(widget.post.id, cause);
+                if (!context.mounted) return;
+                if (error != null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(error), backgroundColor: Theme.of(context).colorScheme.error),
+                  );
+                } else {
+                  // Track reported post so it stays hidden on feed reload
+                  ref.read(reportedPostsProvider.notifier).add(widget.post.id);
+                  // Remove post from feed immediately for the reporter
+                  ref.read(paginatedFeedProvider.notifier).removePost(widget.post.id);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Post reported. It will be hidden from your feed.'),
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
+                }
+              },
+            )),
+          ],
+        ),
       ),
     );
   }

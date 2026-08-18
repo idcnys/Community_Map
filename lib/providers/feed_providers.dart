@@ -18,6 +18,19 @@ final feedFilterProvider = NotifierProvider<FeedFilterNotifier, String>(
   FeedFilterNotifier.new,
 );
 
+/// Set of post IDs the current user has reported.
+/// Used to hide reported posts from the feed client-side.
+final reportedPostsProvider = NotifierProvider<ReportedPostsNotifier, Set<String>>(
+  ReportedPostsNotifier.new,
+);
+
+class ReportedPostsNotifier extends Notifier<Set<String>> {
+  @override
+  Set<String> build() => {};
+
+  void add(String postId) => state = {...state, postId};
+}
+
 class FeedFilterNotifier extends Notifier<String> {
   @override
   String build() => 'all';
@@ -120,9 +133,10 @@ class PaginatedFeedNotifier extends AsyncNotifier<PaginatedFeedState> {
       final myGroupIds = myGroupIdsAsync.value ?? [];
 
       final result = await _fetchPage(service, filter, myGroupIds, null);
+      final reportedIds = ref.read(reportedPostsProvider);
 
       return PaginatedFeedState(
-        posts: result.items,
+        posts: result.items.where((p) => !reportedIds.contains(p.id)).toList(),
         cursor: result.lastDoc,
         hasMore: result.hasMore,
       );
@@ -151,8 +165,11 @@ class PaginatedFeedNotifier extends AsyncNotifier<PaginatedFeedState> {
 
       final result = await _fetchPage(service, filter, myGroupIds, current.cursor);
 
+      final reportedIds = ref.read(reportedPostsProvider);
+      final filteredItems = result.items.where((p) => !reportedIds.contains(p.id)).toList();
+
       state = AsyncData(current.copyWith(
-        posts: [...current.posts, ...result.items],
+        posts: [...current.posts, ...filteredItems],
         cursor: result.lastDoc,
         hasMore: result.hasMore,
         isLoadingMore: false,
