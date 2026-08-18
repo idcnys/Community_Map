@@ -3,7 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../providers/service_providers.dart';
+import '../../providers/feed_providers.dart';
+import '../../providers/guest_provider.dart';
 import '../../models/community_post_model.dart';
+import '../../services/post_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
@@ -25,6 +29,22 @@ class _CommentsPageState extends ConsumerState<CommentsPage> {
   final _commentCtrl = TextEditingController();
   bool _sending = false;
   String _resolvedAuthorId = '';
+  bool _isLiked = false;
+  bool _loadingLike = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkLiked();
+  }
+
+  Future<void> _checkLiked() async {
+    try {
+      final service = ref.read(postServiceProvider);
+      final liked = await service.hasLiked(widget.postId);
+      if (mounted) setState(() => _isLiked = liked);
+    } catch (_) {}
+  }
 
   @override
   void dispose() {
@@ -138,6 +158,92 @@ class _CommentsPageState extends ConsumerState<CommentsPage> {
                         ),
                       ),
                     ],
+                    // ─── ACTION BUTTONS ROW ────────────────────────
+                    const SizedBox(height: 10),
+                    const Divider(height: 1),
+                    const SizedBox(height: 4),
+                    Builder(builder: (ctx) {
+                      final isGuest = ref.read(isGuestProvider);
+                      final isOwn = _isOwnPost(post);
+                      return Row(
+                        children: [
+                          // Like button
+                          InkWell(
+                            onTap: (isGuest || _loadingLike) ? null : () => _toggleLike(post),
+                            borderRadius: BorderRadius.circular(16),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    _isLiked ? Icons.thumb_up : LucideIcons.thumbsUp,
+                                    size: 16,
+                                    color: _isLiked ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    '${post.likeCount}',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                      color: _isLiked ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          // Comment count (non-interactive, already on this page)
+                          _metricChip(theme, LucideIcons.messageCircle, post.commentCount),
+                          const SizedBox(width: 8),
+                          // Repost button
+                          if (!isOwn && !isGuest && !post.isRepost)
+                            InkWell(
+                              onTap: () => _repostFromComments(post),
+                              borderRadius: BorderRadius.circular(16),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(LucideIcons.repeat, size: 16, color: theme.colorScheme.onSurfaceVariant),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      '${post.repostCount}',
+                                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: theme.colorScheme.onSurfaceVariant),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            )
+                          else
+                            _metricChip(theme, LucideIcons.repeat, post.repostCount),
+                          const SizedBox(width: 8),
+                          // View count
+                          _metricChip(theme, LucideIcons.eye, post.viewCount),
+                          const Spacer(),
+                          // Report button
+                          if (!isOwn && !isGuest)
+                            InkWell(
+                              onTap: () => _showReportDialog(context, post),
+                              borderRadius: BorderRadius.circular(16),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(LucideIcons.flag, size: 16, color: theme.colorScheme.onSurfaceVariant),
+                                    const SizedBox(width: 4),
+                                    Text('Report', style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant)),
+                                  ],
+                                ),
+                              ),
+                            ),
+                        ],
+                      );
+                    }),
                   ],
                 ),
               );
@@ -305,5 +411,119 @@ class _CommentsPageState extends ConsumerState<CommentsPage> {
         SnackBar(content: Text(error), backgroundColor: Colors.red),
       );
     }
+  }
+
+  Future<void> _toggleLike(CommunityPostModel post) async {
+    setState(() {
+      _isLiked = !_isLiked;
+      _loadingLike = true;
+    });
+    final service = ref.read(postServiceProvider);
+    await service.toggleLike(post.id, post.authorId);
+    if (mounted) setState(() => _loadingLike = false);
+  }
+
+  Future<void> _repostFromComments(CommunityPostModel post) async {
+    final service = ref.read(postServiceProvider);
+    final error = await service.repost(
+      post.id,
+      originType: post.isPublic ? 'public' : 'group',
+      groupId: post.groupId,
+      groupName: post.groupName,
+    );
+    if (!mounted) return;
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error), backgroundColor: Theme.of(context).colorScheme.error),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Reposted successfully'), duration: Duration(seconds: 2)),
+      );
+    }
+  }
+
+  bool _isOwnPost(CommunityPostModel post) {
+    return post.authorId == FirebaseAuth.instance.currentUser?.uid;
+  }
+
+  Widget _metricChip(ThemeData theme, IconData icon, int count) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 14, color: theme.colorScheme.onSurfaceVariant),
+        const SizedBox(width: 4),
+        Text(
+          '$count',
+          style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant, fontWeight: FontWeight.w500),
+        ),
+      ],
+    );
+  }
+
+  void _showReportDialog(BuildContext context, CommunityPostModel post) {
+    final isGuest = ref.read(isGuestProvider);
+    if (isGuest) return;
+
+    final service = ref.read(postServiceProvider);
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        titlePadding: const EdgeInsets.fromLTRB(20, 16, 8, 0),
+        contentPadding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+        title: Row(
+          children: [
+            Icon(LucideIcons.flag, color: Theme.of(ctx).colorScheme.error, size: 18),
+            const SizedBox(width: 6),
+            Expanded(child: Text('Report Post', style: Theme.of(ctx).textTheme.titleMedium)),
+            IconButton(
+              icon: const Icon(LucideIcons.x, size: 18),
+              onPressed: () => Navigator.of(ctx).pop(),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Why are you reporting this post?',
+              style: TextStyle(color: Theme.of(ctx).colorScheme.onSurfaceVariant, fontSize: 13),
+            ),
+            const SizedBox(height: 6),
+            ...PostService.reportCauses.map((cause) => ListTile(
+              dense: true,
+              visualDensity: VisualDensity.compact,
+              contentPadding: EdgeInsets.zero,
+              minVerticalPadding: 4,
+              title: Text(cause, style: const TextStyle(fontSize: 13)),
+              onTap: () async {
+                Navigator.of(ctx).pop();
+                final error = await service.reportPost(post.id, cause);
+                if (!context.mounted) return;
+                if (error != null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(error), backgroundColor: Theme.of(context).colorScheme.error),
+                  );
+                } else {
+                  ref.read(reportedPostsProvider.notifier).add(post.id);
+                  ref.read(paginatedFeedProvider.notifier).removePost(post.id);
+                  // Navigate back since the post is now hidden
+                  if (context.mounted) Navigator.of(context).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Post reported. It will be hidden from your feed.'),
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
+                }
+              },
+            )),
+          ],
+        ),
+      ),
+    );
   }
 }

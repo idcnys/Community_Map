@@ -330,11 +330,19 @@ class _CommunityPostCardState extends ConsumerState<CommunityPostCard> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
+        titlePadding: const EdgeInsets.fromLTRB(20, 16, 8, 0),
+        contentPadding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
         title: Row(
           children: [
-            Icon(LucideIcons.flag, color: Theme.of(ctx).colorScheme.error, size: 22),
-            const SizedBox(width: 8),
-            const Text('Report Post'),
+            Icon(LucideIcons.flag, color: Theme.of(ctx).colorScheme.error, size: 18),
+            const SizedBox(width: 6),
+            Expanded(child: Text('Report Post', style: Theme.of(ctx).textTheme.titleMedium)),
+            IconButton(
+              icon: const Icon(LucideIcons.x, size: 18),
+              onPressed: () => Navigator.of(ctx).pop(),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+            ),
           ],
         ),
         content: Column(
@@ -343,14 +351,15 @@ class _CommunityPostCardState extends ConsumerState<CommunityPostCard> {
           children: [
             Text(
               'Why are you reporting this post?',
-              style: TextStyle(color: Theme.of(ctx).colorScheme.onSurfaceVariant, fontSize: 14),
+              style: TextStyle(color: Theme.of(ctx).colorScheme.onSurfaceVariant, fontSize: 13),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 6),
             ...PostService.reportCauses.map((cause) => ListTile(
               dense: true,
+              visualDensity: VisualDensity.compact,
               contentPadding: EdgeInsets.zero,
-              leading: Icon(LucideIcons.circleAlert, size: 18, color: Theme.of(ctx).colorScheme.onSurfaceVariant),
-              title: Text(cause, style: const TextStyle(fontSize: 14)),
+              minVerticalPadding: 4,
+              title: Text(cause, style: const TextStyle(fontSize: 13)),
               onTap: () async {
                 Navigator.of(ctx).pop();
                 final error = await service.reportPost(widget.post.id, cause);

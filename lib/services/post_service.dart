@@ -99,7 +99,6 @@ class PostService {
     var query = _firestore
         .collection('community_posts')
         .where('originType', isEqualTo: 'public')
-        .where('isSpam', isEqualTo: false)
         .where('createdAt', isGreaterThanOrEqualTo: _feedCutoff)
         .orderBy('createdAt', descending: true)
         .limit(pageSize);
@@ -117,7 +116,6 @@ class PostService {
     var query = _firestore
         .collection('community_posts')
         .where('groupId', isEqualTo: groupId)
-        .where('isSpam', isEqualTo: false)
         .where('createdAt', isGreaterThanOrEqualTo: _feedCutoff)
         .orderBy('createdAt', descending: true)
         .limit(pageSize);
@@ -138,7 +136,6 @@ class PostService {
     var query = _firestore
         .collection('community_posts')
         .where('groupId', whereIn: allowedGroupIds)
-        .where('isSpam', isEqualTo: false)
         .where('createdAt', isGreaterThanOrEqualTo: _feedCutoff)
         .orderBy('createdAt', descending: true)
         .limit(pageSize);
@@ -154,6 +151,7 @@ class PostService {
   ) {
     final items = snap.docs
         .map((d) => CommunityPostModel.fromMap(d.id, d.data()))
+        .where((p) => !p.isSpam)
         .toList();
     return PaginatedResult(
       items: items,
@@ -173,7 +171,6 @@ class PostService {
   }) {
     Query<Map<String, dynamic>> query = _firestore
         .collection('community_posts')
-        .where('isSpam', isEqualTo: false)
         .where('createdAt', isGreaterThanOrEqualTo: Timestamp.fromDate(since))
         .orderBy('createdAt', descending: true)
         .limit(pageSize);
@@ -189,6 +186,7 @@ class PostService {
 
     return query.snapshots().map((snap) => snap.docs
         .map((d) => CommunityPostModel.fromMap(d.id, d.data()))
+        .where((p) => !p.isSpam)
         .toList());
   }
 
