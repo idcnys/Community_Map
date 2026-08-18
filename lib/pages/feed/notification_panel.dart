@@ -64,9 +64,50 @@ class NotificationPanel extends ConsumerWidget {
                           style: theme.textTheme.titleLarge
                               ?.copyWith(fontWeight: FontWeight.bold),
                         ),
-                        TextButton(
-                          onPressed: () => service.markAllRead(),
-                          child: const Text('Mark all read'),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            TextButton(
+                              onPressed: () => service.markAllRead(),
+                              child: const Text('Mark all read'),
+                            ),
+                            const SizedBox(width: 4),
+                            TextButton(
+                              style: TextButton.styleFrom(
+                                foregroundColor: theme.colorScheme.error,
+                              ),
+                              onPressed: notifications.isEmpty
+                                  ? null
+                                  : () {
+                                      showDialog(
+                                        context: context,
+                                        builder: (ctx) => AlertDialog(
+                                          title: const Text('Clear all notifications?'),
+                                          content: const Text(
+                                            'This will permanently delete all your notifications.',
+                                          ),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () => Navigator.of(ctx).pop(),
+                                              child: const Text('Cancel'),
+                                            ),
+                                            FilledButton(
+                                              style: FilledButton.styleFrom(
+                                                backgroundColor: theme.colorScheme.error,
+                                              ),
+                                              onPressed: () {
+                                                Navigator.of(ctx).pop();
+                                                service.clearAll();
+                                              },
+                                              child: const Text('Clear all'),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    },
+                              child: const Text('Clear all'),
+                            ),
+                          ],
                         ),
                       ],
                     ),

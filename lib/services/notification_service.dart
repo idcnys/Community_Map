@@ -62,6 +62,20 @@ class NotificationService {
     await batch.commit();
   }
 
+  // ─── CLEAR ALL ──────────────────────────────────────────────────
+  Future<void> clearAll() async {
+    final snap = await _firestore
+        .collection('notifications')
+        .where('targetUserId', isEqualTo: currentUid)
+        .get();
+
+    final batch = _firestore.batch();
+    for (final doc in snap.docs) {
+      batch.delete(doc.reference);
+    }
+    await batch.commit();
+  }
+
   // ─── SEND ────────────────────────────────────────────────────────
   /// Send a single notification to one user (Firestore + push).
   Future<void> send({
