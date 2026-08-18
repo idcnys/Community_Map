@@ -289,10 +289,15 @@ class PostService {
   }
 
   // ─── UPDATE POST ─────────────────────────────────────────────────
-  Future<void> updatePost(String postId, {String? title, String? description}) async {
+  Future<void> updatePost(String postId, {String? title, String? description, String? imageUrl, bool removeImage = false}) async {
     final updates = <String, dynamic>{};
     if (title != null) updates['title'] = title;
     if (description != null) updates['description'] = description;
+    if (removeImage) {
+      updates['imageUrl'] = '';
+    } else if (imageUrl != null) {
+      updates['imageUrl'] = imageUrl;
+    }
     if (updates.isNotEmpty) {
       await _firestore.collection('community_posts').doc(postId).update(updates);
     }
