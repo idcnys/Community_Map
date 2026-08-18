@@ -42,13 +42,21 @@ class MyGroupsTab extends ConsumerWidget {
                 );
               }
 
-              return ListView.builder(
-                padding: const EdgeInsets.all(12),
-                itemCount: groups.length,
-                itemBuilder: (context, index) {
-                  final group = groups[index];
-                  return _GroupTile(group: group);
+              return RefreshIndicator(
+                onRefresh: () async {
+                  ref.invalidate(myJoinedGroupsProvider);
+                  // Wait briefly so the indicator stays visible long enough
+                  await Future.delayed(const Duration(milliseconds: 500));
                 },
+                child: ListView.builder(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.all(12),
+                  itemCount: groups.length,
+                  itemBuilder: (context, index) {
+                    final group = groups[index];
+                    return _GroupTile(group: group);
+                  },
+                ),
               );
             },
           ),
