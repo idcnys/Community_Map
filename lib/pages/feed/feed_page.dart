@@ -306,6 +306,13 @@ class _FeedPageState extends ConsumerState<FeedPage> {
                     '/dashboard/comments/${post.id}?authorId=${post.authorId}',
                   );
                 },
+                onOriginalPostTap: post.isRepost
+                    ? () {
+                        context.push(
+                          '/dashboard/comments/${post.originalPostId}?authorId=',
+                        );
+                      }
+                    : null,
               );
             },
           ),

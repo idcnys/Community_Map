@@ -274,6 +274,18 @@ class PostService {
         'repostCount': FieldValue.increment(1),
       });
 
+      // Notify original author (skip self-repost)
+      final originalAuthorId = original['authorId'] as String? ?? '';
+      if (originalAuthorId.isNotEmpty && originalAuthorId != currentUid) {
+        notifications.send(
+          targetUserId: originalAuthorId,
+          type: 'repost',
+          postId: postId,
+          postTitle: original['title'] ?? '',
+          message: '$currentName reposted your post',
+        );
+      }
+
       return null;
     } catch (e) {
       return 'Failed to repost: $e';

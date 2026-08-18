@@ -20,11 +20,13 @@ final hasLikedProvider = FutureProvider.family<bool, String>((ref, postId) async
 class CommunityPostCard extends ConsumerStatefulWidget {
   final CommunityPostModel post;
   final VoidCallback? onCommentTap;
+  final VoidCallback? onOriginalPostTap;
 
   const CommunityPostCard({
     super.key,
     required this.post,
     this.onCommentTap,
+    this.onOriginalPostTap,
   });
 
   @override
@@ -77,19 +79,37 @@ class _CommunityPostCardState extends ConsumerState<CommunityPostCard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Repost indicator
+            // Repost indicator (tappable → original post)
             if (widget.post.isRepost)
-              Padding(
-                padding: EdgeInsets.only(bottom: 8),
-                child: Row(
-                  children: [
-                    Icon(LucideIcons.repeat, size: 16, color: theme.colorScheme.onSurfaceVariant),
-                    SizedBox(width: 6),
-                    Text(
-                      '${widget.post.authorName} reposted from ${widget.post.originalAuthorName}',
-                      style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant, fontStyle: FontStyle.italic),
-                    ),
-                  ],
+              GestureDetector(
+                onTap: widget.onOriginalPostTap,
+                child: Padding(
+                  padding: EdgeInsets.only(bottom: 8),
+                  child: Row(
+                    children: [
+                      Icon(LucideIcons.repeat, size: 14, color: theme.colorScheme.primary),
+                      SizedBox(width: 6),
+                      Expanded(
+                        child: RichText(
+                          text: TextSpan(
+                            style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
+                            children: [
+                              TextSpan(text: '${widget.post.authorName} reposted from '),
+                              TextSpan(
+                                text: widget.post.originalAuthorName,
+                                style: TextStyle(
+                                  color: theme.colorScheme.primary,
+                                  fontWeight: FontWeight.w600,
+                                  decoration: TextDecoration.underline,
+                                  decorationColor: theme.colorScheme.primary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             // Header: author + group tag

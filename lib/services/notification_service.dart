@@ -210,6 +210,8 @@ class NotificationService {
         return 'Join Request';
       case 'member_approved':
         return 'Request Approved';
+      case 'repost':
+        return '🔁 Reposted';
       default:
         return 'Notification';
     }
