@@ -73,36 +73,46 @@ class _DiscoverGroupsTabState extends ConsumerState<DiscoverGroupsTab> {
                 );
               }
 
-              return ListView.builder(
-                padding: const EdgeInsets.all(12),
-                itemCount: discoverGroups.length,
-                itemBuilder: (context, index) {
-                  final group = discoverGroups[index];
-                  final hasRequested = group.pendingRequests.contains(uid);
-
-                  return Card(
-                    margin: const EdgeInsets.only(bottom: 8),
-                    child: ListTile(
-                      leading: const Icon(LucideIcons.compass),
-                      title: Text(group.name),
-                      subtitle: Text(
-                        '${group.memberCount} members${group.description.isNotEmpty ? '\n${group.description}' : ''}',
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      isThreeLine: group.description.isNotEmpty,
-                      trailing: hasRequested
-                          ? OutlinedButton(
-                              onPressed: () => _cancelRequest(group.id),
-                              child: const Text('Requested'),
-                            )
-                          : FilledButton(
-                              onPressed: () => _sendRequest(group.id),
-                              child: const Text('Join'),
-                            ),
-                    ),
-                  );
+              return RefreshIndicator(
+                onRefresh: () async {
+                  ref.invalidate(searchGroupsProvider);
+                  // Wait for the stream to emit new data
+                  await ref.read(searchGroupsProvider.future);
                 },
+                child: ListView.builder(
+                  padding: const EdgeInsets.all(12),
+                  itemCount: discoverGroups.length,
+                  itemBuilder: (context, index) {
+                    final group = discoverGroups[index];
+                    final hasRequested = group.pendingRequests.contains(uid);
+                    final adminName = group.createdByName.isNotEmpty
+                        ? group.createdByName
+                        : 'Unknown';
+
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      child: ListTile(
+                        leading: const Icon(LucideIcons.compass),
+                        title: Text(group.name),
+                        subtitle: Text(
+                          'Admin: $adminName\n${group.memberCount} members${group.description.isNotEmpty ? '\n${group.description}' : ''}',
+                          maxLines: 3,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        isThreeLine: true,
+                        trailing: hasRequested
+                            ? OutlinedButton(
+                                onPressed: () => _cancelRequest(group.id),
+                                child: const Text('Requested'),
+                              )
+                            : FilledButton(
+                                onPressed: () => _sendRequest(group.id),
+                                child: const Text('Join'),
+                              ),
+                      ),
+                  );
+                  },
+                ),
               );
             },
           ),
