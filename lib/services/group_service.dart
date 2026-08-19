@@ -16,11 +16,12 @@ class GroupService {
   String get currentUid => _auth.currentUser!.uid;
   String get currentName => _auth.currentUser?.displayName ?? 'User';
 
-  // ─── SEARCH GROUPS ───────────────────────────────────────────────
+  // ─── SEARCH GROUPS (public only for discover) ────────────────────
   Stream<List<GroupModel>> searchGroups(String query) {
     if (query.isEmpty) {
       return _firestore
           .collection('groups')
+          .where('isPrivate', isEqualTo: false)
           .orderBy('createdAt', descending: true)
           .limit(50)
           .snapshots()
@@ -28,13 +29,17 @@ class GroupService {
               snap.docs.map((d) => GroupModel.fromMap(d.id, d.data())).toList());
     }
     // Firestore doesn't support full-text search; use prefix match on name
+    // Filter private groups client-side since we can't combine != with range
     return _firestore
         .collection('groups')
         .orderBy('name')
         .startAt([query]).endAt(['$query\uf8ff'])
         .snapshots()
         .map((snap) =>
-            snap.docs.map((d) => GroupModel.fromMap(d.id, d.data())).toList());
+            snap.docs
+                .map((d) => GroupModel.fromMap(d.id, d.data()))
+                .where((g) => !g.isPrivate)
+                .toList());
   }
 
   Stream<List<GroupModel>> getAllGroups() {
@@ -115,6 +120,7 @@ class GroupService {
   Future<String?> createGroup({
     required String name,
     required String description,
+    bool isPrivate = false,
   }) async {
     try {
       final canCreate = await canCreateGroup();
@@ -140,6 +146,8 @@ class GroupService {
         'memberCount': 1,
         'members': [currentUid],
         'pendingRequests': <String>[],
+        'isPrivate': isPrivate,
+        'invites': <String>[],
       });
       return null; // success
     } catch (e) {
@@ -267,5 +275,116 @@ class GroupService {
         .doc(groupId)
         .snapshots()
         .map((snap) => snap.exists ? GroupModel.fromMap(snap.id, snap.data()!) : null);
+  }
+
+  // ─── INVITES (private groups) ────────────────────────────────────
+
+  /// Stream of groups where current user has a pending invite.
+  Stream<List<GroupModel>> getMyInvites() {
+    return _firestore
+        .collection('groups')
+        .where('invites', arrayContains: currentUid)
+        .limit(50)
+        .snapshots()
+        .map((snap) =>
+            snap.docs.map((d) => GroupModel.fromMap(d.id, d.data())).toList());
+  }
+
+  /// Admin sends an invite to a user for a private group.
+  Future<String?> sendInvite(String groupId, String userId) async {
+    try {
+      // Verify caller is admin
+      final doc = await _firestore.collection('groups').doc(groupId).get();
+      final data = doc.data();
+      if (data == null) return 'Group not found.';
+      if (data['createdBy'] != currentUid) return 'Only the admin can send invites.';
+      if (!(data['isPrivate'] ?? false)) return 'This group is not private.';
+      if ((data['members'] as List?)?.contains(userId) == true) {
+        return 'User is already a member.';
+      }
+      if ((data['invites'] as List?)?.contains(userId) == true) {
+        return 'User already has a pending invite.';
+      }
+
+      await _firestore.collection('groups').doc(groupId).update({
+        'invites': FieldValue.arrayUnion([userId]),
+      });
+      return null;
+    } catch (e) {
+      return 'Failed to send invite: $e';
+    }
+  }
+
+  /// User accepts an invite — added as member, invite removed.
+  Future<String?> acceptInvite(String groupId) async {
+    final canJoin = await canJoinGroup();
+    if (!canJoin) {
+      return 'You have reached the maximum of ${GroupLimits.maxTotal} total group activities.';
+    }
+
+    try {
+      await _firestore.collection('groups').doc(groupId).update({
+        'invites': FieldValue.arrayRemove([currentUid]),
+        'members': FieldValue.arrayUnion([currentUid]),
+        'memberCount': FieldValue.increment(1),
+      });
+      return null;
+    } catch (e) {
+      return 'Failed to accept invite: $e';
+    }
+  }
+
+  /// User declines an invite — invite removed, no membership.
+  Future<String?> declineInvite(String groupId) async {
+    try {
+      await _firestore.collection('groups').doc(groupId).update({
+        'invites': FieldValue.arrayRemove([currentUid]),
+      });
+      return null;
+    } catch (e) {
+      return 'Failed to decline invite: $e';
+    }
+  }
+
+  /// Admin cancels a pending invite they sent.
+  Future<String?> cancelInvite(String groupId, String userId) async {
+    try {
+      final doc = await _firestore.collection('groups').doc(groupId).get();
+      final data = doc.data();
+      if (data == null) return 'Group not found.';
+      if (data['createdBy'] != currentUid) return 'Only the admin can cancel invites.';
+
+      await _firestore.collection('groups').doc(groupId).update({
+        'invites': FieldValue.arrayRemove([userId]),
+      });
+      return null;
+    } catch (e) {
+      return 'Failed to cancel invite: $e';
+    }
+  }
+
+  /// Search users by name (case-insensitive substring match).
+  /// Fetches recent users and filters client-side since Firestore
+  /// doesn't support case-insensitive queries natively.
+  Stream<List<Map<String, String>>> searchUsers(String query) {
+    if (query.isEmpty) return Stream.value([]);
+    final lowerQuery = query.toLowerCase();
+    return _firestore
+        .collection('users')
+        .orderBy('fullName')
+        .limit(100)
+        .snapshots()
+        .map((snap) => snap.docs
+            .map((d) {
+              final data = d.data();
+              return {
+                'uid': d.id,
+                'fullName': (data['fullName'] as String?) ?? 'Unknown',
+                'imageUrl': (data['imageUrl'] as String?) ?? '',
+              };
+            })
+            .where((u) => u['fullName']!.toLowerCase().contains(lowerQuery))
+            .take(20)
+            .toList());
   }
 }

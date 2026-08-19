@@ -15,6 +15,7 @@ class MyGroupsTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final groupsAsync = ref.watch(myJoinedGroupsProvider);
+    final invitesAsync = ref.watch(myInvitesProvider);
     final theme = Theme.of(context);
 
     return Column(
@@ -24,7 +25,9 @@ class MyGroupsTab extends ConsumerWidget {
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (e, _) => Center(child: Text('Error: $e')),
             data: (groups) {
-              if (groups.isEmpty) {
+              final invites = invitesAsync.value ?? [];
+
+              if (groups.isEmpty && invites.isEmpty) {
                 return Center(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -45,17 +48,51 @@ class MyGroupsTab extends ConsumerWidget {
               return RefreshIndicator(
                 onRefresh: () async {
                   ref.invalidate(myJoinedGroupsProvider);
-                  // Wait briefly so the indicator stays visible long enough
+                  ref.invalidate(myInvitesProvider);
                   await Future.delayed(const Duration(milliseconds: 500));
                 },
-                child: ListView.builder(
+                child: ListView(
                   physics: const AlwaysScrollableScrollPhysics(),
                   padding: const EdgeInsets.all(12),
-                  itemCount: groups.length,
-                  itemBuilder: (context, index) {
-                    final group = groups[index];
-                    return _GroupTile(group: group);
-                  },
+                  children: [
+                    // Pending invites section
+                    if (invites.isNotEmpty) ...[
+                      Row(
+                        children: [
+                          Icon(LucideIcons.mailOpen, size: 16, color: theme.colorScheme.primary),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Invites (${invites.length})',
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: theme.colorScheme.primary,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      ...invites.map((group) => _InviteTile(group: group)),
+                      const SizedBox(height: 16),
+                    ],
+                    // My groups header
+                    if (groups.isNotEmpty) ...[
+                      Row(
+                        children: [
+                          Icon(LucideIcons.users, size: 16, color: theme.colorScheme.onSurfaceVariant),
+                          const SizedBox(width: 6),
+                          Text(
+                            'My Groups (${groups.length})',
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      ...groups.map((group) => _GroupTile(group: group)),
+                    ],
+                  ],
                 ),
               );
             },
@@ -83,56 +120,73 @@ class MyGroupsTab extends ConsumerWidget {
     final nameCtrl = TextEditingController();
     final descCtrl = TextEditingController();
     final formKey = GlobalKey<FormState>();
+    bool isPrivate = false;
 
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Create Group'),
-        content: Form(
-          key: formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                controller: nameCtrl,
-                decoration: const InputDecoration(labelText: 'Group Name'),
-                validator: (v) => (v == null || v.trim().length < 3)
-                    ? 'Name must be at least 3 characters'
-                    : null,
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: descCtrl,
-                maxLines: 2,
-                decoration: const InputDecoration(labelText: 'Description'),
-              ),
-            ],
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setModalState) => AlertDialog(
+          title: const Text('Create Group'),
+          content: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: nameCtrl,
+                  decoration: const InputDecoration(labelText: 'Group Name'),
+                  validator: (v) => (v == null || v.trim().length < 3)
+                      ? 'Name must be at least 3 characters'
+                      : null,
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: descCtrl,
+                  maxLines: 2,
+                  decoration: const InputDecoration(labelText: 'Description'),
+                ),
+                const SizedBox(height: 8),
+                SwitchListTile(
+                  title: const Text('Private Group'),
+                  subtitle: Text(
+                    isPrivate
+                        ? 'Invite-only • Hidden from discover'
+                        : 'Anyone can find and request to join',
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                  value: isPrivate,
+                  onChanged: (v) => setModalState(() => isPrivate = v),
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ],
+            ),
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () async {
-              if (!formKey.currentState!.validate()) return;
-              Navigator.of(ctx).pop();
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () async {
+                if (!formKey.currentState!.validate()) return;
+                Navigator.of(ctx).pop();
 
-              final error = await ref.read(groupServiceProvider).createGroup(
-                name: nameCtrl.text.trim(),
-                description: descCtrl.text.trim(),
-              );
-
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(error ?? 'Group created!')),
+                final error = await ref.read(groupServiceProvider).createGroup(
+                  name: nameCtrl.text.trim(),
+                  description: descCtrl.text.trim(),
+                  isPrivate: isPrivate,
                 );
-              }
-            },
-            child: const Text('Create'),
-          ),
-        ],
+
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(error ?? 'Group created!')),
+                  );
+                }
+              },
+              child: const Text('Create'),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -157,7 +211,7 @@ class _GroupTile extends StatelessWidget {
         leading: const Icon(LucideIcons.users),
         title: Text(group.name),
         subtitle: Text(
-          '${group.memberCount} members${isAdmin ? ' • Admin' : ''}',
+          '${group.memberCount} members${isAdmin ? ' • Admin' : ''}${group.isPrivate ? ' • 🔒 Private' : ''}',
         ),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
@@ -243,6 +297,115 @@ class _GroupTile extends StatelessWidget {
     final error = await service.leaveGroup(groupId);
     if (error != null && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+    }
+  }
+}
+
+/// Invite tile — shows pending invite with Accept / Decline buttons.
+class _InviteTile extends ConsumerWidget {
+  final GroupModel group;
+  const _InviteTile({required this.group});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      clipBehavior: Clip.antiAlias,
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(9),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primaryContainer.withAlpha(80),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(LucideIcons.mailOpen, size: 18, color: theme.colorScheme.primary),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        group.name,
+                        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        'Invited by ${group.createdByName}',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            if (group.description.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(
+                group.description,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => _decline(ref, context),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                    ),
+                    child: const Text('Decline'),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: () => _accept(ref, context),
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                    ),
+                    child: const Text('Accept'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _accept(WidgetRef ref, BuildContext context) async {
+    final error = await ref.read(groupServiceProvider).acceptInvite(group.id);
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error ?? 'Joined ${group.name}!')),
+      );
+    }
+  }
+
+  void _decline(WidgetRef ref, BuildContext context) async {
+    final error = await ref.read(groupServiceProvider).declineInvite(group.id);
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error ?? 'Invite declined')),
+      );
     }
   }
 }

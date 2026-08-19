@@ -10,6 +10,8 @@ class GroupModel {
   final int memberCount;
   final List<String> members;
   final List<String> pendingRequests;
+  final bool isPrivate;
+  final List<String> invites;
 
   GroupModel({
     this.id = '',
@@ -21,9 +23,11 @@ class GroupModel {
     this.memberCount = 0,
     this.members = const [],
     this.pendingRequests = const [],
+    this.isPrivate = false,
+    this.invites = const [],
   });
 
-  bool get isPublic => true;
+  bool get isPublic => !isPrivate;
 
   GroupModel copyWith({
     String? name,
@@ -31,6 +35,8 @@ class GroupModel {
     int? memberCount,
     List<String>? members,
     List<String>? pendingRequests,
+    bool? isPrivate,
+    List<String>? invites,
   }) {
     return GroupModel(
       id: id,
@@ -42,6 +48,8 @@ class GroupModel {
       memberCount: memberCount ?? this.memberCount,
       members: members ?? this.members,
       pendingRequests: pendingRequests ?? this.pendingRequests,
+      isPrivate: isPrivate ?? this.isPrivate,
+      invites: invites ?? this.invites,
     );
   }
 
@@ -56,6 +64,8 @@ class GroupModel {
       memberCount: map['memberCount'] ?? 0,
       members: List<String>.from(map['members'] ?? []),
       pendingRequests: List<String>.from(map['pendingRequests'] ?? []),
+      isPrivate: (map['isPrivate'] as bool?) ?? false,
+      invites: List<String>.from((map['invites'] as List<dynamic>?) ?? []),
     );
   }
 
@@ -69,6 +79,8 @@ class GroupModel {
       'memberCount': memberCount,
       'members': members,
       'pendingRequests': pendingRequests,
+      'isPrivate': isPrivate,
+      'invites': invites,
     };
   }
 }

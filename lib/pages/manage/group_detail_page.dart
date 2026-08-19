@@ -7,6 +7,7 @@ import '../../providers/service_providers.dart';
 import '../../models/group_model.dart';
 import '../../core/utils/time_ago.dart';
 import 'group_chat_page.dart';
+import 'group_invite_page.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
@@ -93,9 +94,19 @@ class _GroupDetailPageState extends ConsumerState<GroupDetailPage> {
                         Text(group.description, style: TextStyle(color: theme.colorScheme.onSurface)),
                       ],
                       const SizedBox(height: 8),
-                      Text(
-                        '${group.memberCount} members \u2022 Created by ${group.createdByName}',
-                        style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 13),
+                      Row(
+                        children: [
+                          Text(
+                            '${group.memberCount} members \u2022 Created by ${group.createdByName}',
+                            style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 13),
+                          ),
+                          if (group.isPrivate) ...[
+                            const SizedBox(width: 8),
+                            Icon(LucideIcons.lock, size: 12, color: theme.colorScheme.onSurfaceVariant),
+                            const SizedBox(width: 2),
+                            Text('Private', style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 12)),
+                          ],
+                        ],
                       ),
                     ],
                   ),
@@ -114,9 +125,51 @@ class _GroupDetailPageState extends ConsumerState<GroupDetailPage> {
                 label: const Text('Group Chat'),
                 style: FilledButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14)),
               ),
+              const SizedBox(height: 10),
+
+              // Invite button (admin of private group only)
+              if (isAdmin && group.isPrivate)
+                OutlinedButton.icon(
+                  onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+                    builder: (_) => GroupInvitePage(group: group),
+                  )),
+                  icon: const Icon(LucideIcons.userPlus, size: 18),
+                  label: const Text('Invite Members'),
+                  style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14)),
+                ),
               const SizedBox(height: 16),
 
-              // Pending requests (admin only)
+              // Pending invites (admin of private group)
+              if (isAdmin && group.isPrivate && group.invites.isNotEmpty) ...[
+                Text(
+                  'Pending Invites (${group.invites.length})',
+                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                ...group.invites.map((inviteUid) {
+                  return Card(
+                    margin: const EdgeInsets.only(bottom: 6),
+                    child: ListTile(
+                      leading: const Icon(LucideIcons.mail),
+                      title: FutureBuilder<Map<String, dynamic>>(
+                        future: _resolveMemberInfo(inviteUid),
+                        builder: (ctx, infoSnap) => Text(
+                          (infoSnap.data?['name'] as String?) ?? 'Loading...',
+                        ),
+                      ),
+                      subtitle: const Text('Invite pending'),
+                      trailing: IconButton(
+                        icon: Icon(LucideIcons.x, color: theme.colorScheme.error),
+                        tooltip: 'Cancel invite',
+                        onPressed: () => _cancelInvite(inviteUid),
+                      ),
+                    ),
+                  );
+                }),
+                const SizedBox(height: 16),
+              ],
+
+              // Pending requests (admin only, public groups)
               if (isAdmin && group.pendingRequests.isNotEmpty) ...[
                 Text(
                   'Pending Requests (${group.pendingRequests.length})',
@@ -357,4 +410,14 @@ class _GroupDetailPageState extends ConsumerState<GroupDetailPage> {
       );
     }
   }
+
+  void _cancelInvite(String userId) async {
+    final error = await ref.read(groupServiceProvider).cancelInvite(widget.groupId, userId);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error ?? 'Invite cancelled')),
+      );
+    }
+  }
+
 }

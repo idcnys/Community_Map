@@ -44,3 +44,9 @@ final groupByIdProvider = StreamProvider.family<GroupModel?, String>((ref, group
   final service = ref.watch(groupServiceProvider);
   return service.getGroupById(groupId);
 });
+
+/// User's pending invites (private groups they've been invited to).
+final myInvitesProvider = StreamProvider<List<GroupModel>>((ref) {
+  final service = ref.watch(groupServiceProvider);
+  return service.getMyInvites();
+});
