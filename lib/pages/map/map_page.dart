@@ -664,6 +664,11 @@ class _MapPageState extends ConsumerState<MapPage>
   }
 
   void _resetMapView() {
+    // Clear my-location marker and nearby POI markers (hospital, police, etc.)
+    // Report markers are untouched — they come from a stream provider.
+    setState(() => _userLocation = null);
+    ref.read(nearbyProvider.notifier).clear();
+
     if (_selectedGroupFilter == 'global') {
       _mapController.move(_initialCenter, 7.5);
     } else {
