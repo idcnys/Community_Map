@@ -90,27 +90,98 @@ class _DiscoverGroupsTabState extends ConsumerState<DiscoverGroupsTab> {
                         : 'Unknown';
 
                     return Card(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      child: ListTile(
-                        leading: const Icon(LucideIcons.compass),
-                        title: Text(group.name),
-                        subtitle: Text(
-                          'Admin: $adminName\n${group.memberCount} members${group.description.isNotEmpty ? '\n${group.description}' : ''}',
-                          maxLines: 3,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        isThreeLine: true,
-                        trailing: hasRequested
-                            ? OutlinedButton(
-                                onPressed: () => _cancelRequest(group.id),
-                                child: const Text('Requested'),
-                              )
-                            : FilledButton(
-                                onPressed: () => _sendRequest(group.id),
-                                child: const Text('Join'),
+                      margin: const EdgeInsets.only(bottom: 10),
+                      clipBehavior: Clip.antiAlias,
+                      child: Padding(
+                        padding: const EdgeInsets.all(14),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Header row: icon + name + action button
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: theme.colorScheme.primaryContainer.withAlpha(80),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Icon(
+                                    LucideIcons.compass,
+                                    size: 20,
+                                    color: theme.colorScheme.primary,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    group.name,
+                                    style: theme.textTheme.titleMedium?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                hasRequested
+                                    ? OutlinedButton(
+                                        onPressed: () => _cancelRequest(group.id),
+                                        style: OutlinedButton.styleFrom(
+                                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                          textStyle: const TextStyle(fontSize: 13),
+                                        ),
+                                        child: const Text('Requested'),
+                                      )
+                                    : FilledButton(
+                                        onPressed: () => _sendRequest(group.id),
+                                        style: FilledButton.styleFrom(
+                                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                          textStyle: const TextStyle(fontSize: 13),
+                                        ),
+                                        child: const Text('Join'),
+                                      ),
+                              ],
+                            ),
+                            // Description (if any)
+                            if (group.description.isNotEmpty) ...[
+                              const SizedBox(height: 10),
+                              Text(
+                                group.description,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
                               ),
+                            ],
+                            // Meta row: admin + member count
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                Icon(LucideIcons.user, size: 13, color: theme.colorScheme.onSurfaceVariant),
+                                const SizedBox(width: 4),
+                                Text(
+                                  adminName,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                                const SizedBox(width: 14),
+                                Icon(LucideIcons.users, size: 13, color: theme.colorScheme.onSurfaceVariant),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '${group.memberCount} members',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
-                  );
+                    );
                   },
                 ),
               );
