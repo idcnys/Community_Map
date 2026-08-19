@@ -439,73 +439,84 @@ class _MapPageState extends ConsumerState<MapPage>
                   children: [
                     Row(
                       children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.onPrimary,
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: [
-                              BoxShadow(
-                                color: theme.colorScheme.onSurface.withAlpha(
-                                  20,
-                                ),
-                                blurRadius: 6,
-                              ),
-                            ],
-                          ),
-                          child: DropdownButtonHideUnderline(
-                            child: DropdownButton<String>(
-                              value: _selectedGroupFilter,
-                              isDense: true,
-                              icon: Icon(
-                                LucideIcons.chevronDown,
-                                size: 18,
-                                color: theme.colorScheme.primary,
-                              ),
-                              style: TextStyle(
-                                color: isGuest
-                                    ? theme.colorScheme.onSurfaceVariant
-                                          .withAlpha(120)
-                                    : theme.colorScheme.onSurface,
-                                fontSize: 14,
-                              ),
-                              items: [
-                                const DropdownMenuItem(
-                                  value: 'global',
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(LucideIcons.globe, size: 16),
-                                      SizedBox(width: 6),
-                                      Text('Global'),
-                                    ],
+                        ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 180),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.onPrimary,
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: theme.colorScheme.onSurface.withAlpha(
+                                    20,
                                   ),
+                                  blurRadius: 6,
                                 ),
-                                if (!isGuest)
-                                  ...myGroups.map(
-                                    (g) => DropdownMenuItem(
-                                      value: g.id,
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          const Icon(
-                                            LucideIcons.users,
-                                            size: 16,
-                                          ),
-                                          const SizedBox(width: 6),
-                                          Text(
-                                            g.name,
+                              ],
+                            ),
+                            child: DropdownButtonHideUnderline(
+                              child: DropdownButton<String>(
+                                value: _selectedGroupFilter,
+                                isDense: true,
+                                isExpanded: true,
+                                icon: Icon(
+                                  LucideIcons.chevronDown,
+                                  size: 18,
+                                  color: theme.colorScheme.primary,
+                                ),
+                                style: TextStyle(
+                                  color: isGuest
+                                      ? theme.colorScheme.onSurfaceVariant
+                                            .withAlpha(120)
+                                      : theme.colorScheme.onSurface,
+                                  fontSize: 14,
+                                ),
+                                items: [
+                                  const DropdownMenuItem(
+                                    value: 'global',
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(LucideIcons.globe, size: 16),
+                                        SizedBox(width: 6),
+                                        Flexible(
+                                          child: Text(
+                                            'Global',
                                             overflow: TextOverflow.ellipsis,
                                           ),
-                                        ],
-                                      ),
+                                        ),
+                                      ],
                                     ),
                                   ),
-                              ],
-                              onChanged: isGuest ? null : _onGroupFilterChanged,
+                                  if (!isGuest)
+                                    ...myGroups.map(
+                                      (g) => DropdownMenuItem(
+                                        value: g.id,
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            const Icon(
+                                              LucideIcons.users,
+                                              size: 16,
+                                            ),
+                                            const SizedBox(width: 6),
+                                            Flexible(
+                                              child: Text(
+                                                g.name,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                                onChanged: isGuest ? null : _onGroupFilterChanged,
+                              ),
                             ),
                           ),
                         ),
