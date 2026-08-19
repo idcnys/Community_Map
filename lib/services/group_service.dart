@@ -19,27 +19,29 @@ class GroupService {
   // ─── SEARCH GROUPS (public only for discover) ────────────────────
   Stream<List<GroupModel>> searchGroups(String query) {
     if (query.isEmpty) {
+      // Fetch all groups and filter client-side to include docs where
+      // isPrivate field is missing (legacy groups default to public).
       return _firestore
           .collection('groups')
-          .where('isPrivate', isEqualTo: false)
           .orderBy('createdAt', descending: true)
-          .limit(50)
+          .limit(100)
           .snapshots()
-          .map((snap) =>
-              snap.docs.map((d) => GroupModel.fromMap(d.id, d.data())).toList());
+          .map((snap) => snap.docs
+              .map((d) => GroupModel.fromMap(d.id, d.data()))
+              .where((g) => !g.isPrivate)
+              .toList());
     }
-    // Firestore doesn't support full-text search; use prefix match on name
-    // Filter private groups client-side since we can't combine != with range
+    // Firestore doesn't support full-text search; use prefix match on name.
+    // Filter private groups client-side since we can't combine != with range.
     return _firestore
         .collection('groups')
         .orderBy('name')
         .startAt([query]).endAt(['$query\uf8ff'])
         .snapshots()
-        .map((snap) =>
-            snap.docs
-                .map((d) => GroupModel.fromMap(d.id, d.data()))
-                .where((g) => !g.isPrivate)
-                .toList());
+        .map((snap) => snap.docs
+            .map((d) => GroupModel.fromMap(d.id, d.data()))
+            .where((g) => !g.isPrivate)
+            .toList());
   }
 
   Stream<List<GroupModel>> getAllGroups() {
