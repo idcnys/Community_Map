@@ -111,6 +111,32 @@ class GroupChatService {
     }
   }
 
+  // ─── MEMBER LOOKUP (for @mentions) ─────────────────────────────
+  /// Fetch member info for @mention suggestions.
+  /// Returns list of maps with uid, name, imageUrl.
+  /// Excludes [excludeUid] (current user).
+  Future<List<Map<String, String>>> getMemberMentionInfo(
+    List<String> uids, {
+    required String excludeUid,
+  }) async {
+    final filtered = uids.where((uid) => uid != excludeUid).toList();
+    if (filtered.isEmpty) return [];
+    final futures = filtered.map((uid) => _firestore.collection('users').doc(uid).get());
+    final snaps = await Future.wait(futures);
+    final result = <Map<String, String>>[];
+    for (final snap in snaps) {
+      if (snap.exists) {
+        final data = snap.data()!;
+        result.add({
+          'uid': snap.id,
+          'name': (data['fullName'] as String?) ?? '',
+          'imageUrl': (data['imageUrl'] as String?) ?? '',
+        });
+      }
+    }
+    return result;
+  }
+
   // ─── READ RECEIPTS (for unread badge) ───────────────────────────
   Future<void> markGroupAsRead(String groupId) async {
     try {

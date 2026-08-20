@@ -195,6 +195,51 @@ class NotificationService {
     } catch (e) { debugPrint('[] error: $e'); }
   }
 
+  // ─── MENTION NOTIFICATIONS ──────────────────────────────────────
+  /// Notify users who were @mentioned via the suggestion panel.
+  /// [targetUids] — exact UIDs from atomic mention ranges (already validated).
+  Future<void> notifyMentionedByUid({
+    required String groupId,
+    required String groupName,
+    required List<String> targetUids,
+  }) async {
+    if (targetUids.isEmpty) return;
+    try {
+      final batch = _firestore.batch();
+      final uids = <String>[];
+
+      for (final uid in targetUids) {
+        if (uid == currentUid) continue;
+        uids.add(uid);
+        final ref = _firestore.collection('notifications').doc();
+        batch.set(ref, {
+          'type': 'mention',
+          'targetUserId': uid,
+          'actorId': currentUid,
+          'actorName': currentName,
+          'postId': groupId,
+          'postTitle': groupName,
+          'message': '$currentName mentioned you in $groupName',
+          'read': false,
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+      }
+      await batch.commit();
+
+      // Fire push to mentioned users (non-blocking)
+      if (uids.isNotEmpty) {
+        _push.pushToUsers(
+          targetUserIds: uids,
+          title: _pushTitle('mention'),
+          body: '$currentName mentioned you in $groupName',
+          data: {'type': 'mention', 'groupId': groupId},
+        );
+      }
+    } catch (e) {
+      debugPrint('[Notif] notifyMentionedByUid error: $e');
+    }
+  }
+
   // ─── HELPERS ─────────────────────────────────────────────────────
   String _pushTitle(String type) {
     switch (type) {
@@ -212,6 +257,8 @@ class NotificationService {
         return 'Request Approved';
       case 'repost':
         return '🔁 Reposted';
+      case 'mention':
+        return '💬 Mentioned You';
       default:
         return 'Notification';
     }

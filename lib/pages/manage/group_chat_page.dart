@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../services/group_chat_service.dart';
+import '../../services/notification_service.dart';
 import 'package:geolocator/geolocator.dart';
 import '../../core/utils/time_ago.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -14,9 +16,62 @@ class GroupChatPage extends StatefulWidget {
   State<GroupChatPage> createState() => _GroupChatPageState();
 }
 
+/// A mention range tracking an atomic @FullName span in the text.
+class _MentionRange {
+  final int start;
+  final int end;
+  final String uid;
+  final String name;
+  _MentionRange(this.start, this.end, this.uid, this.name);
+
+  bool contains(int pos) => pos > start && pos < end;
+  int get length => end - start;
+}
+
+/// Custom controller that renders @mentions with highlighted style.
+class _MentionTextController extends TextEditingController {
+  List<_MentionRange> mentionRanges = [];
+  Color mentionColor = Colors.blue;
+
+  @override
+  TextSpan buildTextSpan({
+    required BuildContext context,
+    TextStyle? style,
+    required bool withComposing,
+  }) {
+    final text = value.text;
+    if (mentionRanges.isEmpty) {
+      return TextSpan(text: text, style: style);
+    }
+    final children = <InlineSpan>[];
+    int lastEnd = 0;
+    // Sort ranges by start to process left-to-right
+    final sorted = List<_MentionRange>.from(mentionRanges)
+      ..sort((a, b) => a.start.compareTo(b.start));
+    for (final range in sorted) {
+      if (range.start > lastEnd) {
+        children.add(TextSpan(text: text.substring(lastEnd, range.start)));
+      }
+      children.add(TextSpan(
+        text: text.substring(range.start, range.end),
+        style: TextStyle(
+          color: mentionColor,
+          fontWeight: FontWeight.w600,
+          backgroundColor: mentionColor.withAlpha(30),
+        ),
+      ));
+      lastEnd = range.end;
+    }
+    if (lastEnd < text.length) {
+      children.add(TextSpan(text: text.substring(lastEnd)));
+    }
+    return TextSpan(children: children, style: style);
+  }
+}
+
 class _GroupChatPageState extends State<GroupChatPage> {
   final _service = GroupChatService();
-  final _msgCtrl = TextEditingController();
+  final _msgCtrl = _MentionTextController();
   final _scrollCtrl = ScrollController();
   bool _sending = false;
   int _prevMsgCount = 0;
@@ -24,18 +79,145 @@ class _GroupChatPageState extends State<GroupChatPage> {
 
   late final Stream<List<Map<String, dynamic>>> _messagesStream;
 
+  // ─── @mention state ─────────────────────────────────────────────
+  List<Map<String, String>> _memberInfo = []; // [{uid, name, imageUrl}]
+  List<Map<String, String>> _mentionSuggestions = []; // filtered matches
+  bool _showMentions = false;
+  int _mentionStartIndex = -1; // position of '@' in text
+  bool _suppressListener = false; // prevent re-entrant listener calls
+
   @override
   void initState() {
     super.initState();
     _messagesStream = _service.getGroupMessages(widget.groupId);
     _service.markGroupAsRead(widget.groupId);
+    _msgCtrl.addListener(_onTextChanged);
+    _loadMemberNames();
   }
 
   @override
   void dispose() {
+    _msgCtrl.removeListener(_onTextChanged);
     _msgCtrl.dispose();
     _scrollCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadMemberNames() async {
+    try {
+      final myUid = FirebaseAuth.instance.currentUser?.uid ?? '';
+      final groupDoc = await FirebaseFirestore.instance
+          .collection('groups')
+          .doc(widget.groupId)
+          .get();
+      final members = List<String>.from(groupDoc.data()?['members'] ?? []);
+      final info = await _service.getMemberMentionInfo(members, excludeUid: myUid);
+      if (mounted) setState(() => _memberInfo = info);
+    } catch (_) {}
+  }
+
+  /// Rebuild mention ranges after text changes — remove any whose text no longer matches.
+  void _syncMentionRanges(String text) {
+    _msgCtrl.mentionRanges.removeWhere((r) {
+      if (r.end > text.length) return true;
+      final span = text.substring(r.start, r.end);
+      return span != '@${r.name}';
+    });
+  }
+
+  void _onTextChanged() {
+    if (_suppressListener) return;
+
+    final text = _msgCtrl.text;
+    final selection = _msgCtrl.selection;
+
+    // Sync ranges — remove any that got partially edited
+    _syncMentionRanges(text);
+
+    if (!selection.isValid || selection.baseOffset != selection.extentOffset) {
+      if (_showMentions) setState(() => _showMentions = false);
+      return;
+    }
+
+    final cursorPos = selection.baseOffset;
+
+    // If cursor is inside an existing mention, delete the whole mention
+    final hitRange = _msgCtrl.mentionRanges.where((r) => r.contains(cursorPos)).firstOrNull;
+    if (hitRange != null) {
+      _suppressListener = true;
+      final before = text.substring(0, hitRange.start);
+      final after = text.substring(hitRange.end);
+      final newText = '$before$after';
+      final newCursor = hitRange.start;
+      _msgCtrl.value = TextEditingValue(
+        text: newText,
+        selection: TextSelection.collapsed(offset: newCursor),
+      );
+      _syncMentionRanges(newText);
+      _suppressListener = false;
+      setState(() => _showMentions = false);
+      return;
+    }
+
+    // Find '@' before cursor starting a new word (not inside existing mention)
+    int atPos = -1;
+    for (var i = cursorPos - 1; i >= 0; i--) {
+      final ch = text[i];
+      if (ch == '@') {
+        if (i == 0 || text[i - 1] == ' ' || text[i - 1] == '\n') {
+          // Make sure this @ isn't part of an existing mention
+          final inExisting = _msgCtrl.mentionRanges.any((r) => i >= r.start && i < r.end);
+          if (!inExisting) {
+            atPos = i;
+            break;
+          }
+        }
+      } else if (ch == ' ' || ch == '\n') {
+        break;
+      }
+    }
+
+    if (atPos < 0) {
+      if (_showMentions) setState(() => _showMentions = false);
+      return;
+    }
+
+    final query = text.substring(atPos + 1, cursorPos).toLowerCase();
+    final filtered = _memberInfo
+        .where((m) => (m['name'] ?? '').toLowerCase().contains(query))
+        .toList()
+      ..sort((a, b) => (a['name'] ?? '').toLowerCase().compareTo((b['name'] ?? '').toLowerCase()));
+
+    setState(() {
+      _mentionStartIndex = atPos;
+      _mentionSuggestions = filtered;
+      _showMentions = filtered.isNotEmpty;
+    });
+  }
+
+  void _insertMention(Map<String, String> member) {
+    final name = member['name'] ?? '';
+    final uid = member['uid'] ?? '';
+    final text = _msgCtrl.text;
+    final cursorPos = _msgCtrl.selection.baseOffset;
+    final mentionText = '@$name';
+
+    final before = text.substring(0, _mentionStartIndex);
+    final after = text.substring(cursorPos);
+    final newText = '$before$mentionText $after';
+    final mentionEnd = before.length + mentionText.length;
+
+    _suppressListener = true;
+    _msgCtrl.value = TextEditingValue(
+      text: newText,
+      selection: TextSelection.collapsed(offset: mentionEnd + 1), // after trailing space
+    );
+
+    // Register the atomic mention range
+    _msgCtrl.mentionRanges.add(_MentionRange(before.length, mentionEnd, uid, name));
+    _suppressListener = false;
+
+    setState(() => _showMentions = false);
   }
 
   void _scrollToBottom({bool instant = false}) {
@@ -57,14 +239,27 @@ class _GroupChatPageState extends State<GroupChatPage> {
   Future<void> _send() async {
     final text = _msgCtrl.text.trim();
     if (text.isEmpty) return;
+
+    // Collect UIDs from tracked atomic mention ranges only
+    final mentionedUids = _msgCtrl.mentionRanges.map((r) => r.uid).toSet().toList();
+
     _msgCtrl.clear();
-    setState(() => _sending = true);
+    _msgCtrl.mentionRanges.clear();
+    setState(() { _sending = true; _showMentions = false; });
+
     final error = await _service.sendMessage(widget.groupId, text);
     if (mounted) {
       setState(() => _sending = false);
       if (error != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(error), backgroundColor: Colors.red),
+        );
+      } else if (mentionedUids.isNotEmpty) {
+        // Fire mention notifications (non-blocking) — using exact UIDs
+        NotificationService().notifyMentionedByUid(
+          groupId: widget.groupId,
+          groupName: widget.groupName,
+          targetUids: mentionedUids,
         );
       }
     }
@@ -146,6 +341,46 @@ class _GroupChatPageState extends State<GroupChatPage> {
               },
             ),
           ),
+          // @mention suggestions panel
+          if (_showMentions)
+            Container(
+              constraints: const BoxConstraints(maxHeight: 180),
+              margin: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surface,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(color: Colors.black.withAlpha(30), blurRadius: 8, offset: const Offset(0, -2)),
+                ],
+                border: Border.all(color: theme.colorScheme.outlineVariant),
+              ),
+              child: ListView.builder(
+                shrinkWrap: true,
+                padding: EdgeInsets.zero,
+                itemCount: _mentionSuggestions.length,
+                itemBuilder: (ctx, i) {
+                  final member = _mentionSuggestions[i];
+                  final name = member['name'] ?? '';
+                  final imageUrl = member['imageUrl'] ?? '';
+                  return ListTile(
+                    dense: true,
+                    leading: CircleAvatar(
+                      radius: 16,
+                      backgroundColor: theme.colorScheme.secondaryContainer,
+                      backgroundImage: imageUrl.isNotEmpty ? NetworkImage(imageUrl) : null,
+                      child: imageUrl.isEmpty
+                          ? Text(
+                              name.isNotEmpty ? name[0].toUpperCase() : '?',
+                              style: TextStyle(fontSize: 12, color: theme.colorScheme.onSecondaryContainer),
+                            )
+                          : null,
+                    ),
+                    title: Text(name, style: const TextStyle(fontSize: 14)),
+                    onTap: () => _insertMention(member),
+                  );
+                },
+              ),
+            ),
           // Input bar
           SafeArea(
             child: Container(
