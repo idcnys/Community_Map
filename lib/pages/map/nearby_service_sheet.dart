@@ -1,4 +1,6 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../models/nearby_place_model.dart';
@@ -6,8 +8,9 @@ import '../../models/nearby_place_model.dart';
 /// Bottom sheet showing details of a nearby service.
 class NearbyServiceSheet extends StatelessWidget {
   final NearbyPlace place;
+  final LatLng? userLocation;
 
-  const NearbyServiceSheet({super.key, required this.place});
+  const NearbyServiceSheet({super.key, required this.place, this.userLocation});
 
   @override
   Widget build(BuildContext context) {
@@ -79,6 +82,12 @@ class NearbyServiceSheet extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
+
+          // Distance from user
+          if (userLocation != null) ...[
+            _distanceChip(context, color),
+            const SizedBox(height: 12),
+          ],
 
           // Full address from display_name
           if (place.displayName != null)
@@ -153,6 +162,56 @@ class NearbyServiceSheet extends StatelessWidget {
         'https://www.google.com/maps/dir/?api=1&destination=${place.latitude},${place.longitude}';
     launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
   }
+
+  Widget _distanceChip(BuildContext context, Color color) {
+    final distMeters = _haversineDistance(
+      userLocation!.latitude,
+      userLocation!.longitude,
+      place.latitude,
+      place.longitude,
+    );
+    final label = distMeters < 1000
+        ? '${distMeters.round()} m away'
+        : '${(distMeters / 1000).toStringAsFixed(1)} km away';
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withAlpha(25),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withAlpha(60)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(LucideIcons.ruler, size: 14, color: color),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Haversine distance in meters between two lat/lng points.
+  static double _haversineDistance(double lat1, double lon1, double lat2, double lon2) {
+    const r = 6371000.0; // Earth radius in meters
+    final dLat = _toRad(lat2 - lat1);
+    final dLon = _toRad(lon2 - lon1);
+    final a = sin(dLat / 2) * sin(dLat / 2) +
+        cos(_toRad(lat1)) * cos(_toRad(lat2)) *
+        sin(dLon / 2) * sin(dLon / 2);
+    final c = 2 * atan2(sqrt(a), sqrt(1 - a));
+    return r * c;
+  }
+
+  static double _toRad(double deg) => deg * pi / 180;
 
   IconData _categoryIcon(NearbyCategory category) {
     switch (category) {

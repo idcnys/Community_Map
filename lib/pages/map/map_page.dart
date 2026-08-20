@@ -879,7 +879,10 @@ class _MapPageState extends ConsumerState<MapPage>
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (_) => NearbyServiceSheet(place: place),
+      builder: (_) => NearbyServiceSheet(
+        place: place,
+        userLocation: _userLocation,
+      ),
     );
   }
 
