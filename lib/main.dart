@@ -100,19 +100,24 @@ class _MyAppState extends State<MyApp> {
 
   void _handleNotificationNavigation(RemoteMessage message) {
     final data = message.data;
-    final postId = data['postId'] as String?;
     final type = data['type'] as String?;
 
-    if (postId == null || postId.isEmpty) return;
+    // Mention notifications carry groupId instead of postId
+    final groupId = data['groupId'] as String?;
+    final postId = data['postId'] as String?;
 
-    // Navigate to comments page for the post
     final context = _navigatorKey.currentContext;
     if (context == null) return;
 
     // Small delay to ensure router is ready
     Future.delayed(const Duration(milliseconds: 300), () {
       if (!mounted) return;
-      router.go('/dashboard/comments/$postId');
+
+      if (type == 'mention' && groupId != null && groupId.isNotEmpty) {
+        router.go('/dashboard/group/$groupId');
+      } else if (postId != null && postId.isNotEmpty) {
+        router.go('/dashboard/comments/$postId');
+      }
     });
   }
 

@@ -4,6 +4,7 @@ import '../../core/utils/time_ago.dart';
 import '../../providers/service_providers.dart';
 import '../../services/notification_service.dart';
 import '../../models/notification_model.dart';
+import '../../router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'comments_page.dart';
 
@@ -168,6 +169,10 @@ class NotificationPanel extends ConsumerWidget {
         icon = LucideIcons.fileText;
         iconColor = theme.colorScheme.tertiary;
         break;
+      case 'mention':
+        icon = LucideIcons.atSign;
+        iconColor = Colors.blue;
+        break;
       default:
         icon = LucideIcons.bell;
         iconColor = theme.colorScheme.onSurfaceVariant;
@@ -205,10 +210,16 @@ class NotificationPanel extends ConsumerWidget {
             ),
       onTap: () async {
         service.markRead(notif.id);
-        if (notif.postId.isEmpty) return;
 
-        if (notif.type == 'new_report') {
+        if (notif.type == 'mention') {
+          // GC mention notification -> open GroupDetailPage
+          // postId field stores groupId for mention notifications
+          if (notif.postId.isEmpty) return;
+          Navigator.of(context).pop(); // close notification sheet
+          router.go('/dashboard/group/${notif.postId}');
+        } else if (notif.type == 'new_report') {
           // Map report notification -> open ReportDetailSheet
+          if (notif.postId.isEmpty) return;
           final reportService = ref.read(reportPostServiceProvider);
           final report = await reportService.getReportById(notif.postId);
           if (report == null || !context.mounted) return;
@@ -220,6 +231,7 @@ class NotificationPanel extends ConsumerWidget {
           );
         } else {
           // Feed post notification -> open CommentsPage
+          if (notif.postId.isEmpty) return;
           Navigator.of(context).push(
             MaterialPageRoute(
               builder: (_) => CommentsPage(postId: notif.postId),
