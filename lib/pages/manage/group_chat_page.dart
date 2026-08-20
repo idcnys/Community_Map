@@ -380,13 +380,24 @@ class _GroupChatPageState extends State<GroupChatPage> {
                   controller: _scrollCtrl,
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   itemCount: messages.length,
-                  itemBuilder: (ctx, i) => _MessageBubble(
-                    key: ValueKey(messages[i]['id']),
-                    msg: messages[i],
-                    isMine: messages[i]['senderId'] == myUid,
-                    theme: theme,
-                    maxWidth: MediaQuery.of(context).size.width * 0.75,
-                  ),
+                  itemBuilder: (ctx, i) {
+                    final msg = messages[i];
+                    final isMine = msg['senderId'] == myUid;
+                    // Look up sender avatar from member info
+                    String senderAvatar = '';
+                    if (!isMine) {
+                      final member = _memberInfo.where((m) => m['uid'] == msg['senderId']).firstOrNull;
+                      senderAvatar = member?['imageUrl'] ?? '';
+                    }
+                    return _MessageBubble(
+                      key: ValueKey(msg['id']),
+                      msg: msg,
+                      isMine: isMine,
+                      senderAvatarUrl: senderAvatar,
+                      theme: theme,
+                      maxWidth: MediaQuery.of(context).size.width * 0.75,
+                    );
+                  },
                 );
               },
             ),
@@ -547,6 +558,7 @@ class _GroupChatPageState extends State<GroupChatPage> {
 class _MessageBubble extends StatelessWidget {
   final Map<String, dynamic> msg;
   final bool isMine;
+  final String senderAvatarUrl;
   final ThemeData theme;
   final double maxWidth;
 
@@ -554,6 +566,7 @@ class _MessageBubble extends StatelessWidget {
     super.key,
     required this.msg,
     required this.isMine,
+    required this.senderAvatarUrl,
     required this.theme,
     required this.maxWidth,
   });
@@ -565,81 +578,153 @@ class _MessageBubble extends StatelessWidget {
     final imageUrl = msg['imageUrl'] as String? ?? '';
     final hasImage = imageUrl.isNotEmpty;
 
-    return Align(
-      alignment: isMine ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        constraints: BoxConstraints(maxWidth: maxWidth),
-        decoration: BoxDecoration(
-          color: isMine ? theme.colorScheme.primary : theme.colorScheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(16),
-            topRight: const Radius.circular(16),
-            bottomLeft: Radius.circular(isMine ? 16 : 4),
-            bottomRight: Radius.circular(isMine ? 4 : 16),
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (!isMine)
-              Text(
-                msg['senderName'] ?? 'Unknown',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: theme.colorScheme.primary,
+    final bubbleRadius = BorderRadius.only(
+      topLeft: const Radius.circular(16),
+      topRight: const Radius.circular(16),
+      bottomLeft: Radius.circular(isMine ? 16 : 4),
+      bottomRight: Radius.circular(isMine ? 4 : 16),
+    );
+
+    final showAvatar = !isMine;
+    final senderName = msg['senderName'] ?? '?';
+    final initial = senderName.isNotEmpty ? senderName[0].toUpperCase() : '?';
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        mainAxisAlignment: isMine ? MainAxisAlignment.end : MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          // Avatar for others' messages
+          if (showAvatar) ...[
+            CircleAvatar(
+              radius: 14,
+              backgroundColor: theme.colorScheme.secondaryContainer,
+              backgroundImage: senderAvatarUrl.isNotEmpty
+                  ? CachedNetworkImageProvider(senderAvatarUrl)
+                  : null,
+              child: senderAvatarUrl.isEmpty
+                  ? Text(initial, style: TextStyle(fontSize: 11, color: theme.colorScheme.onSecondaryContainer))
+                  : null,
+            ),
+            const SizedBox(width: 6),
+          ],
+          // Bubble
+          Flexible(
+            child: Align(
+              alignment: isMine ? Alignment.centerRight : Alignment.centerLeft,
+              child: Container(
+                constraints: BoxConstraints(maxWidth: maxWidth),
+                clipBehavior: Clip.antiAlias,
+                decoration: BoxDecoration(
+                  color: isMine ? theme.colorScheme.primary : theme.colorScheme.surfaceContainerHighest,
+                  borderRadius: bubbleRadius,
                 ),
-              ),
-            // Image preview
-            if (hasImage)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 6),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: CachedNetworkImage(
-                    imageUrl: imageUrl,
-                    fit: BoxFit.cover,
-                    width: double.infinity,
-                    height: 200,
-                    placeholder: (_, _) => Container(
-                      height: 200,
-                      color: theme.colorScheme.surfaceContainerLow,
-                      child: Center(
-                        child: SizedBox(
-                          width: 24, height: 24,
-                          child: CircularProgressIndicator(strokeWidth: 2),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Image — edge-to-edge, tappable for fullscreen
+                    if (hasImage)
+                      GestureDetector(
+                        onTap: () => _openFullscreenImage(context, imageUrl),
+                        child: ClipRRect(
+                          borderRadius: bubbleRadius,
+                          child: SizedBox(
+                            width: double.infinity,
+                            height: 200,
+                            child: CachedNetworkImage(
+                              imageUrl: imageUrl,
+                              fit: BoxFit.cover,
+                              placeholder: (_, _) => Container(
+                                color: isMine ? theme.colorScheme.primary : theme.colorScheme.surfaceContainerHighest,
+                                child: const Center(
+                                  child: SizedBox(
+                                    width: 24, height: 24,
+                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                  ),
+                                ),
+                              ),
+                              errorWidget: (_, _, _) => Container(
+                                color: isMine ? theme.colorScheme.primary : theme.colorScheme.surfaceContainerHighest,
+                                child: Icon(LucideIcons.imageOff, size: 32, color: theme.colorScheme.onSurfaceVariant),
+                              ),
+                            ),
+                          ),
                         ),
                       ),
+                    // Text + metadata with padding
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (!isMine)
+                            Text(
+                              msg['senderName'] ?? 'Unknown',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: theme.colorScheme.primary,
+                              ),
+                            ),
+                          if (text.isNotEmpty)
+                            Text(
+                              text,
+                              style: TextStyle(
+                                color: isMine ? theme.colorScheme.onPrimary : theme.colorScheme.onSurface,
+                              ),
+                            ),
+                          const SizedBox(height: 2),
+                          Text(
+                            timeAgo(createdAt),
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: isMine
+                                  ? theme.colorScheme.onPrimary.withAlpha(180)
+                                  : theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    errorWidget: (_, _, _) => Container(
-                      height: 100,
-                      color: theme.colorScheme.surfaceContainerLow,
-                      child: Icon(LucideIcons.imageOff, size: 32, color: theme.colorScheme.onSurfaceVariant),
-                    ),
-                  ),
+                  ],
                 ),
-              ),
-            // Text (only if non-empty)
-            if (text.isNotEmpty)
-              Text(
-                text,
-                style: TextStyle(
-                  color: isMine ? theme.colorScheme.onPrimary : theme.colorScheme.onSurface,
-                ),
-              ),
-            const SizedBox(height: 2),
-            Text(
-              timeAgo(createdAt),
-              style: TextStyle(
-                fontSize: 10,
-                color: isMine
-                    ? theme.colorScheme.onPrimary.withAlpha(180)
-                    : theme.colorScheme.onSurfaceVariant,
               ),
             ),
-          ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  static void _openFullscreenImage(BuildContext context, String imageUrl) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => Scaffold(
+          backgroundColor: Colors.black,
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            iconTheme: const IconThemeData(color: Colors.white),
+          ),
+          extendBodyBehindAppBar: true,
+          body: Center(
+            child: InteractiveViewer(
+              minScale: 0.5,
+              maxScale: 4.0,
+              child: CachedNetworkImage(
+                imageUrl: imageUrl,
+                fit: BoxFit.contain,
+                placeholder: (_, _) => const Center(
+                  child: CircularProgressIndicator(color: Colors.white),
+                ),
+                errorWidget: (_, _, _) => const Icon(
+                  LucideIcons.imageOff, size: 48, color: Colors.white54,
+                ),
+              ),
+            ),
+          ),
         ),
       ),
     );
