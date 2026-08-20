@@ -4,6 +4,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'my_groups_tab.dart';
 import 'discover_groups_tab.dart';
 import 'app_update_page.dart';
+import 'report_issue_page.dart';
 import '../../services/app_update_service.dart';
 
 class ManagePage extends StatefulWidget {
@@ -75,6 +76,13 @@ class _ManagePageState extends State<ManagePage> {
                     ),
                   ),
               ],
+            ),
+            IconButton(
+              icon: const Icon(LucideIcons.bug),
+              tooltip: 'Report Issue',
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const ReportIssuePage()),
+              ),
             ),
             IconButton(
               icon: const Icon(LucideIcons.user),

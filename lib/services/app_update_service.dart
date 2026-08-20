@@ -11,6 +11,8 @@ class UpdateInfo {
   final String? releaseNotes;
   final String downloadUrl;
   final int fileSizeBytes;
+  final DateTime? publishedAt;
+  final String? author;
 
   const UpdateInfo({
     required this.tagName,
@@ -18,6 +20,8 @@ class UpdateInfo {
     this.releaseNotes,
     required this.downloadUrl,
     required this.fileSizeBytes,
+    this.publishedAt,
+    this.author,
   });
 
   String get formattedSize {
@@ -63,12 +67,19 @@ class AppUpdateService {
 
       if (downloadUrl.isEmpty) return null;
 
+      final publishedAt = json['published_at'] != null
+          ? DateTime.tryParse(json['published_at'] as String)
+          : null;
+      final author = (json['author'] as Map<String, dynamic>?)?['login'] as String?;
+
       return UpdateInfo(
         tagName: tagName,
         version: latestVersion,
         releaseNotes: json['body'] as String?,
         downloadUrl: downloadUrl,
         fileSizeBytes: fileSize,
+        publishedAt: publishedAt,
+        author: author,
       );
     } catch (_) {
       return null;
@@ -136,12 +147,19 @@ class AppUpdateService {
         final fileSize = apkAsset['size'] as int? ?? 0;
         if (downloadUrl.isEmpty) continue;
 
+        final publishedAt = json['published_at'] != null
+            ? DateTime.tryParse(json['published_at'] as String)
+            : null;
+        final author = (json['author'] as Map<String, dynamic>?)?['login'] as String?;
+
         results.add(UpdateInfo(
           tagName: tagName,
           version: version,
           releaseNotes: json['body'] as String?,
           downloadUrl: downloadUrl,
           fileSizeBytes: fileSize,
+          publishedAt: publishedAt,
+          author: author,
         ));
       }
 
