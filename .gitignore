@@ -51,3 +51,4 @@ app.*.map.json
 # Environment secrets
 .env
 init
+lib/secrets.dart

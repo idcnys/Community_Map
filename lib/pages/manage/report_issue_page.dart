@@ -1,0 +1,262 @@
+import 'dart:io';
+import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import '../../services/github_issue_service.dart';
+
+class ReportIssuePage extends StatefulWidget {
+  const ReportIssuePage({super.key});
+
+  @override
+  State<ReportIssuePage> createState() => _ReportIssuePageState();
+}
+
+class _ReportIssuePageState extends State<ReportIssuePage> {
+  final _titleCtrl = TextEditingController();
+  final _bodyCtrl = TextEditingController();
+  IssueLabel _selectedLabel = IssueLabel.bug;
+  bool _submitting = false;
+  String? _deviceInfo;
+  String? _appVersion;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDeviceInfo();
+  }
+
+  Future<void> _loadDeviceInfo() async {
+    try {
+      final info = await PackageInfo.fromPlatform();
+      setState(() {
+        _appVersion = '${info.version}+${info.buildNumber}';
+        // Sanitize: only OS name + major version (strip build fingerprint)
+        final osVer = Platform.operatingSystemVersion;
+        final cleanVersion = RegExp(r'(\d+)').firstMatch(osVer)?.group(1) ?? '';
+        final osName = Platform.operatingSystem == 'android'
+            ? 'Android'
+            : Platform.operatingSystem;
+        _deviceInfo = cleanVersion.isNotEmpty ? '$osName $cleanVersion' : osName;
+      });
+    } catch (_) {}
+  }
+
+  @override
+  void dispose() {
+    _titleCtrl.dispose();
+    _bodyCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    final title = _titleCtrl.text.trim();
+    final body = _bodyCtrl.text.trim();
+
+    if (title.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a title')),
+      );
+      return;
+    }
+    if (body.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please describe the issue')),
+      );
+      return;
+    }
+
+    setState(() => _submitting = true);
+
+    final result = await GitHubIssueService().createIssue(
+      title: title,
+      body: body,
+      label: _selectedLabel,
+      deviceInfo: _deviceInfo,
+      appVersion: _appVersion,
+    );
+
+    if (!mounted) return;
+    setState(() => _submitting = false);
+
+    if (result.success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(LucideIcons.circleCheckBig, size: 18,
+                  color: Theme.of(context).colorScheme.primary),
+              const SizedBox(width: 8),
+              Expanded(child: Text('Issue #${result.issueNumber} created!')),
+            ],
+          ),
+          backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      Navigator.pop(context);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed: ${result.error}'),
+          backgroundColor: Theme.of(context).colorScheme.errorContainer,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Report Issue'),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Type dropdown
+            DropdownButtonFormField<IssueLabel>(
+              initialValue: _selectedLabel,
+              decoration: InputDecoration(
+                labelText: 'Type',
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                filled: true,
+                fillColor:
+                    theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 14, vertical: 12),
+              ),
+              items: IssueLabel.values.map((label) {
+                return DropdownMenuItem(
+                  value: label,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(_iconForLabel(label), size: 16),
+                      const SizedBox(width: 8),
+                      Text(label.displayName),
+                    ],
+                  ),
+                );
+              }).toList(),
+              onChanged: (v) {
+                if (v != null) setState(() => _selectedLabel = v);
+              },
+            ),
+
+            const SizedBox(height: 20),
+
+            // Title field
+            Text(
+              'Title',
+              style: theme.textTheme.labelMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _titleCtrl,
+              decoration: InputDecoration(
+                hintText: 'Brief summary of the issue',
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                filled: true,
+                fillColor:
+                    theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 14, vertical: 12),
+              ),
+              textInputAction: TextInputAction.next,
+              maxLength: 120,
+            ),
+
+            const SizedBox(height: 16),
+
+            // Description field
+            Text(
+              'Description',
+              style: theme.textTheme.labelMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _bodyCtrl,
+              decoration: InputDecoration(
+                hintText: 'Describe what happened, expected behavior, steps to reproduce…',
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                filled: true,
+                fillColor:
+                    theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                alignLabelWithHint: true,
+                contentPadding: const EdgeInsets.all(14),
+              ),
+              maxLines: 10,
+              minLines: 5,
+              textInputAction: TextInputAction.newline,
+            ),
+
+            const SizedBox(height: 16),
+
+            // Auto-attached device info (single subtle line)
+            if (_appVersion != null || _deviceInfo != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(
+                  [
+                    if (_appVersion != null) 'v$_appVersion',
+                    if (_deviceInfo != null) _deviceInfo,
+                  ].join(' · '),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+                  ),
+                ),
+              ),
+
+            const SizedBox(height: 24),
+
+            // Submit button (bottom)
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: FilledButton.icon(
+                onPressed: _submitting ? null : _submit,
+                icon: _submitting
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(LucideIcons.send, size: 18),
+                label: Text(_submitting ? 'Submitting…' : 'Create Issue'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  IconData _iconForLabel(IssueLabel label) {
+    switch (label) {
+      case IssueLabel.bug:
+        return LucideIcons.bug;
+      case IssueLabel.feature:
+        return LucideIcons.lightbulb;
+      case IssueLabel.question:
+        return LucideIcons.circleHelp;
+      case IssueLabel.crash:
+        return LucideIcons.flame;
+    }
+  }
+}
