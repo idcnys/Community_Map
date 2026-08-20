@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'package:flutter/material.dart';
@@ -24,6 +25,7 @@ import '../../providers/guest_provider.dart';
 import '../../providers/nearby_providers.dart';
 import '../../models/nearby_place_model.dart';
 import 'nearby_service_sheet.dart';
+import '../../services/route_service.dart';
 
 class MapPage extends ConsumerStatefulWidget {
   const MapPage({super.key});
@@ -47,6 +49,14 @@ class _MapPageState extends ConsumerState<MapPage>
   StreamSubscription? _locationSub;
   Timer? _debounceTimer;
   bool _hasShownMissingToast = false;
+
+  // Route navigation state
+  final RouteService _routeService = RouteService();
+  RouteResult? _activeRoute;
+  NearbyPlace? _routeDestination;
+  int _currentStepIndex = 0;
+  bool _isFetchingRoute = false;
+  String _routeProfile = 'driving'; // driving, walking, cycling
 
   @override
   void initState() {
@@ -248,39 +258,6 @@ class _MapPageState extends ConsumerState<MapPage>
                 userAgentPackageName: 'com.communityapp',
                 retinaMode: RetinaMode.isHighDensity(context),
               ),
-              // User's own location marker
-              if (_userLocation != null)
-                MarkerLayer(
-                  markers: [
-                    Marker(
-                      point: _userLocation!,
-                      width: 40,
-                      height: 40,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: theme.colorScheme.primary,
-                          border: Border.all(
-                            color: theme.colorScheme.onPrimary,
-                            width: 3,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: theme.colorScheme.primary.withAlpha(77),
-                              blurRadius: 10,
-                              spreadRadius: 3,
-                            ),
-                          ],
-                        ),
-                        child: Icon(
-                          LucideIcons.locateFixed,
-                          color: theme.colorScheme.onPrimary,
-                          size: 20,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
               // Report markers (only in global mode)
               if (_selectedGroupFilter == 'global')
                 MarkerLayer(
@@ -408,11 +385,97 @@ class _MapPageState extends ConsumerState<MapPage>
                     );
                   }).toList(),
                 ),
+              // Route polyline with arrows (BELOW user location marker)
+              if (_activeRoute != null && _activeRoute!.polylinePoints.isNotEmpty)
+                PolylineLayer(
+                  polylines: [
+                    // Outline for contrast
+                    Polyline(
+                      points: _activeRoute!.polylinePoints,
+                      strokeWidth: 8.0,
+                      color: const Color(0xFF2563EB).withAlpha(60),
+                    ),
+                    // Main route line
+                    Polyline(
+                      points: _activeRoute!.polylinePoints,
+                      strokeWidth: 5.0,
+                      color: const Color(0xFF2563EB),
+                    ),
+                  ],
+                ),
+              // Route direction arrows
+              if (_activeRoute != null && _activeRoute!.polylinePoints.length > 2)
+                MarkerLayer(
+                  markers: _buildRouteArrowMarkers(),
+                ),
+              // Destination marker highlight when routing
+              if (_routeDestination != null)
+                MarkerLayer(
+                  markers: [
+                    Marker(
+                      point: LatLng(_routeDestination!.latitude, _routeDestination!.longitude),
+                      width: 50,
+                      height: 50,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: const Color(0xFFDC2626),
+                          border: Border.all(color: Colors.white, width: 3),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFFDC2626).withAlpha(100),
+                              blurRadius: 10,
+                              spreadRadius: 3,
+                            ),
+                          ],
+                        ),
+                        child: const Icon(
+                          LucideIcons.mapPin,
+                          color: Colors.white,
+                          size: 24,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              // User's own location marker (ALWAYS ON TOP of route layers)
+              if (_userLocation != null)
+                MarkerLayer(
+                  markers: [
+                    Marker(
+                      point: _userLocation!,
+                      width: 44,
+                      height: 44,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: theme.colorScheme.primary,
+                          border: Border.all(
+                            color: theme.colorScheme.onPrimary,
+                            width: 3,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: theme.colorScheme.primary.withAlpha(77),
+                              blurRadius: 10,
+                              spreadRadius: 3,
+                            ),
+                          ],
+                        ),
+                        child: Icon(
+                          LucideIcons.locateFixed,
+                          color: theme.colorScheme.onPrimary,
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
             ],
           ),
           ),
 
-          // Nearby category filter chips
+          // Nearby category filter chips (offset adjusts when route dropdown visible)
           if (_selectedGroupFilter == 'global')
             Positioned(
               top: 0,
@@ -420,7 +483,11 @@ class _MapPageState extends ConsumerState<MapPage>
               right: 0,
               child: SafeArea(
                 child: Padding(
-                  padding: const EdgeInsets.only(top: 62, left: 12, right: 12),
+                  padding: EdgeInsets.only(
+                    top: (_routeDestination != null) ? 108 : 62,
+                    left: 12,
+                    right: 12,
+                  ),
                   child: _buildNearbyCategoryChips(nearbyState),
                 ),
               ),
@@ -537,6 +604,96 @@ class _MapPageState extends ConsumerState<MapPage>
                         _buildLatestReportsButton(),
                       ],
                     ),
+                    // Route mode row (second row, only when route active)
+                    if (_routeDestination != null || _activeRoute != null) ...[
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 140),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF2563EB).withAlpha(20),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: const Color(0xFF2563EB).withAlpha(80),
+                                ),
+                              ),
+                              child: DropdownButtonHideUnderline(
+                                child: DropdownButton<String>(
+                                  value: _routeProfile,
+                                  isDense: true,
+                                  isExpanded: true,
+                                  icon: const Icon(
+                                    LucideIcons.chevronDown,
+                                    size: 14,
+                                    color: Color(0xFF2563EB),
+                                  ),
+                                  style: const TextStyle(
+                                    color: Color(0xFF2563EB),
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  items: const [
+                                    DropdownMenuItem(
+                                      value: 'driving',
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(LucideIcons.car, size: 14),
+                                          SizedBox(width: 4),
+                                          Text('Drive'),
+                                        ],
+                                      ),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: 'walking',
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(LucideIcons.footprints, size: 14),
+                                          SizedBox(width: 4),
+                                          Text('Walk'),
+                                        ],
+                                      ),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: 'cycling',
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(LucideIcons.bike, size: 14),
+                                          SizedBox(width: 4),
+                                          Text('Cycle'),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                  onChanged: (val) {
+                                    if (val != null && _routeDestination != null) {
+                                      setState(() => _routeProfile = val);
+                                      _fetchRoute(_routeDestination!);
+                                    }
+                                  },
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          // Clear route button
+                          _circleButton(
+                            icon: LucideIcons.x,
+                            tooltip: 'Clear Route',
+                            onPressed: _clearRoute,
+                          ),
+                          const Spacer(),
+                        ],
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -623,6 +780,229 @@ class _MapPageState extends ConsumerState<MapPage>
               ],
             ),
           ),
+
+          // Route step navigation panel (bottom center)
+          if (_activeRoute != null && _activeRoute!.steps.isNotEmpty)
+            Positioned(
+              bottom: 24,
+              left: 80,
+              right: 80,
+              child: _buildStepNavigationPanel(theme),
+            ),
+
+          // Loading indicator for route fetching
+          if (_isFetchingRoute)
+            Positioned.fill(
+              child: Container(
+                color: Colors.black.withAlpha(80),
+                child: const Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CircularProgressIndicator(color: Color(0xFF2563EB)),
+                      SizedBox(height: 12),
+                      Text(
+                        'Calculating route...',
+                        style: TextStyle(color: Colors.white, fontSize: 14),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  /// Builds directional arrow markers along the route polyline.
+  List<Marker> _buildRouteArrowMarkers() {
+    final points = _activeRoute!.polylinePoints;
+    if (points.length < 4) return [];
+
+    // Place arrows at ~20% intervals along the polyline
+    final markers = <Marker>[];
+    final interval = (points.length / 5).round().clamp(2, points.length - 2);
+
+    for (int i = interval; i < points.length - 1; i += interval) {
+      final current = points[i];
+      final next = points[i + 1 < points.length ? i + 1 : i];
+
+      // Calculate bearing for arrow rotation
+      final bearing = _calculateBearing(current, next);
+
+      markers.add(Marker(
+        point: current,
+        width: 24,
+        height: 24,
+        child: Transform.rotate(
+          angle: bearing * pi / 180,
+          child: const Icon(
+            LucideIcons.chevronUp,
+            color: Color(0xFF2563EB),
+            size: 24,
+            shadows: [Shadow(color: Colors.white, blurRadius: 3)],
+          ),
+        ),
+      ));
+    }
+    return markers;
+  }
+
+  double _calculateBearing(LatLng from, LatLng to) {
+    final dLon = (to.longitude - from.longitude) * pi / 180;
+    final lat1 = from.latitude * pi / 180;
+    final lat2 = to.latitude * pi / 180;
+    final y = sin(dLon) * cos(lat2);
+    final x = cos(lat1) * sin(lat2) - sin(lat1) * cos(lat2) * cos(dLon);
+    return atan2(y, x) * 180 / pi;
+  }
+
+  /// Step-by-step navigation panel with prev/next controls.
+  Widget _buildStepNavigationPanel(ThemeData theme) {
+    final steps = _activeRoute!.steps;
+    if (steps.isEmpty) return const SizedBox.shrink();
+
+    // Clamp index
+    final idx = _currentStepIndex.clamp(0, steps.length - 1);
+    final step = steps[idx];
+
+    // Determine maneuver icon
+    IconData maneuverIcon;
+    switch (step.maneuverType) {
+      case 1:
+        maneuverIcon = LucideIcons.cornerUpLeft;
+        break;
+      case 2:
+        maneuverIcon = LucideIcons.cornerUpRight;
+        break;
+      default:
+        maneuverIcon = LucideIcons.arrowUp;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(40),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Route summary
+          Row(
+            children: [
+              Icon(LucideIcons.navigation, size: 16, color: const Color(0xFF2563EB)),
+              const SizedBox(width: 6),
+              Text(
+                '${_activeRoute!.totalDistanceLabel} · ${_activeRoute!.totalDurationLabel}',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF2563EB),
+                ),
+              ),
+              const Spacer(),
+              Text(
+                'Step ${idx + 1}/${steps.length}',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+          const Divider(height: 16),
+          // Current step instruction
+          Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF2563EB).withAlpha(20),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(maneuverIcon, color: const Color(0xFF2563EB), size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      step.instruction,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: theme.colorScheme.onSurface,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      step.distanceLabel,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          // Prev / Next buttons
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: idx > 0
+                      ? () {
+                          final prevIdx = idx - 1;
+                          setState(() => _currentStepIndex = prevIdx);
+                          // Center on previous step at current zoom
+                          _mapController.move(steps[prevIdx].startPoint, 18);
+                        }
+                      : null,
+                  icon: const Icon(LucideIcons.chevronLeft, size: 16),
+                  label: const Text('Prev'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: idx < steps.length - 1
+                      ? () {
+                          final nextIdx = idx + 1;
+                          setState(() => _currentStepIndex = nextIdx);
+                          // Center on next step at same max zoom
+                          _mapController.move(steps[nextIdx].startPoint, 18);
+                        }
+                      : null,
+                  icon: const Icon(LucideIcons.chevronRight, size: 16),
+                  label: const Text('Next'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: const Color(0xFF2563EB),
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
@@ -664,9 +1044,14 @@ class _MapPageState extends ConsumerState<MapPage>
   }
 
   void _resetMapView() {
-    // Clear my-location marker and nearby POI markers (hospital, police, etc.)
+    // Clear my-location marker, nearby POI markers, and active route.
     // Report markers are untouched — they come from a stream provider.
-    setState(() => _userLocation = null);
+    setState(() {
+      _userLocation = null;
+      _activeRoute = null;
+      _routeDestination = null;
+      _currentStepIndex = 0;
+    });
     ref.read(nearbyProvider.notifier).clear();
 
     if (_selectedGroupFilter == 'global') {
@@ -882,8 +1267,71 @@ class _MapPageState extends ConsumerState<MapPage>
       builder: (_) => NearbyServiceSheet(
         place: place,
         userLocation: _userLocation,
+        onShowRoute: () => _fetchRoute(place),
       ),
     );
+  }
+
+  /// Fetch route from user location to the given destination.
+  Future<void> _fetchRoute(NearbyPlace destination) async {
+    // Always get a fresh precise location for routing accuracy
+    final position = await ReportPostService.getPreciseLocation();
+    if (position == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Enable location to calculate routes'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+      return;
+    }
+
+    final userLatLng = LatLng(position.latitude, position.longitude);
+    setState(() {
+      _userLocation = userLatLng;
+      _isFetchingRoute = true;
+      _routeDestination = destination;
+      _currentStepIndex = 0;
+    });
+
+    final result = await _routeService.fetchRoute(
+      from: userLatLng,
+      to: LatLng(destination.latitude, destination.longitude),
+      profile: _routeProfile,
+    );
+
+    if (!mounted) return;
+
+    setState(() {
+      _isFetchingRoute = false;
+      _activeRoute = result;
+    });
+
+    if (!result.isSuccess) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result.error ?? 'Failed to calculate route'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    // Zoom in max on user's current location to start navigation
+    _mapController.move(userLatLng, 18);
+  }
+
+  /// Clear active route and return to normal map view.
+  void _clearRoute() {
+    setState(() {
+      _activeRoute = null;
+      _routeDestination = null;
+      _currentStepIndex = 0;
+    });
   }
 
   IconData _nearbyCategoryIcon(NearbyCategory category) {

@@ -292,6 +292,8 @@ class ReportPostService {
   }
 
   // ─── LOCATION HELPERS ────────────────────────────────────────────
+
+  /// Get current location with standard accuracy (for markers, reports).
   static Future<Position?> getCurrentLocation() async {
     try {
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
@@ -310,6 +312,47 @@ class ReportPostService {
           timeLimit: Duration(seconds: 10),
         ),
       );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Get precise location for routing/navigation.
+  /// Uses bestForNavigation accuracy and longer timeout for GPS lock.
+  /// Falls back to last known position if fresh fix times out.
+  static Future<Position?> getPreciseLocation() async {
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) return null;
+
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) return null;
+      }
+      if (permission == LocationPermission.deniedForever) return null;
+
+      // Try best accuracy with generous timeout for GPS lock
+      try {
+        return await Geolocator.getCurrentPosition(
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.bestForNavigation,
+            timeLimit: Duration(seconds: 15),
+          ),
+        );
+      } catch (_) {
+        // Fall back to last known position if fresh fix fails
+        final lastKnown = await Geolocator.getLastKnownPosition();
+        if (lastKnown != null) return lastKnown;
+
+        // Final fallback: medium accuracy with short timeout
+        return await Geolocator.getCurrentPosition(
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.medium,
+            timeLimit: Duration(seconds: 5),
+          ),
+        );
+      }
     } catch (_) {
       return null;
     }

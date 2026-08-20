@@ -9,8 +9,15 @@ import '../../models/nearby_place_model.dart';
 class NearbyServiceSheet extends StatelessWidget {
   final NearbyPlace place;
   final LatLng? userLocation;
+  /// Called when user taps "Route" to show in-app navigation on map.
+  final VoidCallback? onShowRoute;
 
-  const NearbyServiceSheet({super.key, required this.place, this.userLocation});
+  const NearbyServiceSheet({
+    super.key,
+    required this.place,
+    this.userLocation,
+    this.onShowRoute,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -113,19 +120,42 @@ class NearbyServiceSheet extends StatelessWidget {
 
           const SizedBox(height: 16),
 
-          // Navigate button
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton.icon(
-              onPressed: () => _openInMaps(context),
-              icon: const Icon(LucideIcons.navigation, size: 18),
-              label: const Text('Navigate'),
-              style: FilledButton.styleFrom(
-                backgroundColor: color,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 14),
+          // Route + Navigate buttons side by side
+          Row(
+            children: [
+              // In-app Route button
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: userLocation != null && onShowRoute != null
+                      ? () {
+                          Navigator.pop(context);
+                          onShowRoute!();
+                        }
+                      : null,
+                  icon: const Icon(LucideIcons.route, size: 18),
+                  label: const Text('Route'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: color,
+                    side: BorderSide(color: color),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                ),
               ),
-            ),
+              const SizedBox(width: 10),
+              // External Navigate button
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: () => _openInMaps(context),
+                  icon: const Icon(LucideIcons.navigation, size: 18),
+                  label: const Text('Navigate'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: color,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                ),
+              ),
+            ],
           ),
 
             const SizedBox(height: 8),
