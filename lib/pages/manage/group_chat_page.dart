@@ -1,8 +1,12 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../services/group_chat_service.dart';
 import '../../services/notification_service.dart';
+import '../../services/cloudinary_service.dart';
 import 'package:geolocator/geolocator.dart';
 import '../../core/utils/time_ago.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -73,9 +77,13 @@ class _GroupChatPageState extends State<GroupChatPage> {
   final _service = GroupChatService();
   final _msgCtrl = _MentionTextController();
   final _scrollCtrl = ScrollController();
+  final _picker = ImagePicker();
+  final _cloudinary = CloudinaryService();
   bool _sending = false;
   int _prevMsgCount = 0;
   bool _isInitialLoad = true;
+  File? _pendingImage;
+  bool _uploadingImage = false;
 
   late final Stream<List<Map<String, dynamic>>> _messagesStream;
 
@@ -236,18 +244,60 @@ class _GroupChatPageState extends State<GroupChatPage> {
     });
   }
 
+  Future<void> _pickImage() async {
+    try {
+      final picked = await _picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 85,
+      );
+      if (picked != null && mounted) {
+        setState(() => _pendingImage = File(picked.path));
+      }
+    } catch (_) {}
+  }
+
+  void _clearPendingImage() {
+    setState(() => _pendingImage = null);
+  }
+
   Future<void> _send() async {
     final text = _msgCtrl.text.trim();
-    if (text.isEmpty) return;
+    final hasImage = _pendingImage != null;
+    if (text.isEmpty && !hasImage) return;
 
     // Collect UIDs from tracked atomic mention ranges only
     final mentionedUids = _msgCtrl.mentionRanges.map((r) => r.uid).toSet().toList();
 
     _msgCtrl.clear();
     _msgCtrl.mentionRanges.clear();
-    setState(() { _sending = true; _showMentions = false; });
+    final imageToSend = _pendingImage;
+    setState(() {
+      _sending = true;
+      _showMentions = false;
+      _pendingImage = null;
+    });
 
-    final error = await _service.sendMessage(widget.groupId, text);
+    // Upload image first if present
+    String? imageUrl;
+    if (imageToSend != null) {
+      setState(() => _uploadingImage = true);
+      imageUrl = await _cloudinary.uploadImage(
+        imageToSend,
+        folder: 'cmap/chat',
+        onError: (err) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Image upload failed: $err'), backgroundColor: Colors.red),
+            );
+          }
+        },
+      );
+      if (mounted) setState(() => _uploadingImage = false);
+    }
+
+    final error = await _service.sendMessage(widget.groupId, text, imageUrl: imageUrl);
     if (mounted) {
       setState(() => _sending = false);
       if (error != null) {
@@ -381,6 +431,41 @@ class _GroupChatPageState extends State<GroupChatPage> {
                 },
               ),
             ),
+          // Pending image preview
+          if (_pendingImage != null)
+            Container(
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+              color: theme.colorScheme.surface,
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.file(
+                        _pendingImage!,
+                        height: 80,
+                        width: 80,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                    Positioned(
+                      top: -8,
+                      right: -8,
+                      child: GestureDetector(
+                        onTap: _clearPendingImage,
+                        child: CircleAvatar(
+                          radius: 12,
+                          backgroundColor: theme.colorScheme.error,
+                          child: Icon(LucideIcons.x, size: 12, color: theme.colorScheme.onError),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           // Input bar
           SafeArea(
             child: Container(
@@ -393,6 +478,17 @@ class _GroupChatPageState extends State<GroupChatPage> {
               ),
               child: Row(
                 children: [
+                  // Image attach button
+                  IconButton(
+                    icon: _uploadingImage
+                        ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                        : Icon(LucideIcons.image, size: 22, color: theme.colorScheme.onSurfaceVariant),
+                    onPressed: _uploadingImage ? null : _pickImage,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                    tooltip: 'Attach image',
+                  ),
+                  const SizedBox(width: 4),
                   Expanded(
                     child: TextField(
                       controller: _msgCtrl,
@@ -465,6 +561,10 @@ class _MessageBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final createdAt = (msg['createdAt'] as dynamic)?.toDate() ?? DateTime.now();
+    final text = msg['text'] as String? ?? '';
+    final imageUrl = msg['imageUrl'] as String? ?? '';
+    final hasImage = imageUrl.isNotEmpty;
+
     return Align(
       alignment: isMine ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
@@ -492,12 +592,43 @@ class _MessageBubble extends StatelessWidget {
                   color: theme.colorScheme.primary,
                 ),
               ),
-            Text(
-              msg['text'] ?? '',
-              style: TextStyle(
-                color: isMine ? theme.colorScheme.onPrimary : theme.colorScheme.onSurface,
+            // Image preview
+            if (hasImage)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: CachedNetworkImage(
+                    imageUrl: imageUrl,
+                    fit: BoxFit.cover,
+                    width: double.infinity,
+                    height: 200,
+                    placeholder: (_, _) => Container(
+                      height: 200,
+                      color: theme.colorScheme.surfaceContainerLow,
+                      child: Center(
+                        child: SizedBox(
+                          width: 24, height: 24,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      ),
+                    ),
+                    errorWidget: (_, _, _) => Container(
+                      height: 100,
+                      color: theme.colorScheme.surfaceContainerLow,
+                      child: Icon(LucideIcons.imageOff, size: 32, color: theme.colorScheme.onSurfaceVariant),
+                    ),
+                  ),
+                ),
               ),
-            ),
+            // Text (only if non-empty)
+            if (text.isNotEmpty)
+              Text(
+                text,
+                style: TextStyle(
+                  color: isMine ? theme.colorScheme.onPrimary : theme.colorScheme.onSurface,
+                ),
+              ),
             const SizedBox(height: 2),
             Text(
               timeAgo(createdAt),

@@ -26,18 +26,22 @@ class GroupChatService {
             }).toList());
   }
 
-  Future<String?> sendMessage(String groupId, String text) async {
+  Future<String?> sendMessage(String groupId, String text, {String? imageUrl}) async {
     try {
-      await _firestore
-          .collection('groups')
-          .doc(groupId)
-          .collection('messages')
-          .add({
+      final data = <String, dynamic>{
         'text': text,
         'senderId': currentUid,
         'senderName': currentName,
         'createdAt': FieldValue.serverTimestamp(),
-      });
+      };
+      if (imageUrl != null && imageUrl.isNotEmpty) {
+        data['imageUrl'] = imageUrl;
+      }
+      await _firestore
+          .collection('groups')
+          .doc(groupId)
+          .collection('messages')
+          .add(data);
       return null;
     } catch (e) {
       return 'Failed to send: $e';
