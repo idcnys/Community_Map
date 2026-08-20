@@ -24,7 +24,6 @@ import '../../providers/guest_provider.dart';
 import '../../providers/nearby_providers.dart';
 import '../../models/nearby_place_model.dart';
 import 'nearby_service_sheet.dart';
-import '../../services/route_service.dart';
 
 class MapPage extends ConsumerStatefulWidget {
   const MapPage({super.key});
@@ -48,11 +47,6 @@ class _MapPageState extends ConsumerState<MapPage>
   StreamSubscription? _locationSub;
   Timer? _debounceTimer;
   bool _hasShownMissingToast = false;
-
-  // Route navigation state
-  List<LatLng> _routePoints = [];
-  NearbyPlace? _activeRoutePlace;
-  RouteResult? _routeResult;
 
   @override
   void initState() {
@@ -414,70 +408,6 @@ class _MapPageState extends ConsumerState<MapPage>
                     );
                   }).toList(),
                 ),
-              // Route polyline
-              if (_routePoints.isNotEmpty)
-                PolylineLayer(
-                  polylines: [
-                    Polyline(
-                      points: _routePoints,
-                      strokeWidth: 5.0,
-                      color: const Color(0xFF2563EB),
-                    ),
-                  ],
-                ),
-              // Route start marker (user location)
-              if (_routePoints.isNotEmpty && _userLocation != null)
-                MarkerLayer(
-                  markers: [
-                    Marker(
-                      point: _userLocation!,
-                      width: 30,
-                      height: 30,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: const Color(0xFF2563EB),
-                          border: Border.all(color: Colors.white, width: 2),
-                        ),
-                        child: const Icon(
-                          LucideIcons.circleDot,
-                          color: Colors.white,
-                          size: 14,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              // Route end marker (destination)
-              if (_activeRoutePlace != null)
-                MarkerLayer(
-                  markers: [
-                    Marker(
-                      point: LatLng(_activeRoutePlace!.latitude, _activeRoutePlace!.longitude),
-                      width: 36,
-                      height: 36,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Color(_activeRoutePlace!.category.markerColor),
-                          border: Border.all(color: Colors.white, width: 3),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Color(_activeRoutePlace!.category.markerColor).withAlpha(100),
-                              blurRadius: 8,
-                              spreadRadius: 2,
-                            ),
-                          ],
-                        ),
-                        child: Icon(
-                          LucideIcons.flag,
-                          color: Colors.white,
-                          size: 18,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
             ],
           ),
           ),
@@ -736,7 +666,6 @@ class _MapPageState extends ConsumerState<MapPage>
   void _resetMapView() {
     // Clear my-location marker and nearby POI markers (hospital, police, etc.)
     // Report markers are untouched — they come from a stream provider.
-    _clearRoute();
     setState(() => _userLocation = null);
     ref.read(nearbyProvider.notifier).clear();
 
@@ -950,43 +879,8 @@ class _MapPageState extends ConsumerState<MapPage>
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (_) => NearbyServiceSheet(
-        place: place,
-        onGetUserLocation: () async {
-          LatLng? loc = _userLocation;
-          if (loc == null) {
-            final position = await ReportPostService.getCurrentLocation();
-            if (position == null) return null;
-            loc = LatLng(position.latitude, position.longitude);
-            if (mounted) setState(() => _userLocation = loc);
-          }
-          return loc;
-        },
-        onRouteFetched: (result) {
-          setState(() {
-            _routePoints = result.points;
-            _routeResult = result;
-            _activeRoutePlace = place;
-          });
-          // Fit camera to show entire route
-          if (result.points.length > 1) {
-            final bounds = LatLngBounds.fromPoints(result.points);
-            _mapController.fitCamera(
-              CameraFit.bounds(bounds: bounds, padding: const EdgeInsets.all(80)),
-            );
-          }
-        },
-      ),
+      builder: (_) => NearbyServiceSheet(place: place),
     );
-  }
-
-  /// Clear the active route from the map.
-  void _clearRoute() {
-    setState(() {
-      _routePoints = [];
-      _activeRoutePlace = null;
-      _routeResult = null;
-    });
   }
 
   IconData _nearbyCategoryIcon(NearbyCategory category) {
