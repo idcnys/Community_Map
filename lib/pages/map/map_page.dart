@@ -416,23 +416,26 @@ class _MapPageState extends ConsumerState<MapPage>
                       point: LatLng(_routeDestination!.latitude, _routeDestination!.longitude),
                       width: 50,
                       height: 50,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: const Color(0xFFDC2626),
-                          border: Border.all(color: Colors.white, width: 3),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFFDC2626).withAlpha(100),
-                              blurRadius: 10,
-                              spreadRadius: 3,
-                            ),
-                          ],
-                        ),
-                        child: const Icon(
-                          LucideIcons.mapPin,
-                          color: Colors.white,
-                          size: 24,
+                      child: GestureDetector(
+                        onTap: () => _onNearbyMarkerTap(_routeDestination!),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: const Color(0xFFDC2626),
+                            border: Border.all(color: Colors.white, width: 3),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFFDC2626).withAlpha(100),
+                                blurRadius: 10,
+                                spreadRadius: 3,
+                              ),
+                            ],
+                          ),
+                          child: const Icon(
+                            LucideIcons.mapPin,
+                            color: Colors.white,
+                            size: 24,
+                          ),
                         ),
                       ),
                     ),
