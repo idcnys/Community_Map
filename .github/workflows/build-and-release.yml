@@ -1,0 +1,172 @@
+name: Build & Release CMap
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'index.html'
+      - 'assets/**'
+      - '.gitignore'
+
+permissions:
+  contents: write
+
+env:
+  FLUTTER_VERSION: '3.47.0'
+  JAVA_VERSION: '17'
+
+jobs:
+  # ─── Auto-bump version based on commit count since last tag ───
+  bump-version:
+    runs-on: ubuntu-latest
+    outputs:
+      new_version: ${{ steps.bump.outputs.new_version }}
+      new_tag: ${{ steps.bump.outputs.new_tag }}
+      changelog: ${{ steps.bump.outputs.changelog }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for tag comparison
+
+      - name: Bump version
+        id: bump
+        run: |
+          # Get current version from pubspec.yaml
+          CURRENT=$(grep '^version:' pubspec.yaml | sed 's/version: //')
+          MAJOR=$(echo "$CURRENT" | cut -d. -f1)
+          MINOR=$(echo "$CURRENT" | cut -d. -f2)
+          PATCH=$(echo "$CURRENT" | cut -d. -f3 | cut -d+ -f1)
+          
+          # Count commits since last tag (or all commits if no tag)
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          if [ -n "$LAST_TAG" ]; then
+            COMMITS_SINCE=$(git rev-list "$LAST_TAG"..HEAD --count)
+          else
+            COMMITS_SINCE=$(git rev-list HEAD --count)
+          fi
+          
+          # Bump patch + use commit count as build number
+          NEW_PATCH=$((PATCH + 1))
+          NEW_VERSION="${MAJOR}.${MINOR}.${NEW_PATCH}+${COMMITS_SINCE}"
+          NEW_TAG="v${MAJOR}.${MINOR}.${NEW_PATCH}"
+          
+          echo "Current version: $CURRENT"
+          echo "New version: $NEW_VERSION"
+          echo "New tag: $NEW_TAG"
+          
+          # Update pubspec.yaml
+          sed -i "s/^version: .*/version: ${NEW_VERSION}/" pubspec.yaml
+          
+          # Generate changelog from commits since last tag
+          if [ -n "$LAST_TAG" ]; then
+            CHANGELOG=$(git log "$LAST_TAG"..HEAD --pretty=format:"- %s" --no-merges)
+          else
+            CHANGELOG=$(git log --pretty=format:"- %s" --no-merges -20)
+          fi
+          
+          echo "new_version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
+          echo "new_tag=$NEW_TAG" >> "$GITHUB_OUTPUT"
+          
+          # Write changelog to file for multiline output
+          echo "$CHANGELOG" > /tmp/changelog.txt
+          
+          # Commit the version bump
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add pubspec.yaml
+          git commit -m "chore: bump version to $NEW_VERSION [skip ci]"
+          git push
+
+      - name: Upload changelog
+        uses: actions/upload-artifact@v4
+        with:
+          name: changelog
+          path: /tmp/changelog.txt
+
+  # ─── Build APKs ───
+  build:
+    needs: bump-version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main  # Pull the version-bumped commit
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Decode secrets.dart
+        env:
+          SECRETS_DART: ${{ secrets.SECRETS_DART }}
+        run: |
+          if [ -n "$SECRETS_DART" ]; then
+            echo "$SECRETS_DART" | base64 -d > lib/secrets.dart
+          else
+            echo "Warning: SECRETS_DART secret not set"
+          fi
+
+      - name: Build split-per-ABI APKs
+        run: |
+          flutter build apk --release --split-per-abi \
+            --obfuscate --split-debug-info=build/debug-info
+
+      - name: Build universal APK
+        run: |
+          flutter clean
+          flutter pub get
+          flutter build apk --release \
+            --obfuscate --split-debug-info=build/debug-info
+
+      - name: Rename APKs
+        run: ./scripts/rename_apks.sh
+
+      - name: List final APKs
+        run: ls -lh build/app/outputs/flutter-apk/Cmap-*.apk
+
+      - name: Upload APK artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: apks
+          path: build/app/outputs/flutter-apk/Cmap-*.apk
+          retention-days: 7
+
+  # ─── Create GitHub Release ───
+  release:
+    needs: [bump-version, build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: apks
+          path: apks/
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: changelog
+          path: changelog/
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.bump-version.outputs.new_tag }}
+          name: CMap ${{ needs.bump-version.outputs.new_tag }}
+          body_path: changelog/changelog.txt
+          files: apks/Cmap-*.apk
+          draft: false
+          prerelease: false
+          generate_release_notes: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
