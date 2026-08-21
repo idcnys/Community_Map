@@ -118,17 +118,35 @@ jobs:
             echo "Warning: SECRETS_DART secret not set"
           fi
 
+      - name: Decode release keystore
+        env:
+          RELEASE_KEYSTORE: ${{ secrets.RELEASE_KEYSTORE }}
+        run: |
+          if [ -n "$RELEASE_KEYSTORE" ]; then
+            echo "$RELEASE_KEYSTORE" | base64 -d > android/app/release-keystore.jks
+          else
+            echo "Warning: RELEASE_KEYSTORE secret not set"
+          fi
+
       - name: Clean & prepare
         run: |
           flutter clean
           flutter pub get
 
       - name: Build split-per-ABI APKs
+        env:
+          KEYSTORE_STORE_PASSWORD: ${{ secrets.KEYSTORE_STORE_PASSWORD }}
+          KEYSTORE_KEY_ALIAS: ${{ secrets.KEYSTORE_KEY_ALIAS }}
+          KEYSTORE_KEY_PASSWORD: ${{ secrets.KEYSTORE_KEY_PASSWORD }}
         run: |
           flutter build apk --release --split-per-abi \
             --obfuscate --split-debug-info=build/debug-info
 
       - name: Build universal APK
+        env:
+          KEYSTORE_STORE_PASSWORD: ${{ secrets.KEYSTORE_STORE_PASSWORD }}
+          KEYSTORE_KEY_ALIAS: ${{ secrets.KEYSTORE_KEY_ALIAS }}
+          KEYSTORE_KEY_PASSWORD: ${{ secrets.KEYSTORE_KEY_PASSWORD }}
         run: |
           flutter build apk --release \
             --obfuscate --split-debug-info=build/debug-info

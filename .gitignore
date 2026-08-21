@@ -51,3 +51,4 @@ app.*.map.json
 # Environment secrets
 init
 lib/secrets.dart
+*.jks

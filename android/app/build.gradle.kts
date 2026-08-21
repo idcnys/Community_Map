@@ -15,7 +15,14 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-
+    signingConfigs {
+        create("release") {
+            storeFile = file("release-keystore.jks")
+            storePassword = System.getenv("KEYSTORE_STORE_PASSWORD") ?: ""
+            keyAlias = System.getenv("KEYSTORE_KEY_ALIAS") ?: ""
+            keyPassword = System.getenv("KEYSTORE_KEY_PASSWORD") ?: ""
+        }
+    }
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
@@ -37,7 +44,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 
