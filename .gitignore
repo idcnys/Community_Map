@@ -49,6 +49,5 @@ app.*.map.json
 .editor_tools_backups/
 
 # Environment secrets
-.env
 init
 lib/secrets.dart
