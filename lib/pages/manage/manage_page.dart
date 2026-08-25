@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'my_groups_tab.dart';
 import 'discover_groups_tab.dart';
+import 'app_permissions_page.dart';
 import 'app_update_page.dart';
 import 'report_issue_page.dart';
 import '../../services/app_update_service.dart';
@@ -49,40 +50,81 @@ class _ManagePageState extends State<ManagePage> {
           title: const Text('Manage'),
           automaticallyImplyLeading: false,
           actions: [
-            // Update button with optional badge
-            Stack(
-              clipBehavior: Clip.none,
-              children: [
-                IconButton(
-                  icon: const Icon(LucideIcons.download),
-                  tooltip: 'App Update',
-                  onPressed: _openUpdatePage,
-                ),
-                if (_updateAvailable)
-                  Positioned(
-                    right: 6,
-                    top: 6,
-                    child: Container(
-                      width: 10,
-                      height: 10,
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.error,
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: Theme.of(context).colorScheme.surface,
-                          width: 1.5,
+            // More menu: App Update + Report Issue
+            PopupMenuButton<String>(
+              icon: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  const Icon(LucideIcons.moreVertical),
+                  if (_updateAvailable)
+                    Positioned(
+                      right: -4,
+                      top: -4,
+                      child: Container(
+                        width: 10,
+                        height: 10,
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.error,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: Theme.of(context).colorScheme.surface,
+                            width: 1.5,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-              ],
-            ),
-            IconButton(
-              icon: const Icon(LucideIcons.info),
-              tooltip: 'Report Issue',
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const ReportIssuePage()),
+                ],
               ),
+              tooltip: 'More',
+              onSelected: (value) {
+                switch (value) {
+                  case 'update':
+                    _openUpdatePage();
+                  case 'report':
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const ReportIssuePage()),
+                    );
+                  case 'permissions':
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const AppPermissionsPage()),
+                    );
+                }
+              },
+              itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: 'update',
+                  child: Row(
+                    children: [
+                      Icon(LucideIcons.download, size: 18,
+                          color: Theme.of(context).colorScheme.onSurface),
+                      const SizedBox(width: 12),
+                      Text(_updateAvailable ? 'App Update •' : 'App Update'),
+                    ],
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'report',
+                  child: Row(
+                    children: [
+                      Icon(LucideIcons.info, size: 18,
+                          color: Theme.of(context).colorScheme.onSurface),
+                      const SizedBox(width: 12),
+                      const Text('Report Issue'),
+                    ],
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'permissions',
+                  child: Row(
+                    children: [
+                      Icon(LucideIcons.shieldCheck, size: 18,
+                          color: Theme.of(context).colorScheme.onSurface),
+                      const SizedBox(width: 12),
+                      const Text('Permissions'),
+                    ],
+                  ),
+                ),
+              ],
             ),
             IconButton(
               icon: const Icon(LucideIcons.user),
