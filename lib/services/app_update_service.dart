@@ -1,5 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
@@ -58,7 +60,7 @@ class AppUpdateService {
       if (!_isNewerVersion(currentVersion, latestVersion)) return null;
 
       final assets = json['assets'] as List<dynamic>? ?? [];
-      final apkAsset = _pickBestApk(assets);
+      final apkAsset = await _pickBestApk(assets);
 
       if (apkAsset == null) return null;
 
@@ -138,7 +140,7 @@ class AppUpdateService {
         final tagName = json['tag_name'] as String? ?? '';
         final version = _extractVersion(tagName);
         final assets = json['assets'] as List<dynamic>? ?? [];
-        final apkAsset = _pickBestApk(assets);
+        final apkAsset = await _pickBestApk(assets);
 
         if (apkAsset == null) continue;
 
@@ -184,14 +186,9 @@ class AppUpdateService {
   // ── Helpers ────────────────────────────────────────────────────────
 
   /// Picks the best APK asset from a release's assets list.
-  /// Priority: arm64-v8a → armeabi-v7a → x86_64 → release (fat) → any .apk
-  Map<String, dynamic>? _pickBestApk(List<dynamic> assets) {
-    const archPriority = [
-      'arm64-v8a',
-      'armeabi-v7a',
-      'x86_64',
-    ];
-
+  /// Detects the device's supported ABIs and matches in preference order.
+  /// Falls back to universal/release APK, then any APK.
+  Future<Map<String, dynamic>?> _pickBestApk(List<dynamic> assets) async {
     final apkAssets = assets
         .whereType<Map<String, dynamic>>()
         .where((a) => (a['name'] as String?)?.endsWith('.apk') == true)
@@ -199,10 +196,25 @@ class AppUpdateService {
 
     if (apkAssets.isEmpty) return null;
 
-    // Try each architecture in priority order
-    for (final arch in archPriority) {
+    // Detect device ABI preference order
+    List<String> abiPriority;
+    if (!kIsWeb && Platform.isAndroid) {
+      try {
+        final androidInfo = await DeviceInfoPlugin().androidInfo;
+        // supportedAbis is ordered by device preference (most preferred first)
+        abiPriority = androidInfo.supportedAbis;
+      } catch (_) {
+        abiPriority = ['arm64-v8a', 'armeabi-v7a', 'x86_64'];
+      }
+    } else {
+      // Non-Android / web fallback
+      abiPriority = ['arm64-v8a', 'armeabi-v7a', 'x86_64'];
+    }
+
+    // Try each device-supported ABI in preference order
+    for (final abi in abiPriority) {
       final match = apkAssets.firstWhere(
-        (a) => (a['name'] as String?)?.contains(arch) == true,
+        (a) => (a['name'] as String?)?.contains(abi) == true,
         orElse: () => <String, dynamic>{},
       );
       if (match.isNotEmpty) return match;
