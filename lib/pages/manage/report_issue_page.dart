@@ -1,4 +1,6 @@
-import 'dart:io';
+import 'dart:io' show Platform;
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -28,17 +30,41 @@ class _ReportIssuePageState extends State<ReportIssuePage> {
   Future<void> _loadDeviceInfo() async {
     try {
       final info = await PackageInfo.fromPlatform();
+      final deviceInfo = DeviceInfoPlugin();
+
+      String? device;
+      if (kIsWeb) {
+        // Web: no reliable device info; skip to avoid leaking browser fingerprint
+        device = null;
+      } else if (Platform.isAndroid) {
+        final android = await deviceInfo.androidInfo;
+        // Only brand + model + Android major version. No serial, ID, or fingerprint.
+        final brand = android.brand.isNotEmpty ? android.brand : 'Android';
+        final model = android.model.isNotEmpty ? android.model : '';
+        final sdkMajor = android.version.sdkInt >= 28
+            ? android.version.release.split('.').first
+            : android.version.release.split('.').first;
+        device = '$brand $model · Android $sdkMajor'.trim();
+      } else if (Platform.isIOS) {
+        final ios = await deviceInfo.iosInfo;
+        // Model name (e.g. "iPhone") + system major version. No identifierForVendor.
+        final name = ios.name.isEmpty ? 'iOS' : ios.name;
+        final major = ios.systemVersion.split('.').first;
+        device = '$name · iOS $major';
+      } else {
+        // Desktop fallback
+        final os = Platform.operatingSystem;
+        final ver = Platform.operatingSystemVersion.split(' ').first;
+        device = '$os $ver';
+      }
+
       setState(() {
         _appVersion = '${info.version}+${info.buildNumber}';
-        // Sanitize: only OS name + major version (strip build fingerprint)
-        final osVer = Platform.operatingSystemVersion;
-        final cleanVersion = RegExp(r'(\d+)').firstMatch(osVer)?.group(1) ?? '';
-        final osName = Platform.operatingSystem == 'android'
-            ? 'Android'
-            : Platform.operatingSystem;
-        _deviceInfo = cleanVersion.isNotEmpty ? '$osName $cleanVersion' : osName;
+        _deviceInfo = device;
       });
-    } catch (_) {}
+    } catch (_) {
+      // Non-fatal: issue can still be submitted without device info
+    }
   }
 
   @override

@@ -74,6 +74,7 @@ dependencies:
   open_filex: ^4.7.0
   package_info_plus: ^10.2.1
   path_provider: ^2.1.6
+  device_info_plus: ^13.2.0
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -78,7 +78,7 @@ class _ManagePageState extends State<ManagePage> {
               ],
             ),
             IconButton(
-              icon: const Icon(LucideIcons.bug),
+              icon: const Icon(LucideIcons.info),
               tooltip: 'Report Issue',
               onPressed: () => Navigator.of(context).push(
                 MaterialPageRoute(builder: (_) => const ReportIssuePage()),
