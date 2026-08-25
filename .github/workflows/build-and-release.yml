@@ -99,6 +99,10 @@ jobs:
           distribution: temurin
           java-version: ${{ env.JAVA_VERSION }}
 
+      - name: Install Android SDK 37
+        run: |
+          yes | sdkmanager --install "platforms;android-37" --sdk_root=$ANDROID_HOME
+
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
