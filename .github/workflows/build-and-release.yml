@@ -99,9 +99,13 @@ jobs:
           distribution: temurin
           java-version: ${{ env.JAVA_VERSION }}
 
-      - name: Install Android SDK 37
+      - name: Install Android SDK platform 37
+        uses: android-actions/setup-android@v3
+
+      - name: Accept SDK licenses and install platform 37
         run: |
-          yes | sdkmanager --install "platforms;android-37" --sdk_root=$ANDROID_HOME
+          yes | sdkmanager --licenses > /dev/null 2>&1 || true
+          sdkmanager "platforms;android-37"
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
@@ -144,7 +148,7 @@ jobs:
           KEYSTORE_KEY_PASSWORD: ${{ secrets.KEYSTORE_KEY_PASSWORD }}
         run: |
           flutter build apk --release --split-per-abi \
-            --obfuscate --split-debug-info=build/debug-info
+            --obfuscate --split-debug-info=build/debug-info --strip
 
       - name: Build universal APK
         env:
@@ -153,7 +157,7 @@ jobs:
           KEYSTORE_KEY_PASSWORD: ${{ secrets.KEYSTORE_KEY_PASSWORD }}
         run: |
           flutter build apk --release \
-            --obfuscate --split-debug-info=build/debug-info
+            --obfuscate --split-debug-info=build/debug-info --strip
 
       - name: Rename APKs
         run: ./scripts/rename_apks.sh
