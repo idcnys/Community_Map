@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -39,6 +40,9 @@ class _AppUpdatePageState extends State<AppUpdatePage>
   int _totalBytes = 0;
   File? _downloadedFile;
 
+  // Concurrency guard: prevents overlapping downloads
+  bool _isDownloading = false;
+
   AnimationController? _iconAnimCtrl;
   Animation<double>? _iconScale;
 
@@ -63,6 +67,9 @@ class _AppUpdatePageState extends State<AppUpdatePage>
   }
 
   Future<void> _init() async {
+    // Clean up orphaned APKs from previous crashed/killed sessions
+    unawaited(_service.cleanupTempFiles());
+
     try {
       final pkg = await PackageInfo.fromPlatform();
       _currentVersion = pkg.version;
@@ -123,8 +130,9 @@ class _AppUpdatePageState extends State<AppUpdatePage>
   }
 
   Future<void> _startDownload() async {
-    if (_updateInfo == null) return;
+    if (_updateInfo == null || _isDownloading) return;
 
+    _isDownloading = true;
     setState(() => _state = _UpdateState.downloading);
 
     try {
@@ -150,6 +158,8 @@ class _AppUpdatePageState extends State<AppUpdatePage>
         _state = _UpdateState.error;
         _errorMessage = 'Download failed: $e';
       });
+    } finally {
+      _isDownloading = false;
     }
   }
 
@@ -167,10 +177,12 @@ class _AppUpdatePageState extends State<AppUpdatePage>
       if (!mounted) return;
 
       if (result.type == ResultType.done) {
-        Future.delayed(const Duration(seconds: 5), () {
-          _service.cleanupTempFiles();
-        });
+        // System installer launched. Clean up now — the installer copies
+        // the APK internally before returning, so the temp file is safe to delete.
+        unawaited(_service.cleanupTempFiles());
       } else {
+        // Installer failed to launch — clean up and show error
+        unawaited(_service.cleanupTempFiles());
         setState(() {
           _state = _UpdateState.error;
           _errorMessage = 'Could not open installer: ${result.message}';
@@ -178,6 +190,7 @@ class _AppUpdatePageState extends State<AppUpdatePage>
       }
     } catch (e) {
       if (!mounted) return;
+      unawaited(_service.cleanupTempFiles());
       setState(() {
         _state = _UpdateState.error;
         _errorMessage = 'Install error: $e';
@@ -186,6 +199,14 @@ class _AppUpdatePageState extends State<AppUpdatePage>
   }
 
   void _selectVersion(UpdateInfo info) {
+    // Block version switch while a download is in progress
+    if (_isDownloading) return;
+
+    // Clean up previously downloaded APK from disk
+    if (_downloadedFile != null) {
+      unawaited(_service.cleanupTempFiles());
+    }
+
     setState(() {
       _updateInfo = info;
       _state = _UpdateState.updateAvailable;

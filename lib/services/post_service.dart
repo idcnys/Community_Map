@@ -30,10 +30,10 @@ class PostService {
 
   static const int pageSize = 20;
 
-  /// Posts older than 2 days are excluded from the feed.
+  /// Posts older than 30 days are excluded from the feed.
   /// Computed fresh per query so the cutoff never goes stale.
   Timestamp get _feedCutoff => Timestamp.fromDate(
-    DateTime.now().subtract(const Duration(days: 2)),
+    DateTime.now().subtract(const Duration(days: 30)),
   );
 
   String get currentUid => _auth.currentUser!.uid;

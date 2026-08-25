@@ -41,9 +41,7 @@ class _ReportIssuePageState extends State<ReportIssuePage> {
         // Only brand + model + Android major version. No serial, ID, or fingerprint.
         final brand = android.brand.isNotEmpty ? android.brand : 'Android';
         final model = android.model.isNotEmpty ? android.model : '';
-        final sdkMajor = android.version.sdkInt >= 28
-            ? android.version.release.split('.').first
-            : android.version.release.split('.').first;
+        final sdkMajor = android.version.release.split('.').first;
         device = '$brand $model · Android $sdkMajor'.trim();
       } else if (Platform.isIOS) {
         final ios = await deviceInfo.iosInfo;
