@@ -9,6 +9,11 @@ on:
       - 'assets/**'
       - '.gitignore'
 
+# Prevent concurrent runs on main from stepping on each other during push
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 permissions:
   contents: write
 
@@ -71,12 +76,15 @@ jobs:
           # Write changelog to file for multiline output
           echo "$CHANGELOG" > /tmp/changelog.txt
           
-          # Commit the version bump
+          # Commit and push the version bump securely
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add pubspec.yaml
           git commit -m "chore: bump version to $NEW_VERSION [skip ci]"
-          git push
+          
+          # Pull latest remote updates before pushing to prevent rejection
+          git pull origin main --rebase
+          git push origin main
 
       - name: Upload changelog
         uses: actions/upload-artifact@v4
