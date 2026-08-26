@@ -1,7 +1,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
+import '../../core/utils/time_ago.dart';
 import '../../providers/service_providers.dart';
 import '../../providers/feed_providers.dart';
 import '../../providers/guest_provider.dart';
@@ -57,7 +57,7 @@ class _CommentsPageState extends ConsumerState<CommentsPage> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Comments')),
+      appBar: AppBar(title: const Text('মন্তব্য')),
       body: Column(
         children: [
           // ─── ORIGINAL POST CONTEXT ─────────────────────────────────
@@ -97,7 +97,7 @@ class _CommentsPageState extends ConsumerState<CommentsPage> {
                                   post.authorName.isNotEmpty
                                       ? post.authorName[0].toUpperCase()
                                       : '?',
-                                  style: const TextStyle(fontSize: 13),
+                                  style: const TextStyle(fontFamily: 'EkusheInter', fontSize: 13),
                                 )
                               : null,
                         ),
@@ -114,15 +114,15 @@ class _CommentsPageState extends ConsumerState<CommentsPage> {
                                 ),
                               ),
                               Text(
-                                DateFormat('MMM d, h:mm a').format(post.createdAt ?? DateTime.now()),
-                                style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurfaceVariant),
+                                formatShortDate(post.createdAt ?? DateTime.now()),
+                                style: TextStyle(fontFamily: 'EkusheInter', fontSize: 11, color: theme.colorScheme.onSurfaceVariant),
                               ),
                             ],
                           ),
                         ),
                         if (!post.isPublic)
                           Chip(
-                            label: Text(post.groupName, style: const TextStyle(fontSize: 11)),
+                            label: Text(post.groupName, style: const TextStyle(fontFamily: 'EkusheInter', fontSize: 11)),
                             visualDensity: VisualDensity.compact,
                             materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           ),
@@ -138,7 +138,7 @@ class _CommentsPageState extends ConsumerState<CommentsPage> {
                       post.description,
                       maxLines: 4,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: 13, color: theme.colorScheme.onSurface),
+                      style: TextStyle(fontFamily: 'EkusheInter', fontSize: 13, color: theme.colorScheme.onSurface),
                     ),
                     if (post.imageUrl.isNotEmpty) ...[
                       const SizedBox(height: 8),
@@ -212,7 +212,7 @@ class _CommentsPageState extends ConsumerState<CommentsPage> {
                                     const SizedBox(width: 4),
                                     Text(
                                       '${post.repostCount}',
-                                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: theme.colorScheme.onSurfaceVariant),
+                                      style: TextStyle(fontFamily: 'EkusheInter', fontSize: 12, fontWeight: FontWeight.w500, color: theme.colorScheme.onSurfaceVariant),
                                     ),
                                   ],
                                 ),
@@ -236,7 +236,7 @@ class _CommentsPageState extends ConsumerState<CommentsPage> {
                                   children: [
                                     Icon(LucideIcons.flag, size: 16, color: theme.colorScheme.onSurfaceVariant),
                                     const SizedBox(width: 4),
-                                    Text('Report', style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant)),
+                                    Text('রিপোর্ট', style: TextStyle(fontFamily: 'EkusheInter', fontSize: 12, color: theme.colorScheme.onSurfaceVariant)),
                                   ],
                                 ),
                               ),
@@ -263,9 +263,9 @@ class _CommentsPageState extends ConsumerState<CommentsPage> {
                 if (comments.isEmpty) {
                   return Center(
                     child: Text(
-                      'No comments yet.\nBe the first to comment!',
+                      'এখনো কোনো মন্তব্য নেই।\nপ্রথম মন্তব্য করুন!',
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+                      style: TextStyle(fontFamily: 'EkusheInter', color: theme.colorScheme.onSurfaceVariant),
                     ),
                   );
                 }
@@ -296,7 +296,7 @@ class _CommentsPageState extends ConsumerState<CommentsPage> {
                         ),
                         title: Text(comment.authorName,
                             style:
-                                const TextStyle(fontWeight: FontWeight.w600)),
+                                const TextStyle(fontFamily: 'EkusheInter', fontWeight: FontWeight.w600)),
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -304,8 +304,7 @@ class _CommentsPageState extends ConsumerState<CommentsPage> {
                             Text(comment.content),
                             const SizedBox(height: 4),
                             Text(
-                              DateFormat('MMM d, h:mm a')
-                                  .format(comment.createdAt ?? DateTime.now()),
+                              formatShortDate(comment.createdAt ?? DateTime.now()),
                               style: TextStyle(
                                 fontSize: 11,
                                 color: theme.colorScheme.onSurfaceVariant,
@@ -347,7 +346,7 @@ class _CommentsPageState extends ConsumerState<CommentsPage> {
                     child: TextField(
                       controller: _commentCtrl,
                       decoration: InputDecoration(
-                        hintText: 'Write a comment...',
+                        hintText: 'একটি মন্তব্য লিখুন...',
                         filled: true,
                         fillColor: theme.colorScheme.surfaceContainerHighest,
                         border: OutlineInputBorder(
@@ -438,7 +437,7 @@ class _CommentsPageState extends ConsumerState<CommentsPage> {
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Reposted successfully'), duration: Duration(seconds: 2)),
+        const SnackBar(content: Text('সফলভাবে রিপোস্ট হয়েছে'), duration: Duration(seconds: 2)),
       );
     }
   }
@@ -455,7 +454,7 @@ class _CommentsPageState extends ConsumerState<CommentsPage> {
         const SizedBox(width: 4),
         Text(
           '$count',
-          style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant, fontWeight: FontWeight.w500),
+          style: TextStyle(fontFamily: 'EkusheInter', fontSize: 12, color: theme.colorScheme.onSurfaceVariant, fontWeight: FontWeight.w500),
         ),
       ],
     );
@@ -475,7 +474,7 @@ class _CommentsPageState extends ConsumerState<CommentsPage> {
           children: [
             Icon(LucideIcons.flag, color: Theme.of(ctx).colorScheme.error, size: 18),
             const SizedBox(width: 6),
-            Expanded(child: Text('Report Post', style: Theme.of(ctx).textTheme.titleMedium)),
+            Expanded(child: Text('পোস্ট রিপোর্ট করুন', style: Theme.of(ctx).textTheme.titleMedium)),
             IconButton(
               icon: const Icon(LucideIcons.x, size: 18),
               onPressed: () => Navigator.of(ctx).pop(),
@@ -489,7 +488,7 @@ class _CommentsPageState extends ConsumerState<CommentsPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Why are you reporting this post?',
+              'আপনি কেন এই পোস্টটি রিপোর্ট করছেন?',
               style: TextStyle(color: Theme.of(ctx).colorScheme.onSurfaceVariant, fontSize: 13),
             ),
             const SizedBox(height: 6),
@@ -498,7 +497,7 @@ class _CommentsPageState extends ConsumerState<CommentsPage> {
               visualDensity: VisualDensity.compact,
               contentPadding: EdgeInsets.zero,
               minVerticalPadding: 4,
-              title: Text(cause, style: const TextStyle(fontSize: 13)),
+              title: Text(cause, style: const TextStyle(fontFamily: 'EkusheInter', fontSize: 13)),
               onTap: () async {
                 Navigator.of(ctx).pop();
                 final error = await service.reportPost(post.id, cause);
@@ -514,7 +513,7 @@ class _CommentsPageState extends ConsumerState<CommentsPage> {
                   if (context.mounted) Navigator.of(context).pop();
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text('Post reported. It will be hidden from your feed.'),
+                      content: Text('পোস্ট রিপোর্ট হয়েছে। এটি আপনার ফিড থেকে লুকানো হবে।'),
                       duration: Duration(seconds: 2),
                     ),
                   );

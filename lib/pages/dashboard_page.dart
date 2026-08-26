@@ -62,17 +62,17 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
           NavigationDestination(
             icon: Icon(LucideIcons.newspaper),
             selectedIcon: Icon(LucideIcons.newspaper),
-            label: 'Feed',
+            label: 'ফিড',
           ),
           NavigationDestination(
             icon: Icon(LucideIcons.map),
             selectedIcon: Icon(LucideIcons.map),
-            label: 'Map',
+            label: 'ম্যাপ',
           ),
           NavigationDestination(
             icon: Icon(LucideIcons.settings),
             selectedIcon: Icon(LucideIcons.settings),
-            label: 'Manage',
+            label: 'ম্যানেজ',
           ),
         ],
       ),
@@ -87,7 +87,7 @@ class _GuestLockedPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Manage'), automaticallyImplyLeading: false),
+      appBar: AppBar(title: const Text('ম্যানেজ'), automaticallyImplyLeading: false),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(32),
@@ -97,12 +97,12 @@ class _GuestLockedPage extends StatelessWidget {
               Icon(LucideIcons.lock, size: 64, color: theme.colorScheme.onSurfaceVariant.withAlpha(120)),
               const SizedBox(height: 20),
               Text(
-                'Sign in Required',
+                'সাইন ইন প্রয়োজন',
                 style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 12),
               Text(
-                'Please sign in with an account to manage groups, profile, and requests.',
+                'গ্রুপ, প্রোফাইল এবং অনুরোধ পরিচালনা করতে একটি অ্যাকাউন্ট দিয়ে সাইন ইন করুন।',
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,

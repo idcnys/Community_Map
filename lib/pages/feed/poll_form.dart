@@ -153,7 +153,7 @@ class _PollFormState extends ConsumerState<PollForm> {
               if (_originType == 'group') ...[
                 const SizedBox(height: 8),
                 if (myGroups.isEmpty)
-                  Text('You haven\'t joined any groups yet.', style: TextStyle(color: theme.colorScheme.onSurfaceVariant))
+                  Text('You haven\'t joined any groups yet.', style: TextStyle(fontFamily: 'EkusheInter', color: theme.colorScheme.onSurfaceVariant))
                 else
                   DropdownButtonFormField<String>(
                     value: _selectedGroupId,

@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:go_router/go_router.dart';
 import '../core/utils/validators.dart';
+import '../core/utils/time_ago.dart';
 import '../core/utils/snackbar_helper.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
@@ -51,7 +52,7 @@ class _SignUpPageState extends State<SignUpPage> {
     if (picked != null && picked != _selectedDate) {
       setState(() {
         _selectedDate = picked;
-        _dobController.text = '${picked.day}/${picked.month}/${picked.year}';
+        _dobController.text = formatDateOfBirth(picked);
       });
     }
   }
@@ -71,7 +72,7 @@ class _SignUpPageState extends State<SignUpPage> {
 
       final user = credential.user;
       if (user == null) {
-        if (mounted) context.showError('Account creation failed. Please try again.');
+        if (mounted) context.showError('অ্যাকাউন্ট তৈরি ব্যর্থ হয়েছে। আবার চেষ্টা করুন।');
         return;
       }
 
@@ -105,7 +106,7 @@ class _SignUpPageState extends State<SignUpPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Account created! Please verify your email.'),
+            content: Text('অ্যাকাউন্ট তৈরি হয়েছে! আপনার ইমেইল যাচাই করুন।'),
             backgroundColor: Colors.green,
           ),
         );
@@ -117,15 +118,15 @@ class _SignUpPageState extends State<SignUpPage> {
       String message;
       switch (e.code) {
         case 'email-already-in-use':
-          message = 'This email is already registered.';
+          message = 'এই ইমেইলটি ইতিমধ্যে নিবন্ধিত।';
         case 'invalid-email':
-          message = 'Please enter a valid email address.';
+          message = 'একটি সঠিক ইমেইল ঠিকানা লিখুন।';
         case 'weak-password':
-          message = 'Password is too weak. Use at least 6 characters.';
+          message = 'পাসওয়ার্ডটি খুব দুর্বল। কমপক্ষে ৬ অক্ষর ব্যবহার করুন।';
         case 'operation-not-allowed':
-          message = 'Email/password accounts are not enabled.';
+          message = 'ইমেইল/পাসওয়ার্ড অ্যাকাউন্ট সক্রিয় করা হয়নি।';
         default:
-          message = e.message ?? 'Sign up failed. Please try again.';
+          message = e.message ?? 'সাইন আপ ব্যর্থ হয়েছে। আবার চেষ্টা করুন।';
       }
 
       if (mounted) {
@@ -137,7 +138,7 @@ class _SignUpPageState extends State<SignUpPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Something went wrong: $e'),
+            content: Text('কিছু একটা সমস্যা হয়েছে: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -153,7 +154,7 @@ class _SignUpPageState extends State<SignUpPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Create Account'),
+        title: const Text('অ্যাকাউন্ট তৈরি করুন'),
         centerTitle: true,
       ),
       body: SafeArea(
@@ -171,7 +172,7 @@ class _SignUpPageState extends State<SignUpPage> {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Sign Up',
+                  'সাইন আপ',
                   textAlign: TextAlign.center,
                   style: theme.textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.bold,
@@ -179,7 +180,7 @@ class _SignUpPageState extends State<SignUpPage> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Create your account to get started',
+                  'শুরু করতে আপনার অ্যাকাউন্ট তৈরি করুন',
                   textAlign: TextAlign.center,
                   style: theme.textTheme.bodyLarge?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
@@ -193,8 +194,8 @@ class _SignUpPageState extends State<SignUpPage> {
                   textCapitalization: TextCapitalization.words,
                   autofillHints: const [AutofillHints.name],
                   decoration: const InputDecoration(
-                    labelText: 'Full Name',
-                    hintText: 'John Doe',
+                    labelText: 'পুরো নাম',
+                    hintText: 'জন ডো',
                     prefixIcon: Icon(LucideIcons.user),
                   ),
                   validator: validateName,
@@ -207,14 +208,14 @@ class _SignUpPageState extends State<SignUpPage> {
                   readOnly: true,
                   onTap: _selectDate,
                   decoration: const InputDecoration(
-                    labelText: 'Date of Birth',
+                    labelText: 'জন্ম তারিখ',
                     hintText: 'DD/MM/YYYY',
                     prefixIcon: Icon(LucideIcons.calendar),
                     suffixIcon: Icon(LucideIcons.chevronDown),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please select your date of birth';
+                      return 'আপনার জন্ম তারিখ নির্বাচন করুন';
                     }
                     return null;
                   },
@@ -227,8 +228,8 @@ class _SignUpPageState extends State<SignUpPage> {
                   keyboardType: TextInputType.emailAddress,
                   autofillHints: const [AutofillHints.email],
                   decoration: const InputDecoration(
-                    labelText: 'Email',
-                    hintText: 'you@example.com',
+                    labelText: 'ইমেইল',
+                    hintText: 'আপনি@example.com',
                     prefixIcon: Icon(LucideIcons.mail),
                   ),
                   validator: validateEmail,
@@ -241,8 +242,8 @@ class _SignUpPageState extends State<SignUpPage> {
                   obscureText: _obscurePassword,
                   autofillHints: const [AutofillHints.newPassword],
                   decoration: InputDecoration(
-                    labelText: 'Password',
-                    hintText: 'Min. 6 characters',
+                    labelText: 'পাসওয়ার্ড',
+                    hintText: 'কমপক্ষে ৬ অক্ষর',
                     prefixIcon: const Icon(LucideIcons.lock),
                     suffixIcon: IconButton(
                       icon: Icon(
@@ -256,10 +257,10 @@ class _SignUpPageState extends State<SignUpPage> {
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please enter a password';
+                      return 'একটি পাসওয়ার্ড লিখুন';
                     }
                     if (value.length < 6) {
-                      return 'Password must be at least 6 characters';
+                      return 'পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে';
                     }
                     return null;
                   },
@@ -272,8 +273,8 @@ class _SignUpPageState extends State<SignUpPage> {
                   obscureText: _obscureConfirmPassword,
                   autofillHints: const [AutofillHints.newPassword],
                   decoration: InputDecoration(
-                    labelText: 'Confirm Password',
-                    hintText: 'Re-enter your password',
+                    labelText: 'পাসওয়ার্ড নিশ্চিত করুন',
+                    hintText: 'আপনার পাসওয়ার্ড আবার লিখুন',
                     prefixIcon: const Icon(LucideIcons.lock),
                     suffixIcon: IconButton(
                       icon: Icon(
@@ -287,10 +288,10 @@ class _SignUpPageState extends State<SignUpPage> {
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please confirm your password';
+                      return 'আপনার পাসওয়ার্ড নিশ্চিত করুন';
                     }
                     if (value != _passwordController.text) {
-                      return 'Passwords do not match';
+                      return 'পাসওয়ার্ড মিলছে না';
                     }
                     return null;
                   },
@@ -312,8 +313,8 @@ class _SignUpPageState extends State<SignUpPage> {
                           width: 20,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Text('Create Account',
-                          style: TextStyle(fontSize: 16)),
+                      : const Text('অ্যাকাউন্ট তৈরি করুন',
+                          style: TextStyle(fontFamily: 'EkusheInter', fontSize: 16)),
                 ),
                 const SizedBox(height: 24),
 
@@ -321,7 +322,7 @@ class _SignUpPageState extends State<SignUpPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      'Already have an account? ',
+                      'ইতিমধ্যে একটি অ্যাকাউন্ট আছে? ',
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
@@ -329,8 +330,8 @@ class _SignUpPageState extends State<SignUpPage> {
                     TextButton(
                       onPressed: () => Navigator.of(context).pop(),
                       child: const Text(
-                        'Sign In',
-                        style: TextStyle(fontWeight: FontWeight.bold),
+                        'সাইন ইন',
+                        style: TextStyle(fontFamily: 'EkusheInter', fontWeight: FontWeight.bold),
                       ),
                     ),
                   ],

@@ -1,8 +1,8 @@
 
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import '../../services/report_post_service.dart';
 import '../../models/report_post_model.dart';
+import '../../core/utils/time_ago.dart';
 import 'report_detail_sheet.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
@@ -31,13 +31,13 @@ class MapNotificationPanel extends StatelessWidget {
                       color: theme.colorScheme.primary),
                   const SizedBox(width: 12),
                   Text(
-                    'Latest Reports',
+                    'সর্বশেষ রিপোর্ট',
                     style: theme.textTheme.titleLarge
                         ?.copyWith(fontWeight: FontWeight.bold),
                   ),
                   const Spacer(),
                   Text(
-                    'Active: < 48 hrs',
+                    'সক্রিয়: < ৪৮ ঘণ্টা',
                     style: TextStyle(
                       fontSize: 12,
                       color: theme.colorScheme.onSurfaceVariant,
@@ -66,8 +66,8 @@ class MapNotificationPanel extends StatelessWidget {
                               size: 64, color: theme.colorScheme.onSurfaceVariant.withAlpha(150)),
                           const SizedBox(height: 12),
                           Text(
-                            'No active reports',
-                            style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+                            'কোনো সক্রিয় রিপোর্ট নেই',
+                            style: TextStyle(fontFamily: 'EkusheInter', color: theme.colorScheme.onSurfaceVariant),
                           ),
                         ],
                       ),
@@ -106,7 +106,7 @@ class MapNotificationPanel extends StatelessWidget {
       ),
       title: Text(
         report.reportType,
-        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+        style: const TextStyle(fontFamily: 'EkusheInter', fontWeight: FontWeight.w600, fontSize: 14),
       ),
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -116,12 +116,12 @@ class MapNotificationPanel extends StatelessWidget {
             report.description,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontSize: 13, color: theme.colorScheme.onSurfaceVariant),
+            style: TextStyle(fontFamily: 'EkusheInter', fontSize: 13, color: theme.colorScheme.onSurfaceVariant),
           ),
           const SizedBox(height: 2),
           Text(
             '${report.authorName} • ${_timeAgo(report.createdAt)}',
-            style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurfaceVariant),
+            style: TextStyle(fontFamily: 'EkusheInter', fontSize: 11, color: theme.colorScheme.onSurfaceVariant),
           ),
         ],
       ),
@@ -134,7 +134,7 @@ class MapNotificationPanel extends StatelessWidget {
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Text(
-                'SOLVED',
+                'সমাধান',
                 style: TextStyle(
                   color: Colors.green.shade700,
                   fontSize: 10,
@@ -151,7 +151,7 @@ class MapNotificationPanel extends StatelessWidget {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
-                    'URGENT',
+                    'জরুরি',
                     style: TextStyle(
                       color: theme.colorScheme.error,
                       fontSize: 10,
@@ -172,10 +172,6 @@ class MapNotificationPanel extends StatelessWidget {
   }
 
   String _timeAgo(DateTime date) {
-    final diff = DateTime.now().difference(date);
-    if (diff.inMinutes < 1) return 'Just now';
-    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
-    if (diff.inHours < 24) return '${diff.inHours}h ago';
-    return DateFormat('MMM d, h:mm a').format(date);
+    return timeAgo(date);
   }
 }

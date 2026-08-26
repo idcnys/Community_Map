@@ -78,13 +78,13 @@ class _ReportIssuePageState extends State<ReportIssuePage> {
 
     if (title.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a title')),
+        const SnackBar(content: Text('অনুগ্রহ করে একটি শিরোনাম লিখুন')),
       );
       return;
     }
     if (body.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please describe the issue')),
+        const SnackBar(content: Text('অনুগ্রহ করে সমস্যাটি বর্ণনা করুন')),
       );
       return;
     }
@@ -110,7 +110,7 @@ class _ReportIssuePageState extends State<ReportIssuePage> {
               Icon(LucideIcons.circleCheckBig, size: 18,
                   color: Theme.of(context).colorScheme.primary),
               const SizedBox(width: 8),
-              Expanded(child: Text('Issue #${result.issueNumber} created!')),
+              Expanded(child: Text('সমস্যা #${result.issueNumber} তৈরি হয়েছে!')),
             ],
           ),
           backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
@@ -121,7 +121,7 @@ class _ReportIssuePageState extends State<ReportIssuePage> {
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Failed: ${result.error}'),
+          content: Text('ব্যর্থ হয়েছে: ${result.error}'),
           backgroundColor: Theme.of(context).colorScheme.errorContainer,
           behavior: SnackBarBehavior.floating,
         ),
@@ -135,7 +135,7 @@ class _ReportIssuePageState extends State<ReportIssuePage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Report Issue'),
+        title: const Text('সমস্যা জানান'),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -146,7 +146,7 @@ class _ReportIssuePageState extends State<ReportIssuePage> {
             DropdownButtonFormField<IssueLabel>(
               initialValue: _selectedLabel,
               decoration: InputDecoration(
-                labelText: 'Type',
+                labelText: 'ধরন',
                 border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12)),
                 filled: true,
@@ -178,7 +178,7 @@ class _ReportIssuePageState extends State<ReportIssuePage> {
 
             // Title field
             Text(
-              'Title',
+              'শিরোনাম',
               style: theme.textTheme.labelMedium?.copyWith(
                 fontWeight: FontWeight.w600,
                 color: theme.colorScheme.onSurfaceVariant,
@@ -188,7 +188,7 @@ class _ReportIssuePageState extends State<ReportIssuePage> {
             TextField(
               controller: _titleCtrl,
               decoration: InputDecoration(
-                hintText: 'Brief summary of the issue',
+                hintText: 'সমস্যার সংক্ষিপ্ত সারসংক্ষেপ',
                 border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12)),
                 filled: true,
@@ -206,7 +206,7 @@ class _ReportIssuePageState extends State<ReportIssuePage> {
 
             // Description field
             Text(
-              'Description',
+              'বর্ণনা',
               style: theme.textTheme.labelMedium?.copyWith(
                 fontWeight: FontWeight.w600,
                 color: theme.colorScheme.onSurfaceVariant,
@@ -216,7 +216,7 @@ class _ReportIssuePageState extends State<ReportIssuePage> {
             TextField(
               controller: _bodyCtrl,
               decoration: InputDecoration(
-                hintText: 'Describe what happened, expected behavior, steps to reproduce…',
+                hintText: 'কী ঘটেছে, প্রত্যাশিত আচরণ, পুনরুৎপাদনের ধাপ বর্ণনা করুন…',
                 border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12)),
                 filled: true,
@@ -262,7 +262,7 @@ class _ReportIssuePageState extends State<ReportIssuePage> {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : const Icon(LucideIcons.send, size: 18),
-                label: Text(_submitting ? 'Submitting…' : 'Create Issue'),
+                label: Text(_submitting ? 'জমা দেওয়া হচ্ছে…' : 'সমস্যা তৈরি করুন'),
               ),
             ),
           ],

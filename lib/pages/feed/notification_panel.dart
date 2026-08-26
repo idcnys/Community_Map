@@ -39,11 +39,11 @@ class NotificationPanel extends ConsumerWidget {
                   children: [
                     Icon(LucideIcons.alertCircle, size: 48, color: theme.colorScheme.error),
                     const SizedBox(height: 12),
-                    Text('Failed to load notifications',
-                        style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
+                    Text('বিজ্ঞপ্তি লোড করতে ব্যর্থ হয়েছে',
+                        style: TextStyle(fontFamily: 'EkusheInter', color: theme.colorScheme.onSurfaceVariant)),
                     const SizedBox(height: 8),
                     Text('${snapshot.error}',
-                        style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant)),
+                        style: TextStyle(fontFamily: 'EkusheInter', fontSize: 12, color: theme.colorScheme.onSurfaceVariant)),
                   ],
                 ),
               );
@@ -61,7 +61,7 @@ class NotificationPanel extends ConsumerWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'Notifications',
+                          'বিজ্ঞপ্তি',
                           style: theme.textTheme.titleLarge
                               ?.copyWith(fontWeight: FontWeight.bold),
                         ),
@@ -70,7 +70,7 @@ class NotificationPanel extends ConsumerWidget {
                           children: [
                             TextButton(
                               onPressed: () => service.markAllRead(),
-                              child: const Text('Mark all read'),
+                              child: const Text('সব পড়া হয়েছে'),
                             ),
                             const SizedBox(width: 4),
                             TextButton(
@@ -83,14 +83,14 @@ class NotificationPanel extends ConsumerWidget {
                                       showDialog(
                                         context: context,
                                         builder: (ctx) => AlertDialog(
-                                          title: const Text('Clear all notifications?'),
+                                          title: const Text('সব বিজ্ঞপ্তি মুছে ফেলবেন?'),
                                           content: const Text(
-                                            'This will permanently delete all your notifications.',
+                                            'এটি আপনার সব বিজ্ঞপ্তি স্থায়ীভাবে মুছে ফেলবে।',
                                           ),
                                           actions: [
                                             TextButton(
                                               onPressed: () => Navigator.of(ctx).pop(),
-                                              child: const Text('Cancel'),
+                                              child: const Text('বাতিল'),
                                             ),
                                             FilledButton(
                                               style: FilledButton.styleFrom(
@@ -100,13 +100,13 @@ class NotificationPanel extends ConsumerWidget {
                                                 Navigator.of(ctx).pop();
                                                 service.clearAll();
                                               },
-                                              child: const Text('Clear all'),
+                                              child: const Text('সব মুছুন'),
                                             ),
                                           ],
                                         ),
                                       );
                                     },
-                              child: const Text('Clear all'),
+                              child: const Text('সব মুছুন'),
                             ),
                           ],
                         ),
@@ -125,8 +125,8 @@ class NotificationPanel extends ConsumerWidget {
                           Icon(LucideIcons.bell,
                               size: 64, color: theme.colorScheme.onSurfaceVariant.withAlpha(150)),
                           const SizedBox(height: 12),
-                          Text('No notifications yet',
-                              style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
+                          Text('এখনও কোনো বিজ্ঞপ্তি নেই',
+                              style: TextStyle(fontFamily: 'EkusheInter', color: theme.colorScheme.onSurfaceVariant)),
                         ],
                       ),
                     ),

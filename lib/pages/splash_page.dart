@@ -142,7 +142,7 @@ class _SplashPageState extends State<SplashPage>
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Your Community, Mapped.',
+                      'আপনার কমিউনিটি, মানচিত্রে।',
                       style: TextStyle(
                         fontSize: 15,
                         color: colorScheme.onSurfaceVariant,

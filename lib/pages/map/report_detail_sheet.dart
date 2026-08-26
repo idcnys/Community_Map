@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
+import '../../core/utils/time_ago.dart';
 import '../../models/report_post_model.dart';
 import '../../models/community_post_model.dart';
 import '../../providers/service_providers.dart';
@@ -174,7 +174,7 @@ class _ReportDetailSheetState extends ConsumerState<ReportDetailSheet> {
                                 ?.copyWith(fontWeight: FontWeight.bold),
                           ),
                           Text(
-                            'Reported by ${report.authorName}',
+                            'রিপোর্ট করেছেন ${report.authorName}',
                             style: TextStyle(
                                 color: theme.colorScheme.onSurfaceVariant),
                           ),
@@ -190,7 +190,7 @@ class _ReportDetailSheetState extends ConsumerState<ReportDetailSheet> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          'SOLVED',
+                          'সমাধান হয়েছে',
                           style: TextStyle(
                             color: Colors.green.shade700,
                             fontWeight: FontWeight.bold,
@@ -207,7 +207,7 @@ class _ReportDetailSheetState extends ConsumerState<ReportDetailSheet> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          'URGENT',
+                          'জরুরি',
                           style: TextStyle(
                             color: theme.colorScheme.error,
                             fontWeight: FontWeight.bold,
@@ -226,14 +226,14 @@ class _ReportDetailSheetState extends ConsumerState<ReportDetailSheet> {
                 // Description
                 if (report.description.isNotEmpty) ...[
                   Text(
-                    'Description',
+                    'বিবরণ',
                     style: theme.textTheme.labelLarge
                         ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                   ),
                   const SizedBox(height: 6),
                   Text(
                     report.description,
-                    style: const TextStyle(fontSize: 15, height: 1.5),
+                    style: const TextStyle(fontFamily: 'EkusheInter', fontSize: 15, height: 1.5),
                   ),
                   const SizedBox(height: 16),
                 ],
@@ -276,15 +276,14 @@ class _ReportDetailSheetState extends ConsumerState<ReportDetailSheet> {
                 // Date & time
                 _infoRow(
                   LucideIcons.clock,
-                  'Reported',
-                  DateFormat('MMMM d, yyyy \u2022 h:mm a')
-                      .format(report.createdAt),
+                  'রিপোর্টের সময়',
+                  formatFullDate(report.createdAt),
                 ),
 
                 // Location
                 _infoRow(
                   LucideIcons.mapPin,
-                  'Location',
+                  'অবস্থান',
                   '${report.latitude.toStringAsFixed(6)}, ${report.longitude.toStringAsFixed(6)}',
                 ),
 
@@ -294,11 +293,11 @@ class _ReportDetailSheetState extends ConsumerState<ReportDetailSheet> {
                   if (_loadingContact)
                     const Padding(
                       padding: EdgeInsets.all(8),
-                      child: Text('Checking access...'),
+                      child: Text('অ্যাক্সেস যাচাই হচ্ছে...'),
                     )
                   else if (_canSeeContact)
                     _infoRow(
-                        LucideIcons.phone, 'Contact', report.contactNumber)
+                        LucideIcons.phone, 'যোগাযোগ', report.contactNumber)
                   else
                     Padding(
                       padding: const EdgeInsets.all(8),
@@ -309,7 +308,7 @@ class _ReportDetailSheetState extends ConsumerState<ReportDetailSheet> {
                               color: theme.colorScheme.onSurfaceVariant),
                           const SizedBox(width: 8),
                           Text(
-                            'Contact hidden (group members only)',
+                            'যোগাযোগ লুকানো (শুধুমাত্র গ্রুপ সদস্যদের জন্য)',
                             style: TextStyle(
                               color: theme.colorScheme.onSurfaceVariant,
                               fontStyle: FontStyle.italic,
@@ -346,7 +345,7 @@ class _ReportDetailSheetState extends ConsumerState<ReportDetailSheet> {
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            'Move within 1 km to comment on this report.',
+                            'এই রিপোর্টে মন্তব্য করতে ১ কিমি এর মধ্যে আসুন।',
                             style: TextStyle(
                               fontSize: 13,
                               color: theme.colorScheme.onSurfaceVariant,
@@ -371,7 +370,7 @@ class _ReportDetailSheetState extends ConsumerState<ReportDetailSheet> {
                     child: FilledButton.icon(
                       onPressed: widget.onZoomToLocation,
                       icon: const Icon(LucideIcons.crosshair, size: 18),
-                      label: const Text('Go to Location'),
+                      label: const Text('অবস্থানে যান'),
                       style: FilledButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
@@ -398,7 +397,7 @@ class _ReportDetailSheetState extends ConsumerState<ReportDetailSheet> {
             style: TextStyle(
                 fontSize: 13, color: theme.colorScheme.onSurfaceVariant)),
         const SizedBox(width: 6),
-        Text('views',
+        Text('বার দেখা হয়েছে',
             style: TextStyle(
                 fontSize: 12, color: theme.colorScheme.onSurfaceVariant)),
         const SizedBox(width: 16),
@@ -414,7 +413,7 @@ class _ReportDetailSheetState extends ConsumerState<ReportDetailSheet> {
         Icon(LucideIcons.flag, size: 16, color: theme.colorScheme.error),
         const SizedBox(width: 4),
         Text('${report.spamCount}',
-            style: TextStyle(fontSize: 13, color: theme.colorScheme.error)),
+            style: TextStyle(fontFamily: 'EkusheInter', fontSize: 13, color: theme.colorScheme.error)),
       ],
     );
   }
@@ -444,8 +443,8 @@ class _ReportDetailSheetState extends ConsumerState<ReportDetailSheet> {
             const SizedBox(width: 8),
             Text(
               myVote == 'appropriate'
-                  ? 'You marked this as appropriate'
-                  : 'You marked this as spam',
+                  ? 'আপনি এটিকে যথাযথ হিসেবে চিহ্নিত করেছেন'
+                  : 'আপনি এটিকে স্প্যাম হিসেবে চিহ্নিত করেছেন',
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
@@ -477,7 +476,7 @@ class _ReportDetailSheetState extends ConsumerState<ReportDetailSheet> {
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                'Move within 1 km to vote on this report.',
+                'এই রিপোর্টে ভোট দিতে ১ কিমি এর মধ্যে আসুন।',
                 style: TextStyle(
                   fontSize: 13,
                   color: theme.colorScheme.onSurfaceVariant,
@@ -500,7 +499,7 @@ class _ReportDetailSheetState extends ConsumerState<ReportDetailSheet> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Is this report legitimate?',
+            'এই রিপোর্টটি কি সত্যিকারের?',
             style: theme.textTheme.titleSmall
                 ?.copyWith(fontWeight: FontWeight.w600),
           ),
@@ -511,8 +510,8 @@ class _ReportDetailSheetState extends ConsumerState<ReportDetailSheet> {
                 child: FilledButton.icon(
                   onPressed: _voting ? null : () => _vote('appropriate'),
                   icon: const Icon(LucideIcons.thumbsUp, size: 16),
-                  label: const Text('Appropriate',
-                      style: TextStyle(fontSize: 13)),
+                  label: const Text('যথাযথ',
+                      style: TextStyle(fontFamily: 'EkusheInter', fontSize: 13)),
                   style: FilledButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
@@ -524,7 +523,7 @@ class _ReportDetailSheetState extends ConsumerState<ReportDetailSheet> {
                   onPressed: _voting ? null : () => _vote('spam'),
                   icon: Icon(LucideIcons.flag,
                       size: 16, color: theme.colorScheme.error),
-                  label: Text('Spam',
+                  label: Text('স্প্যাম',
                       style: TextStyle(
                           fontSize: 13, color: theme.colorScheme.error)),
                   style: OutlinedButton.styleFrom(
@@ -547,7 +546,7 @@ class _ReportDetailSheetState extends ConsumerState<ReportDetailSheet> {
           child: TextField(
             controller: _commentController,
             decoration: InputDecoration(
-              hintText: 'Add a comment...',
+              hintText: 'মন্তব্য যোগ করুন...',
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(24),
               ),
@@ -585,7 +584,7 @@ class _ReportDetailSheetState extends ConsumerState<ReportDetailSheet> {
           return Padding(
             padding: const EdgeInsets.symmetric(vertical: 8),
             child: Text(
-              'No comments yet',
+              'এখনো কোনো মন্তব্য নেই',
               style: TextStyle(
                 fontSize: 13,
                 fontStyle: FontStyle.italic,
@@ -599,7 +598,7 @@ class _ReportDetailSheetState extends ConsumerState<ReportDetailSheet> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Comments (${comments.length})',
+              'মন্তব্য (${comments.length})',
               style: theme.textTheme.titleSmall
                   ?.copyWith(fontWeight: FontWeight.w600),
             ),
@@ -628,7 +627,7 @@ class _ReportDetailSheetState extends ConsumerState<ReportDetailSheet> {
                             ),
                             const Spacer(),
                             Text(
-                              DateFormat('h:mm a').format(c.createdAt ?? DateTime.now()),
+                              formatTimeBn(c.createdAt ?? DateTime.now()),
                               style: TextStyle(
                                 fontSize: 11,
                                 color: theme.colorScheme.onSurfaceVariant,
@@ -640,7 +639,7 @@ class _ReportDetailSheetState extends ConsumerState<ReportDetailSheet> {
                         Text(
                           c.content,
                           style:
-                              const TextStyle(fontSize: 14, height: 1.3),
+                              const TextStyle(fontFamily: 'EkusheInter', fontSize: 14, height: 1.3),
                         ),
                       ],
                     ),
@@ -668,7 +667,7 @@ class _ReportDetailSheetState extends ConsumerState<ReportDetailSheet> {
                     style: TextStyle(
                         fontSize: 12,
                         color: theme.colorScheme.onSurfaceVariant)),
-                Text(value, style: const TextStyle(fontSize: 15)),
+                Text(value, style: const TextStyle(fontFamily: 'EkusheInter', fontSize: 15)),
               ],
             ),
           ),

@@ -414,7 +414,7 @@ class PostService {
           targetUserId: postAuthorId,
           type: 'comment',
           postId: postId,
-          message: '$currentName commented on your post',
+          message: '$currentName আপনার পোস্টে মন্তব্য করেছেন',
         );
       }
       return null;

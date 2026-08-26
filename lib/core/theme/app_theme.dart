@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
 
 class AppTheme {
@@ -77,10 +76,11 @@ class AppTheme {
     return ThemeData(
       colorScheme: colorScheme,
       useMaterial3: true,
-      textTheme: GoogleFonts.interTextTheme(
-        isDark
-            ? ThemeData(brightness: Brightness.dark).textTheme
-            : ThemeData(brightness: Brightness.light).textTheme,
+      fontFamily: 'EkusheInter',
+      textTheme: ThemeData(brightness: brightness).textTheme.apply(
+        fontFamily: 'EkusheInter',
+        bodyColor: isDark ? AppColors.darkFg : AppColors.lightFg,
+        displayColor: isDark ? AppColors.darkFg : AppColors.lightFg,
       ),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: colorScheme.surface,
@@ -100,7 +100,7 @@ class AppTheme {
               fontSize: 12,
             );
           }
-          return TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 12);
+          return TextStyle(fontFamily: 'EkusheInter', color: colorScheme.onSurfaceVariant, fontSize: 12);
         }),
       ),
       appBarTheme: AppBarTheme(
@@ -144,7 +144,7 @@ class AppTheme {
       chipTheme: ChipThemeData(
         backgroundColor: colorScheme.secondary,
         selectedColor: colorScheme.primary,
-        labelStyle: TextStyle(color: colorScheme.onSurface),
+        labelStyle: TextStyle(fontFamily: 'EkusheInter', color: colorScheme.onSurface),
         side: BorderSide(color: colorScheme.outline, width: 1),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
@@ -156,7 +156,7 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
           ),
-          textStyle: const TextStyle(fontWeight: FontWeight.w500),
+          textStyle: const TextStyle(fontFamily: 'EkusheInter', fontWeight: FontWeight.w500),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -174,7 +174,7 @@ class AppTheme {
       ),
       snackBarTheme: SnackBarThemeData(
         backgroundColor: colorScheme.inverseSurface,
-        contentTextStyle: TextStyle(color: colorScheme.onInverseSurface),
+        contentTextStyle: TextStyle(fontFamily: 'EkusheInter', color: colorScheme.onInverseSurface),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
       dialogTheme: DialogThemeData(

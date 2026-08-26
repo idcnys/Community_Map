@@ -1,7 +1,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
+import '../../core/utils/time_ago.dart';
 import '../../providers/service_providers.dart';
 import '../../models/report_post_model.dart';
 import 'report_detail_sheet.dart';
@@ -20,10 +20,10 @@ class ArchivedReportsPage extends ConsumerWidget {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Archived Reports'),
+            const Text('আর্কাইভকৃত রিপোর্টসমূহ'),
             Text(
-              'Solved or older than 48 hours',
-              style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurfaceVariant),
+              'সমাধান হয়েছে বা ৪৮ ঘণ্টার বেশি পুরনো',
+              style: TextStyle(fontFamily: 'EkusheInter', fontSize: 11, color: theme.colorScheme.onSurfaceVariant),
             ),
           ],
         ),
@@ -45,8 +45,8 @@ class ArchivedReportsPage extends ConsumerWidget {
                       size: 64, color: theme.colorScheme.onSurfaceVariant.withAlpha(150)),
                   const SizedBox(height: 16),
                   Text(
-                    'No archived reports',
-                    style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+                    'কোনো আর্কাইভকৃত রিপোর্ট নেই',
+                    style: TextStyle(fontFamily: 'EkusheInter', color: theme.colorScheme.onSurfaceVariant),
                   ),
                 ],
               ),
@@ -69,11 +69,11 @@ class ArchivedReportsPage extends ConsumerWidget {
                   ),
                   title: Text(
                     report.reportType,
-                    style: const TextStyle(fontWeight: FontWeight.w600),
+                    style: const TextStyle(fontFamily: 'EkusheInter', fontWeight: FontWeight.w600),
                   ),
                   subtitle: Text(
-                    '${report.authorName} • ${DateFormat('MMM d, h:mm a').format(report.createdAt)}',
-                    style: const TextStyle(fontSize: 12),
+                    '${report.authorName} • ${formatShortDate(report.createdAt)}',
+                    style: const TextStyle(fontFamily: 'EkusheInter', fontSize: 12),
                   ),
                   trailing: report.isSolved
                       ? Container(
@@ -83,7 +83,7 @@ class ArchivedReportsPage extends ConsumerWidget {
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Text(
-                            'SOLVED',
+                            'সমাধান হয়েছে',
                             style: TextStyle(
                               color: Colors.green.shade700,
                               fontSize: 10,

@@ -156,7 +156,7 @@ class _AppUpdatePageState extends State<AppUpdatePage>
       if (!mounted) return;
       setState(() {
         _state = _UpdateState.error;
-        _errorMessage = 'Download failed: $e';
+        _errorMessage = 'ডাউনলোড ব্যর্থ হয়েছে: $e';
       });
     } finally {
       _isDownloading = false;
@@ -185,7 +185,7 @@ class _AppUpdatePageState extends State<AppUpdatePage>
         unawaited(_service.cleanupTempFiles());
         setState(() {
           _state = _UpdateState.error;
-          _errorMessage = 'Could not open installer: ${result.message}';
+          _errorMessage = 'ইনস্টলার খোলা যায়নি: ${result.message}';
         });
       }
     } catch (e) {
@@ -193,7 +193,7 @@ class _AppUpdatePageState extends State<AppUpdatePage>
       unawaited(_service.cleanupTempFiles());
       setState(() {
         _state = _UpdateState.error;
-        _errorMessage = 'Install error: $e';
+        _errorMessage = 'ইনস্টল ত্রুটি: $e';
       });
     }
   }
@@ -227,7 +227,7 @@ class _AppUpdatePageState extends State<AppUpdatePage>
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('App Update')),
+      appBar: AppBar(title: const Text('অ্যাপ আপডেট')),
       body: SafeArea(
         child: Column(
           children: [
@@ -299,7 +299,7 @@ class _AppUpdatePageState extends State<AppUpdatePage>
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'Installed: v$_currentVersion',
+                  'ইনস্টল করা: v$_currentVersion',
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
@@ -356,19 +356,19 @@ class _AppUpdatePageState extends State<AppUpdatePage>
   String get _headerTitle {
     switch (_state) {
       case _UpdateState.checking:
-        return 'Checking…';
+        return 'পরীক্ষা করা হচ্ছে…';
       case _UpdateState.upToDate:
-        return 'Up to Date';
+        return 'সর্বশেষ ভার্সন';
       case _UpdateState.updateAvailable:
-        return 'Update Available';
+        return 'আপডেট উপলব্ধ';
       case _UpdateState.downloading:
-        return 'Downloading…';
+        return 'ডাউনলোড হচ্ছে…';
       case _UpdateState.downloaded:
-        return 'Ready to Install';
+        return 'ইনস্টলের জন্য প্রস্তুত';
       case _UpdateState.installing:
-        return 'Installing…';
+        return 'ইনস্টল হচ্ছে…';
       case _UpdateState.error:
-        return 'Error';
+        return 'ত্রুটি';
     }
   }
 
@@ -467,7 +467,7 @@ class _AppUpdatePageState extends State<AppUpdatePage>
             children: [
               CircularProgressIndicator(),
               SizedBox(height: 20),
-              Text('Checking for updates…'),
+              Text('আপডেট পরীক্ষা করা হচ্ছে…'),
             ],
           ),
         );
@@ -481,15 +481,15 @@ class _AppUpdatePageState extends State<AppUpdatePage>
                   size: 72, color: theme.colorScheme.primary),
               const SizedBox(height: 20),
               Text(
-                'You\'re all set!',
+                'সবকিছু ঠিক আছে!',
                 style: theme.textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.w600,
                 ),
               ),
               const SizedBox(height: 8),
               Text(
-                'Version $_currentVersion is the latest release.',
-                style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+                'ভার্সন $_currentVersion সর্বশেষ রিলিজ।',
+                style: TextStyle(fontFamily: 'EkusheInter', color: theme.colorScheme.onSurfaceVariant),
               ),
             ],
           ),
@@ -518,7 +518,7 @@ class _AppUpdatePageState extends State<AppUpdatePage>
               ),
               const SizedBox(height: 24),
               Text(
-                'Download Complete',
+                'ডাউনলোড সম্পন্ন',
                 style: theme.textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.w600,
                 ),
@@ -526,7 +526,7 @@ class _AppUpdatePageState extends State<AppUpdatePage>
               const SizedBox(height: 8),
               Text(
                 '${_updateInfo?.formattedSize ?? ""} • v${_updateInfo?.version ?? ""}',
-                style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+                style: TextStyle(fontFamily: 'EkusheInter', color: theme.colorScheme.onSurfaceVariant),
               ),
               const SizedBox(height: 16),
               Container(
@@ -545,7 +545,7 @@ class _AppUpdatePageState extends State<AppUpdatePage>
                     const SizedBox(width: 8),
                     Flexible(
                       child: Text(
-                        'The app will close during installation',
+                        'ইনস্টলের সময় অ্যাপটি বন্ধ হয়ে যাবে',
                         textAlign: TextAlign.center,
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
@@ -566,7 +566,7 @@ class _AppUpdatePageState extends State<AppUpdatePage>
             children: [
               CircularProgressIndicator(),
               SizedBox(height: 20),
-              Text('Opening system installer…'),
+              Text('সিস্টেম ইনস্টলার খোলা হচ্ছে…'),
             ],
           ),
         );
@@ -588,7 +588,7 @@ class _AppUpdatePageState extends State<AppUpdatePage>
               ),
               const SizedBox(height: 24),
               Text(
-                'Something went wrong',
+                'কিছু একটা সমস্যা হয়েছে',
                 style: theme.textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.w600,
                 ),
@@ -602,7 +602,7 @@ class _AppUpdatePageState extends State<AppUpdatePage>
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: SelectableText(
-                  _errorMessage ?? 'Unknown error',
+                  _errorMessage ?? 'অজানা ত্রুটি',
                   textAlign: TextAlign.center,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: theme.colorScheme.onErrorContainer,
@@ -674,7 +674,7 @@ class _AppUpdatePageState extends State<AppUpdatePage>
                             color: theme.colorScheme.onSurfaceVariant),
                         const SizedBox(width: 8),
                         Text(
-                          'Release Notes',
+                          'রিলিজ নোট',
                           style: theme.textTheme.labelMedium?.copyWith(
                             fontWeight: FontWeight.w600,
                           ),
@@ -743,7 +743,7 @@ class _AppUpdatePageState extends State<AppUpdatePage>
           ),
           const SizedBox(height: 24),
           Text(
-            'Downloading APK',
+            'APK ডাউনলোড হচ্ছে',
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w600,
             ),
@@ -781,7 +781,7 @@ class _AppUpdatePageState extends State<AppUpdatePage>
         button = FilledButton.icon(
           onPressed: _startDownload,
           icon: const Icon(LucideIcons.download),
-          label: Text('Download ${_updateInfo?.formattedSize ?? "APK"}'),
+          label: Text('ডাউনলোড ${_updateInfo?.formattedSize ?? "APK"}'),
           style: FilledButton.styleFrom(
             minimumSize: const Size(double.infinity, 52),
           ),
@@ -791,7 +791,7 @@ class _AppUpdatePageState extends State<AppUpdatePage>
         button = FilledButton.icon(
           onPressed: _installApk,
           icon: const Icon(LucideIcons.packageOpen),
-          label: const Text('Install Now'),
+          label: const Text('এখনই ইনস্টল করুন'),
           style: FilledButton.styleFrom(
             minimumSize: const Size(double.infinity, 52),
           ),
@@ -801,7 +801,7 @@ class _AppUpdatePageState extends State<AppUpdatePage>
         button = OutlinedButton.icon(
           onPressed: _checkForUpdate,
           icon: const Icon(LucideIcons.refreshCw),
-          label: const Text('Try Again'),
+          label: const Text('আবার চেষ্টা করুন'),
           style: OutlinedButton.styleFrom(
             minimumSize: const Size(double.infinity, 52),
           ),
@@ -811,7 +811,7 @@ class _AppUpdatePageState extends State<AppUpdatePage>
         button = OutlinedButton.icon(
           onPressed: _checkForUpdate,
           icon: const Icon(LucideIcons.refreshCw),
-          label: const Text('Check Again'),
+          label: const Text('আবার পরীক্ষা করুন'),
           style: OutlinedButton.styleFrom(
             minimumSize: const Size(double.infinity, 52),
           ),

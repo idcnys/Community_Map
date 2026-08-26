@@ -134,7 +134,7 @@ class NotificationService {
           'actorName': currentName,
           'postId': postId,
           'postTitle': postTitle,
-          'message': '$currentName posted in $groupName',
+          'message': '$currentName $groupName গ্রুপে পোস্ট করেছেন',
           'read': false,
           'createdAt': FieldValue.serverTimestamp(),
         });
@@ -146,7 +146,7 @@ class NotificationService {
         _push.pushToUsers(
           targetUserIds: targetMembers,
           title: _pushTitle(type),
-          body: '$currentName posted in $groupName',
+          body: '$currentName $groupName গ্রুপে পোস্ট করেছেন',
           data: {'type': type, 'postId': postId, 'groupId': groupId},
         );
       }
@@ -219,7 +219,7 @@ class NotificationService {
           'actorName': currentName,
           'postId': groupId,
           'postTitle': groupName,
-          'message': '$currentName mentioned you in $groupName',
+          'message': '$currentName আপনাকে $groupName গ্রুপে মেনশন করেছেন',
           'read': false,
           'createdAt': FieldValue.serverTimestamp(),
         });
@@ -231,7 +231,7 @@ class NotificationService {
         _push.pushToUsers(
           targetUserIds: uids,
           title: _pushTitle('mention'),
-          body: '$currentName mentioned you in $groupName',
+          body: '$currentName আপনাকে $groupName গ্রুপে মেনশন করেছেন',
           data: {'type': 'mention', 'groupId': groupId},
         );
       }
@@ -244,23 +244,23 @@ class NotificationService {
   String _pushTitle(String type) {
     switch (type) {
       case 'like':
-        return 'New Like';
+        return 'নতুন লাইক';
       case 'comment':
-        return 'New Comment';
+        return 'নতুন মন্তব্য';
       case 'new_post':
-        return 'New Post';
+        return 'নতুন পোস্ট';
       case 'new_report':
-        return '🚨 New Report';
+        return '🚨 নতুন রিপোর্ট';
       case 'join_request':
-        return 'Join Request';
+        return 'যোগদানের অনুরোধ';
       case 'member_approved':
-        return 'Request Approved';
+        return 'অনুরোধ অনুমোদিত';
       case 'repost':
-        return '🔁 Reposted';
+        return '🔁 রিপোস্ট করা হয়েছে';
       case 'mention':
-        return '💬 Mentioned You';
+        return '💬 আপনাকে মেনশন করা হয়েছে';
       default:
-        return 'Notification';
+        return 'বিজ্ঞপ্তি';
     }
   }
 }

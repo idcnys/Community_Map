@@ -2,6 +2,7 @@
 import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
+import '../../core/utils/time_ago.dart';
 import '../../widgets/voice_record_button.dart';
 import '../../services/supabase_storage_service.dart';
 import 'package:geolocator/geolocator.dart';
@@ -80,12 +81,12 @@ class _ReportPostFormState extends ConsumerState<ReportPostForm> {
           children: [
             ListTile(
               leading: const Icon(LucideIcons.camera),
-              title: const Text('Camera'),
+              title: const Text('ক্যামেরা'),
               onTap: () => Navigator.of(ctx).pop('camera'),
             ),
             ListTile(
               leading: const Icon(LucideIcons.image),
-              title: const Text('Gallery'),
+              title: const Text('গ্যালারি'),
               onTap: () => Navigator.of(ctx).pop('gallery'),
             ),
           ],
@@ -120,7 +121,7 @@ class _ReportPostFormState extends ConsumerState<ReportPostForm> {
     final myGroups = ref.watch(myJoinedGroupsProvider).value ?? [];
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Submit Report')),
+      appBar: AppBar(title: const Text('রিপোর্ট জমা দিন')),
       body: SafeArea(
         child: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
@@ -134,13 +135,13 @@ class _ReportPostFormState extends ConsumerState<ReportPostForm> {
                 controller: _contactCtrl,
                 keyboardType: TextInputType.phone,
                 decoration: const InputDecoration(
-                  labelText: 'Contact Number',
+                  labelText: 'যোগাযোগ নম্বর',
                   prefixIcon: Icon(LucideIcons.phone),
                   helperText:
-                      'Only visible to users sharing groups with you',
+                      'শুধুমাত্র আপনার সাথে গ্রুপ শেয়ার করা ব্যবহারকারীদের কাছে দৃশ্যমান',
                 ),
                 validator: (v) => (v == null || v.trim().isEmpty)
-                    ? 'Contact number is required'
+                    ? 'যোগাযোগ নম্বর প্রয়োজন'
                     : null,
               ),
               const SizedBox(height: 16),
@@ -149,7 +150,7 @@ class _ReportPostFormState extends ConsumerState<ReportPostForm> {
               DropdownButtonFormField<String>(
                 value: _reportType,
                 decoration: const InputDecoration(
-                  labelText: 'Report Type',
+                  labelText: 'রিপোর্টের ধরন',
                   prefixIcon: Icon(LucideIcons.layoutGrid),
                 ),
                 items: ReportTypes.options.map((type) {
@@ -164,13 +165,13 @@ class _ReportPostFormState extends ConsumerState<ReportPostForm> {
                 controller: _descCtrl,
                 maxLines: 4,
                 decoration: const InputDecoration(
-                  labelText: 'Description',
-                  hintText: 'Describe the incident...',
+                  labelText: 'বিবরণ',
+                  hintText: 'ঘটনাটি বর্ণনা করুন...',
                   prefixIcon: Icon(LucideIcons.fileText),
                   alignLabelWithHint: true,
                 ),
                 validator: (v) => (v == null || v.trim().isEmpty)
-                    ? 'Description is required'
+                    ? 'বিবরণ প্রয়োজন'
                     : null,
               ),
               const SizedBox(height: 16),
@@ -207,7 +208,7 @@ class _ReportPostFormState extends ConsumerState<ReportPostForm> {
                 OutlinedButton.icon(
                   onPressed: _pickImage,
                   icon: const Icon(LucideIcons.camera),
-                  label: const Text('Attach Photo (optional)'),
+                  label: const Text('ছবি সংযুক্ত করুন (ঐচ্ছিক)'),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
@@ -246,15 +247,15 @@ class _ReportPostFormState extends ConsumerState<ReportPostForm> {
                       const SizedBox(width: 12),
                       Expanded(
                         child: _locating
-                            ? const Text('Detecting location...')
+                            ? const Text('অবস্থান সনাক্ত হচ্ছে...')
                             : _currentPosition != null
                                 ? Text(
                                     'Lat: ${_currentPosition!.latitude.toStringAsFixed(6)}, '
                                     'Lng: ${_currentPosition!.longitude.toStringAsFixed(6)}',
-                                    style: const TextStyle(fontSize: 13),
+                                    style: const TextStyle(fontFamily: 'EkusheInter', fontSize: 13),
                                   )
                                 : Text(
-                                    'Location unavailable',
+                                    'অবস্থান পাওয়া যাচ্ছে না',
                                     style: TextStyle(
                                         color: theme.colorScheme.error.withAlpha(180)),
                                   ),
@@ -272,7 +273,7 @@ class _ReportPostFormState extends ConsumerState<ReportPostForm> {
               // Shared groups info
               if (myGroups.isNotEmpty) ...[
                 Text(
-                  'Contact visible to members of:',
+                  'যোগাযোগ নম্বর দৃশ্যমান হবে:',
                   style: theme.textTheme.bodySmall
                       ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                 ),
@@ -282,7 +283,7 @@ class _ReportPostFormState extends ConsumerState<ReportPostForm> {
                   children: myGroups
                       .map((g) => Chip(
                             label: Text(g.name,
-                                style: const TextStyle(fontSize: 12)),
+                                style: const TextStyle(fontFamily: 'EkusheInter', fontSize: 12)),
                             visualDensity: VisualDensity.compact,
                           ))
                       .toList(),
@@ -303,7 +304,7 @@ class _ReportPostFormState extends ConsumerState<ReportPostForm> {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : Icon(LucideIcons.alertTriangle),
-                label: Text(_uploading ? 'Uploading photo...' : (_uploadingAudio ? 'Uploading voice...' : 'Submit Report')),
+                label: Text(_uploading ? 'ছবি আপলোড হচ্ছে...' : (_uploadingAudio ? 'ভয়েস আপলোড হচ্ছে...' : 'রিপোর্ট জমা দিন')),
                 style: FilledButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
@@ -331,7 +332,7 @@ class _ReportPostFormState extends ConsumerState<ReportPostForm> {
         folder: 'cmap/reports',
         onError: (err) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Image upload failed: $err'), backgroundColor: Colors.red),
+            SnackBar(content: Text('ছবি আপলোড ব্যর্থ: $err'), backgroundColor: Colors.red),
           );
         },
       );
@@ -353,7 +354,7 @@ class _ReportPostFormState extends ConsumerState<ReportPostForm> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Voice upload failed: $error'),
+              content: Text('ভয়েস আপলোড ব্যর্থ: $error'),
               backgroundColor: Colors.red,
               duration: const Duration(seconds: 5),
             ),
@@ -387,7 +388,7 @@ class _ReportPostFormState extends ConsumerState<ReportPostForm> {
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Report submitted successfully')),
+          const SnackBar(content: Text('রিপোর্ট সফলভাবে জমা হয়েছে')),
         );
         Navigator.of(context).pop();
       }

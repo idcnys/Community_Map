@@ -18,18 +18,18 @@ class _OnboardingPageState extends State<OnboardingPage> {
   static const _slides = [
     _SlideData(
       icon: LucideIcons.map,
-      title: 'Discover Your Community',
-      subtitle: 'Find and connect with local groups around you on an interactive map.',
+      title: 'আপনার কমিউনিটি অনুসন্ধান করুন',
+      subtitle: 'একটি ইন্টারঅ্যাক্টিভ ম্যাপে আপনার আশেপাশের স্থানীয় গ্রুপ খুঁজুন এবং যুক্ত হোন।',
     ),
     _SlideData(
       icon: LucideIcons.users,
-      title: 'Join & Collaborate',
-      subtitle: 'Become part of groups, share posts, and engage in meaningful discussions.',
+      title: 'যুক্ত হোন ও সহযোগিতা করুন',
+      subtitle: 'গ্রুপের অংশ হোন, পোস্ট শেয়ার করুন এবং অর্থপূর্ণ আলোচনায় অংশ নিন।',
     ),
     _SlideData(
       icon: LucideIcons.megaphone,
-      title: 'Report & Stay Safe',
-      subtitle: 'Report issues in your area and help build a safer community for everyone.',
+      title: 'রিপোর্ট করুন ও নিরাপদ থাকুন',
+      subtitle: 'আপনার এলাকার সমস্যা রিপোর্ট করুন এবং সবার জন্য একটি নিরাপদ কমিউনিটি গড়তে সহায়তা করুন।',
     ),
   ];
 
@@ -61,7 +61,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 child: TextButton(
                   onPressed: _finishOnboarding,
                   child: Text(
-                    'Skip',
+                    'এড়িয়ে যান',
                     style: TextStyle(
                       color: colorScheme.onSurfaceVariant,
                       fontSize: 15,
@@ -168,8 +168,8 @@ class _OnboardingPageState extends State<OnboardingPage> {
                     }
                   },
                   child: Text(
-                    _currentPage < _slides.length - 1 ? 'Next' : 'Get Started',
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                    _currentPage < _slides.length - 1 ? 'পরবর্তী' : 'শুরু করুন',
+                    style: const TextStyle(fontFamily: 'EkusheInter', fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                 ),
               ),

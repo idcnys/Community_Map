@@ -92,19 +92,19 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       String message;
       switch (e.code) {
         case 'user-not-found':
-          message = 'No account found with this email.';
+          message = 'এই ইমেইল দিয়ে কোনো অ্যাকাউন্ট পাওয়া যায়নি।';
         case 'wrong-password':
-          message = 'Incorrect password. Please try again.';
+          message = 'ভুল পাসওয়ার্ড। আবার চেষ্টা করুন।';
         case 'invalid-email':
-          message = 'Please enter a valid email address.';
+          message = 'একটি সঠিক ইমেইল ঠিকানা লিখুন।';
         case 'user-disabled':
-          message = 'This account has been disabled.';
+          message = 'এই অ্যাকাউন্টটি নিষ্ক্রিয় করা হয়েছে।';
         case 'invalid-credential':
-          message = 'Invalid email or password.';
+          message = 'ইমেইল বা পাসওয়ার্ড সঠিক নয়।';
         case 'too-many-requests':
-          message = 'Too many attempts. Please try again later.';
+          message = 'অনেক বেশি চেষ্টা হয়েছে। পরে আবার চেষ্টা করুন।';
         default:
-          message = e.message ?? 'Login failed. Please try again.';
+          message = e.message ?? 'লগইন ব্যর্থ হয়েছে। আবার চেষ্টা করুন।';
       }
 
       if (mounted) {
@@ -142,7 +142,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Welcome Back',
+                    'ফিরে আসায় স্বাগতম',
                     textAlign: TextAlign.center,
                     style: theme.textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.bold,
@@ -150,7 +150,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   ),
                   SizedBox(height: 8),
                   Text(
-                    'Sign in to your account',
+                    'আপনার অ্যাকাউন্টে সাইন ইন করুন',
                     textAlign: TextAlign.center,
                     style: theme.textTheme.bodyLarge?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
@@ -164,8 +164,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     keyboardType: TextInputType.emailAddress,
                     autofillHints: const [AutofillHints.email],
                     decoration: const InputDecoration(
-                      labelText: 'Email',
-                      hintText: 'you@example.com',
+                      labelText: 'ইমেইল',
+                      hintText: 'আপনি@example.com',
                       prefixIcon: Icon(LucideIcons.mail),
                     ),
                     validator: validateEmail,
@@ -178,8 +178,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     obscureText: _obscurePassword,
                     autofillHints: const [AutofillHints.password],
                     decoration: InputDecoration(
-                      labelText: 'Password',
-                      hintText: 'Enter your password',
+                      labelText: 'পাসওয়ার্ড',
+                      hintText: 'আপনার পাসওয়ার্ড লিখুন',
                       prefixIcon: const Icon(LucideIcons.lock),
                       suffixIcon: IconButton(
                         icon: Icon(
@@ -199,7 +199,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     alignment: Alignment.centerRight,
                     child: TextButton(
                       onPressed: () => _handleForgotPassword(),
-                      child: const Text('Forgot Password?'),
+                      child: const Text('পাসওয়ার্ড ভুলে গেছেন?'),
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -219,7 +219,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                             width: 20,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Text('Sign In', style: TextStyle(fontSize: 16)),
+                        : const Text('সাইন ইন', style: TextStyle(fontFamily: 'EkusheInter', fontSize: 16)),
                   ),
                   const SizedBox(height: 12),
 
@@ -233,7 +233,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       ),
                     ),
                     icon: Image.asset('assets/icon/google_logo.png', width: 24, height: 24),
-                    label: const Text('Sign in with Google', style: TextStyle(fontSize: 16)),
+                    label: const Text('গুগল দিয়ে সাইন ইন করুন', style: TextStyle(fontFamily: 'EkusheInter', fontSize: 16)),
                   ),
                   const SizedBox(height: 12),
 
@@ -247,7 +247,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       ),
                     ),
                     icon: const Icon(LucideIcons.eye),
-                    label: const Text('Login as Guest', style: TextStyle(fontSize: 16)),
+                    label: const Text('অতিথি হিসেবে লগইন করুন', style: TextStyle(fontFamily: 'EkusheInter', fontSize: 16)),
                   ),
                   const SizedBox(height: 32),
 
@@ -255,7 +255,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        "Don't have an account? ",
+                        'অ্যাকাউন্ট নেই? ',
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
@@ -265,8 +265,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                           context.push('/signup');
                         },
                         child: const Text(
-                          'Sign Up',
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                          'সাইন আপ',
+                          style: TextStyle(fontFamily: 'EkusheInter', fontWeight: FontWeight.bold),
                         ),
                       ),
                     ],
@@ -338,9 +338,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
       if (mounted) context.go('/dashboard');
     } on FirebaseAuthException catch (e) {
-      if (mounted) context.showError('Google sign-in failed: ${e.message}');
+      if (mounted) context.showError('গুগল সাইন-ইন ব্যর্থ হয়েছে: ${e.message}');
     } catch (e) {
-      if (mounted) context.showError('Google sign-in failed: $e');
+      if (mounted) context.showError('গুগল সাইন-ইন ব্যর্থ হয়েছে: $e');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -365,7 +365,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         context.go('/dashboard');
       }
     } catch (e) {
-      if (mounted) context.showError('Guest login failed. Please try again.');
+      if (mounted) context.showError('অতিথি লগইন ব্যর্থ হয়েছে। আবার চেষ্টা করুন।');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -391,7 +391,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 ),
                 const SizedBox(height: 20),
                 Text(
-                  'Welcome Back',
+                  'ফিরে আসায় স্বাগতম',
                   textAlign: TextAlign.center,
                   style: theme.textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.bold,
@@ -400,8 +400,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 const SizedBox(height: 8),
                 Text(
                   isGoogle
-                      ? 'Continue with your Google account'
-                      : 'Continue with your email',
+                      ? 'আপনার গুগল অ্যাকাউন্ট দিয়ে চালিয়ে যান'
+                      : 'আপনার ইমেইল দিয়ে চালিয়ে যান',
                   textAlign: TextAlign.center,
                   style: theme.textTheme.bodyLarge?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
@@ -433,8 +433,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       ? Image.asset('assets/icon/google_logo.png', width: 22, height: 22)
                       : const Icon(LucideIcons.mail, size: 20),
                   label: Text(
-                    isGoogle ? 'Continue with Google' : 'Continue with Email',
-                    style: const TextStyle(fontSize: 16),
+                    isGoogle ? 'গুগল দিয়ে চালিয়ে যান' : 'ইমেইল দিয়ে চালিয়ে যান',
+                    style: const TextStyle(fontFamily: 'EkusheInter', fontSize: 16),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -449,7 +449,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     ),
                   ),
                   icon: const Icon(LucideIcons.eye),
-                  label: const Text('Login as Guest', style: TextStyle(fontSize: 16)),
+                  label: const Text('অতিথি হিসেবে লগইন করুন', style: TextStyle(fontFamily: 'EkusheInter', fontSize: 16)),
                 ),
                 const SizedBox(height: 32),
 
@@ -457,7 +457,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 Center(
                   child: TextButton(
                     onPressed: () => setState(() => _showFullForm = true),
-                    child: const Text('Use a different account'),
+                    child: const Text('অন্য একটি অ্যাকাউন্ট ব্যবহার করুন'),
                   ),
                 ),
               ],
@@ -482,19 +482,19 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Reset Password'),
+        title: const Text('পাসওয়ার্ড রিসেট করুন'),
         content: TextField(
           controller: emailController,
           keyboardType: TextInputType.emailAddress,
           decoration: const InputDecoration(
-            labelText: 'Email',
-            hintText: 'Enter your registered email',
+            labelText: 'ইমেইল',
+            hintText: 'আপনার নিবন্ধিত ইমেইল লিখুন',
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
+            child: const Text('বাতিল'),
           ),
           FilledButton(
             onPressed: () async {
@@ -506,7 +506,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Password reset email sent!'),
+                      content: Text('পাসওয়ার্ড রিসেট ইমেইল পাঠানো হয়েছে!'),
                       backgroundColor: Colors.green,
                     ),
                   );
@@ -515,14 +515,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Failed to send reset email: $e'),
+                      content: Text('রিসেট ইমেইল পাঠানো যায়নি: $e'),
                       backgroundColor: Colors.red,
                     ),
                   );
                 }
               }
             },
-            child: const Text('Send'),
+            child: const Text('পাঠান'),
           ),
         ],
       ),

@@ -46,12 +46,12 @@ class _CommunityPostFormState extends ConsumerState<CommunityPostForm> {
           children: [
             ListTile(
               leading: const Icon(LucideIcons.camera),
-              title: const Text('Camera'),
+              title: const Text('ক্যামেরা'),
               onTap: () => Navigator.of(ctx).pop('camera'),
             ),
             ListTile(
               leading: const Icon(LucideIcons.image),
-              title: const Text('Gallery'),
+              title: const Text('গ্যালারি'),
               onTap: () => Navigator.of(ctx).pop('gallery'),
             ),
           ],
@@ -79,7 +79,7 @@ class _CommunityPostFormState extends ConsumerState<CommunityPostForm> {
     final myGroups = ref.watch(myJoinedGroupsProvider).value ?? [];
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Create Community Post')),
+      appBar: AppBar(title: const Text('কমিউনিটি পোস্ট তৈরি করুন')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Form(
@@ -90,11 +90,11 @@ class _CommunityPostFormState extends ConsumerState<CommunityPostForm> {
               TextFormField(
                 controller: _titleCtrl,
                 decoration: const InputDecoration(
-                  labelText: 'Title',
+                  labelText: 'শিরোনাম',
                   prefixIcon: Icon(LucideIcons.type),
                 ),
                 validator: (v) =>
-                    (v == null || v.trim().isEmpty) ? 'Title is required' : null,
+                    (v == null || v.trim().isEmpty) ? 'শিরোনাম আবশ্যক' : null,
               ),
               const SizedBox(height: 16),
 
@@ -102,13 +102,13 @@ class _CommunityPostFormState extends ConsumerState<CommunityPostForm> {
                 controller: _descCtrl,
                 maxLines: 5,
                 decoration: const InputDecoration(
-                  labelText: 'Description',
-                  hintText: 'What do you want to share?',
+                  labelText: 'বিবরণ',
+                  hintText: 'আপনি কী শেয়ার করতে চান?',
                   prefixIcon: Icon(LucideIcons.fileText),
                   alignLabelWithHint: true,
                 ),
                 validator: (v) => (v == null || v.trim().isEmpty)
-                    ? 'Description is required'
+                    ? 'বিবরণ আবশ্যক'
                     : null,
               ),
               const SizedBox(height: 16),
@@ -145,7 +145,7 @@ class _CommunityPostFormState extends ConsumerState<CommunityPostForm> {
                 OutlinedButton.icon(
                   onPressed: _pickImage,
                   icon: const Icon(LucideIcons.imagePlus),
-                  label: const Text('Add Image (optional)'),
+                  label: const Text('ছবি যোগ করুন (ঐচ্ছিক)'),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
@@ -153,15 +153,15 @@ class _CommunityPostFormState extends ConsumerState<CommunityPostForm> {
               const SizedBox(height: 24),
 
               Text(
-                'Post Origin',
+                'পোস্টের উৎস',
                 style: theme.textTheme.titleMedium
                     ?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 12),
 
               RadioListTile<String>(
-                title: const Text('Public'),
-                subtitle: const Text('Visible to everyone'),
+                title: const Text('পাবলিক'),
+                subtitle: const Text('সবার কাছে দৃশ্যমান'),
                 value: 'public',
                 groupValue: _originType,
                 onChanged: (v) => setState(() {
@@ -171,8 +171,8 @@ class _CommunityPostFormState extends ConsumerState<CommunityPostForm> {
               ),
 
               RadioListTile<String>(
-                title: const Text('Group'),
-                subtitle: const Text('Visible to group members only'),
+                title: const Text('গ্রুপ'),
+                subtitle: const Text('শুধুমাত্র গ্রুপ সদস্যদের কাছে দৃশ্যমান'),
                 value: 'group',
                 groupValue: _originType,
                 onChanged: (v) => setState(() => _originType = v!),
@@ -184,15 +184,15 @@ class _CommunityPostFormState extends ConsumerState<CommunityPostForm> {
                   Padding(
                     padding: const EdgeInsets.all(12),
                     child: Text(
-                      'You haven\'t joined any groups yet.',
-                      style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+                      'আপনি এখনো কোনো গ্রুপে যোগ দেননি।',
+                      style: TextStyle(fontFamily: 'EkusheInter', color: theme.colorScheme.onSurfaceVariant),
                     ),
                   )
                 else
                   DropdownButtonFormField<String>(
                     value: _selectedGroupId,
                     decoration: const InputDecoration(
-                      labelText: 'Select Group',
+                      labelText: 'গ্রুপ নির্বাচন করুন',
                       prefixIcon: Icon(LucideIcons.users),
                     ),
                     items: myGroups.map((g) {
@@ -200,7 +200,7 @@ class _CommunityPostFormState extends ConsumerState<CommunityPostForm> {
                     }).toList(),
                     onChanged: (v) => setState(() => _selectedGroupId = v),
                     validator: (v) => (_originType == 'group' && v == null)
-                        ? 'Please select a group'
+                        ? 'অনুগ্রহ করে একটি গ্রুপ নির্বাচন করুন'
                         : null,
                   ),
               ],
@@ -216,7 +216,7 @@ class _CommunityPostFormState extends ConsumerState<CommunityPostForm> {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : const Icon(LucideIcons.send),
-                label: Text(_uploading ? 'Uploading image...' : 'Publish Post'),
+                label: Text(_uploading ? 'ছবি আপলোড হচ্ছে...' : 'পোস্ট প্রকাশ করুন'),
                 style: FilledButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
@@ -242,7 +242,7 @@ class _CommunityPostFormState extends ConsumerState<CommunityPostForm> {
         folder: 'cmap/community',
         onError: (err) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Image upload failed: $err'), backgroundColor: Colors.red),
+            SnackBar(content: Text('ছবি আপলোড ব্যর্থ: $err'), backgroundColor: Colors.red),
           );
         },
       );
@@ -256,7 +256,7 @@ class _CommunityPostFormState extends ConsumerState<CommunityPostForm> {
 
     final myGroups = ref.read(myJoinedGroupsProvider).value ?? [];
     String groupId = '';
-    String groupName = 'Public';
+    String groupName = 'পাবলিক';
 
     if (_originType == 'group' && _selectedGroupId != null) {
       groupId = _selectedGroupId!;
@@ -283,7 +283,7 @@ class _CommunityPostFormState extends ConsumerState<CommunityPostForm> {
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Post published!')),
+          const SnackBar(content: Text('পোস্ট প্রকাশিত হয়েছে!')),
         );
         ref.invalidate(paginatedFeedProvider);
         context.pop();

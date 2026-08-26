@@ -83,7 +83,7 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
           children: [
             Icon(LucideIcons.volumeX, size: 18, color: theme.colorScheme.error),
             const SizedBox(width: 8),
-            Text('Unable to load audio', style: theme.textTheme.bodySmall),
+            Text('অডিও লোড করা যায়নি', style: theme.textTheme.bodySmall),
           ],
         ),
       );
@@ -100,7 +100,7 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
           children: [
             SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)),
             SizedBox(width: 12),
-            Text('Loading audio...'),
+            Text('অডিও লোড হচ্ছে...'),
           ],
         ),
       );
@@ -149,7 +149,7 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
                     Icon(LucideIcons.mic, size: 14, color: theme.colorScheme.primary),
                     const SizedBox(width: 6),
                     Text(
-                      'Voice Note',
+                      'ভয়েস নোট',
                       style: theme.textTheme.bodySmall?.copyWith(
                         fontWeight: FontWeight.w600,
                         color: theme.colorScheme.primary,
@@ -159,7 +159,6 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
                     Text(
                       '${_formatDuration(_position)} / ${_formatDuration(_duration)}',
                       style: theme.textTheme.bodySmall?.copyWith(
-                        fontFamily: 'monospace',
                         fontSize: 11,
                         color: theme.colorScheme.onSurfaceVariant,
                       ),

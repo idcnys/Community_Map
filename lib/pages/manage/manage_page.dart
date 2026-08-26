@@ -47,7 +47,7 @@ class _ManagePageState extends State<ManagePage> {
       length: 2,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Manage'),
+          title: const Text('পরিচালনা'),
           automaticallyImplyLeading: false,
           actions: [
             // More menu: App Update + Report Issue
@@ -75,7 +75,7 @@ class _ManagePageState extends State<ManagePage> {
                     ),
                 ],
               ),
-              tooltip: 'More',
+              tooltip: 'আরও',
               onSelected: (value) {
                 switch (value) {
                   case 'update':
@@ -98,7 +98,7 @@ class _ManagePageState extends State<ManagePage> {
                       Icon(LucideIcons.download, size: 18,
                           color: Theme.of(context).colorScheme.onSurface),
                       const SizedBox(width: 12),
-                      Text(_updateAvailable ? 'App Update •' : 'App Update'),
+                      Text(_updateAvailable ? 'অ্যাপ আপডেট •' : 'অ্যাপ আপডেট'),
                     ],
                   ),
                 ),
@@ -109,7 +109,7 @@ class _ManagePageState extends State<ManagePage> {
                       Icon(LucideIcons.info, size: 18,
                           color: Theme.of(context).colorScheme.onSurface),
                       const SizedBox(width: 12),
-                      const Text('Report Issue'),
+                      const Text('সমস্যা জানান'),
                     ],
                   ),
                 ),
@@ -120,7 +120,7 @@ class _ManagePageState extends State<ManagePage> {
                       Icon(LucideIcons.shieldCheck, size: 18,
                           color: Theme.of(context).colorScheme.onSurface),
                       const SizedBox(width: 12),
-                      const Text('Permissions'),
+                      const Text('অনুমতি'),
                     ],
                   ),
                 ),
@@ -128,14 +128,14 @@ class _ManagePageState extends State<ManagePage> {
             ),
             IconButton(
               icon: const Icon(LucideIcons.user),
-              tooltip: 'Profile',
+              tooltip: 'প্রোফাইল',
               onPressed: () => context.push('/dashboard/profile'),
             ),
           ],
           bottom: const TabBar(
             tabs: [
-              Tab(text: 'My Groups'),
-              Tab(text: 'Discover'),
+              Tab(text: 'আমার গ্রুপ'),
+              Tab(text: 'অনুসন্ধান'),
             ],
           ),
         ),

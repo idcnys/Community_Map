@@ -53,19 +53,19 @@ class _FeedPageState extends ConsumerState<FeedPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Feed'),
+        title: const Text('ফিড'),
         automaticallyImplyLeading: false,
         actions: [
           if (isGuest)
             IconButton(
               icon: const Icon(LucideIcons.logOut),
-              tooltip: 'Sign Out',
+              tooltip: 'সাইন আউট',
               onPressed: _handleGuestLogout,
             )
           else ...[
             IconButton(
               icon: const Icon(LucideIcons.settings2),
-              tooltip: 'Manage My Posts',
+              tooltip: 'আমার পোস্ট পরিচালনা',
               onPressed: () {
                 Navigator.of(context).push(MaterialPageRoute(
                   builder: (_) => const ManagePostsPage(),
@@ -125,7 +125,7 @@ class _FeedPageState extends ConsumerState<FeedPage> {
           : FloatingActionButton.extended(
               onPressed: _showPostOptions,
               icon: const Icon(LucideIcons.plus),
-              label: const Text('Post'),
+              label: const Text('পোস্ট'),
             ),
       body: _buildFeedList(),
     );
@@ -149,12 +149,12 @@ class _FeedPageState extends ConsumerState<FeedPage> {
           children: [
             Padding(
               padding: const EdgeInsets.all(16),
-              child: Text('Create New', style: Theme.of(ctx).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+              child: Text('নতুন তৈরি করুন', style: Theme.of(ctx).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
             ),
             ListTile(
               leading: Icon(LucideIcons.fileText, color: Theme.of(ctx).colorScheme.primary),
-              title: const Text('Normal Post'),
-              subtitle: const Text('Share text with the community'),
+              title: const Text('সাধারণ পোস্ট'),
+              subtitle: const Text('কমিউনিটির সাথে লেখা শেয়ার করুন'),
               onTap: () {
                 Navigator.of(ctx).pop();
                 context.push('/dashboard/create-post');
@@ -162,8 +162,8 @@ class _FeedPageState extends ConsumerState<FeedPage> {
             ),
             ListTile(
               leading: Icon(LucideIcons.barChart2, color: Theme.of(ctx).colorScheme.tertiary),
-              title: const Text('Poll'),
-              subtitle: const Text('Create a vote for the community'),
+              title: const Text('জরিপ'),
+              subtitle: const Text('কমিউনিটির জন্য ভোট তৈরি করুন'),
               onTap: () {
                 Navigator.of(ctx).pop();
                 Navigator.of(context).push(MaterialPageRoute(
@@ -185,8 +185,8 @@ class _FeedPageState extends ConsumerState<FeedPage> {
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 12),
         children: [
-          _filterChip('All', 'all', filter),
-          _filterChip('Public', 'public', filter),
+          _filterChip('সব', 'all', filter),
+          _filterChip('পাবলিক', 'public', filter),
           ...myGroups.map((g) => _filterChip(g.name, g.id, filter)),
         ],
       ),
@@ -204,6 +204,7 @@ class _FeedPageState extends ConsumerState<FeedPage> {
         label: Text(
           label,
           style: TextStyle(
+            fontFamily: 'EkusheInter',
             color: isSelected
                 ? theme.colorScheme.onPrimary
                 : theme.colorScheme.onSurface,
@@ -244,11 +245,11 @@ class _FeedPageState extends ConsumerState<FeedPage> {
           children: [
             Icon(LucideIcons.alertCircle, size: 48, color: theme.colorScheme.onSurfaceVariant.withAlpha(150)),
             SizedBox(height: 12),
-            Text('Failed to load feed', style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
+            Text('ফিড লোড করতে ব্যর্থ', style: TextStyle(fontFamily: 'EkusheInter', color: theme.colorScheme.onSurfaceVariant)),
             const SizedBox(height: 8),
             FilledButton.tonal(
               onPressed: () => ref.read(paginatedFeedProvider.notifier).refresh(),
-              child: const Text('Retry'),
+              child: const Text('আবার চেষ্টা করুন'),
             ),
           ],
         ),
@@ -264,9 +265,9 @@ class _FeedPageState extends ConsumerState<FeedPage> {
                 Icon(LucideIcons.newspaper, size: 64, color: theme.colorScheme.onSurfaceVariant.withAlpha(150)),
                 SizedBox(height: 16),
                 Text(
-                  'No posts yet.\nBe the first to share something!',
+                  'এখনো কোনো পোস্ট নেই।\nপ্রথম কিছু শেয়ার করুন!',
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+                  style: TextStyle(fontFamily: 'EkusheInter', color: theme.colorScheme.onSurfaceVariant),
                 ),
               ],
             ),
