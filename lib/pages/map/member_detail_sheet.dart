@@ -127,7 +127,7 @@ class _MemberDetailSheetState extends State<MemberDetailSheet> {
               _buildInfoRow(
                 icon: LucideIcons.calendar,
                 label: 'জন্মতারিখ',
-                value: _formatDob(_profile?['dateOfBirth']),
+                value: formatDateOfBirth(_profile?['dateOfBirth']),
                 theme: theme,
               ),
               const Divider(height: 24),
@@ -224,10 +224,6 @@ class _MemberDetailSheetState extends State<MemberDetailSheet> {
     );
   }
 
-  String _formatDob(dynamic dob) {
-    if (dob == null || dob.toString().isEmpty) return 'নির্ধারিত নয়';
-    return dob.toString();
-  }
 
   String _formatLastActive(dynamic ts) {
     if (ts == null) return 'অজানা';

@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:go_router/go_router.dart';
 import '../core/utils/validators.dart';
+import '../core/utils/time_ago.dart';
 import '../core/utils/snackbar_helper.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
@@ -51,7 +52,7 @@ class _SignUpPageState extends State<SignUpPage> {
     if (picked != null && picked != _selectedDate) {
       setState(() {
         _selectedDate = picked;
-        _dobController.text = '${picked.day}/${picked.month}/${picked.year}';
+        _dobController.text = formatDateOfBirth(picked);
       });
     }
   }
