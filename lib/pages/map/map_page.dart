@@ -120,8 +120,8 @@ class _MapPageState extends ConsumerState<MapPage>
           if (missing.isNotEmpty && !_hasShownMissingToast) {
             _hasShownMissingToast = true;
             final names = missing.length > 2
-                ? '${missing.length} members haven\'t shared location'
-                : '${missing.length} member(s) haven\'t shared location yet';
+                ? '${missing.length} জন সদস্য এখনো লোকেশন শেয়ার করেননি'
+                : '${missing.length} জন সদস্য এখনো লোকেশন শেয়ার করেননি';
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(names),
@@ -220,7 +220,7 @@ class _MapPageState extends ConsumerState<MapPage>
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('No places found in this area'),
+            content: Text('এই এলাকায় কোনো স্থান পাওয়া যায়নি'),
             duration: Duration(seconds: 2),
             behavior: SnackBarBehavior.floating,
           ),
@@ -301,7 +301,7 @@ class _MapPageState extends ConsumerState<MapPage>
                       );
                     }
                     final uid = loc['uid'] ?? '';
-                    final name = loc['name'] ?? 'Member';
+                    final name = loc['name'] ?? 'সদস্য';
                     final avatarUrl = _memberAvatars[uid];
                     return Marker(
                       point: LatLng(lat, lng),
@@ -539,6 +539,7 @@ class _MapPageState extends ConsumerState<MapPage>
                                   color: theme.colorScheme.primary,
                                 ),
                                 style: TextStyle(
+                                  fontFamily: 'EkusheInter',
                                   color: isGuest
                                       ? theme.colorScheme.onSurfaceVariant
                                             .withAlpha(120)
@@ -555,7 +556,7 @@ class _MapPageState extends ConsumerState<MapPage>
                                         SizedBox(width: 6),
                                         Flexible(
                                           child: Text(
-                                            'Global',
+                                            'গ্লোবাল',
                                             overflow: TextOverflow.ellipsis,
                                           ),
                                         ),
@@ -594,7 +595,7 @@ class _MapPageState extends ConsumerState<MapPage>
                         const Spacer(),
                         _circleButton(
                           icon: LucideIcons.archive,
-                          tooltip: 'Archived Reports',
+                          tooltip: 'আর্কাইভ করা রিপোর্ট',
                           onPressed: () {
                             Navigator.of(context).push(
                               MaterialPageRoute(
@@ -637,6 +638,7 @@ class _MapPageState extends ConsumerState<MapPage>
                                     color: Color(0xFF2563EB),
                                   ),
                                   style: const TextStyle(
+                                    fontFamily: 'EkusheInter',
                                     color: Color(0xFF2563EB),
                                     fontSize: 12,
                                     fontWeight: FontWeight.w600,
@@ -649,7 +651,7 @@ class _MapPageState extends ConsumerState<MapPage>
                                         children: [
                                           Icon(LucideIcons.car, size: 14),
                                           SizedBox(width: 4),
-                                          Text('Drive'),
+                                          Text('গাড়ি'),
                                         ],
                                       ),
                                     ),
@@ -660,7 +662,7 @@ class _MapPageState extends ConsumerState<MapPage>
                                         children: [
                                           Icon(LucideIcons.footprints, size: 14),
                                           SizedBox(width: 4),
-                                          Text('Walk'),
+                                          Text('হাঁটা'),
                                         ],
                                       ),
                                     ),
@@ -671,7 +673,7 @@ class _MapPageState extends ConsumerState<MapPage>
                                         children: [
                                           Icon(LucideIcons.bike, size: 14),
                                           SizedBox(width: 4),
-                                          Text('Cycle'),
+                                          Text('সাইকেল'),
                                         ],
                                       ),
                                     ),
@@ -690,7 +692,7 @@ class _MapPageState extends ConsumerState<MapPage>
                           // Clear route button
                           _circleButton(
                             icon: LucideIcons.x,
-                            tooltip: 'Clear Route',
+                            tooltip: 'রুট মুছুন',
                             onPressed: _clearRoute,
                           ),
                           const Spacer(),
@@ -806,7 +808,7 @@ class _MapPageState extends ConsumerState<MapPage>
                       SizedBox(height: 12),
                       Text(
                         'Calculating route...',
-                        style: TextStyle(color: Colors.white, fontSize: 14),
+                        style: TextStyle(fontFamily: 'EkusheInter', color: Colors.white, fontSize: 14),
                       ),
                     ],
                   ),
@@ -977,7 +979,7 @@ class _MapPageState extends ConsumerState<MapPage>
                         }
                       : null,
                   icon: const Icon(LucideIcons.chevronLeft, size: 16),
-                  label: const Text('Prev'),
+                  label: const Text('আগের'),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 8),
                     visualDensity: VisualDensity.compact,
@@ -996,7 +998,7 @@ class _MapPageState extends ConsumerState<MapPage>
                         }
                       : null,
                   icon: const Icon(LucideIcons.chevronRight, size: 16),
-                  label: const Text('Next'),
+                  label: const Text('পরের'),
                   style: FilledButton.styleFrom(
                     backgroundColor: const Color(0xFF2563EB),
                     padding: const EdgeInsets.symmetric(vertical: 8),
@@ -1144,7 +1146,7 @@ class _MapPageState extends ConsumerState<MapPage>
       backgroundColor: Theme.of(context).colorScheme.error,
       child: _circleButton(
         icon: LucideIcons.bell,
-        tooltip: 'Latest Reports',
+        tooltip: 'সর্বশেষ রিপোর্ট',
         onPressed: () {
           showModalBottomSheet(
             context: context,
@@ -1207,6 +1209,7 @@ class _MapPageState extends ConsumerState<MapPage>
                     showCheckmark: false,
                     backgroundColor: Theme.of(context).colorScheme.surface.withAlpha(230),
                     labelStyle: TextStyle(
+                      fontFamily: 'EkusheInter',
                       fontSize: 11,
                       fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
                       color: isActive ? color : Theme.of(context).colorScheme.onSurface,
@@ -1244,7 +1247,7 @@ class _MapPageState extends ConsumerState<MapPage>
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Enable location to find nearby services'),
+              content: Text('কাছাকাছি সেবা খুঁজতে লোকেশন চালু করুন'),
               backgroundColor: Colors.red,
               behavior: SnackBarBehavior.floating,
             ),
@@ -1283,7 +1286,7 @@ class _MapPageState extends ConsumerState<MapPage>
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Enable location to calculate routes'),
+            content: Text('রুট হিসাব করতে লোকেশন চালু করুন'),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
           ),
@@ -1316,7 +1319,7 @@ class _MapPageState extends ConsumerState<MapPage>
     if (!result.isSuccess) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(result.error ?? 'Failed to calculate route'),
+          content: Text(result.error ?? 'রুট হিসাব করা যায়নি'),
           backgroundColor: Colors.red,
           behavior: SnackBarBehavior.floating,
         ),

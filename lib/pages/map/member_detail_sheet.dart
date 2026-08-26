@@ -114,7 +114,7 @@ class _MemberDetailSheetState extends State<MemberDetailSheet> {
                         const SizedBox(height: 2),
                         Text(
                           _profile?['email'] ?? '',
-                          style: TextStyle(fontSize: 13, color: theme.colorScheme.onSurfaceVariant),
+                          style: TextStyle(fontFamily: 'EkusheInter', fontSize: 13, color: theme.colorScheme.onSurfaceVariant),
                         ),
                       ],
                     ),
@@ -126,14 +126,14 @@ class _MemberDetailSheetState extends State<MemberDetailSheet> {
               // Details
               _buildInfoRow(
                 icon: LucideIcons.calendar,
-                label: 'Date of Birth',
+                label: 'জন্মতারিখ',
                 value: _formatDob(_profile?['dateOfBirth']),
                 theme: theme,
               ),
               const Divider(height: 24),
               _buildInfoRow(
                 icon: LucideIcons.clock,
-                label: 'Last Active',
+                label: 'সর্বশেষ সক্রিয়',
                 value: _formatLastActive(_profile?['lastActive']),
                 theme: theme,
               ),
@@ -141,7 +141,7 @@ class _MemberDetailSheetState extends State<MemberDetailSheet> {
                 const Divider(height: 24),
                 _buildInfoRow(
                   icon: LucideIcons.phone,
-                  label: 'Phone',
+                  label: 'ফোন',
                   value: _profile?['phone'] ?? '',
                   theme: theme,
                 ),
@@ -150,7 +150,7 @@ class _MemberDetailSheetState extends State<MemberDetailSheet> {
                 const Divider(height: 24),
                 _buildInfoRow(
                   icon: LucideIcons.mapPin,
-                  label: 'Location',
+                  label: 'অবস্থান',
                   value: _profile?['location'] ?? '',
                   theme: theme,
                 ),
@@ -159,7 +159,7 @@ class _MemberDetailSheetState extends State<MemberDetailSheet> {
                 const Divider(height: 24),
                 _buildInfoRow(
                   icon: LucideIcons.droplets,
-                  label: 'Blood Group',
+                  label: 'রক্তের গ্রুপ',
                   value: _profile?['bloodGroup'] ?? '',
                   theme: theme,
                 ),
@@ -168,7 +168,7 @@ class _MemberDetailSheetState extends State<MemberDetailSheet> {
                 const Divider(height: 24),
                 _buildInfoRow(
                   icon: LucideIcons.heart,
-                  label: 'Hobby',
+                  label: 'শখ',
                   value: _profile?['hobby'] ?? '',
                   theme: theme,
                 ),
@@ -177,7 +177,7 @@ class _MemberDetailSheetState extends State<MemberDetailSheet> {
                 const Divider(height: 24),
                 _buildInfoRow(
                   icon: LucideIcons.info,
-                  label: 'Bio',
+                  label: 'পরিচিতি',
                   value: _profile?['bio'] ?? '',
                   theme: theme,
                 ),
@@ -213,10 +213,10 @@ class _MemberDetailSheetState extends State<MemberDetailSheet> {
             children: [
               Text(
                 label,
-                style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
+                style: TextStyle(fontFamily: 'EkusheInter', fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
               ),
               const SizedBox(height: 2),
-              Text(value, style: const TextStyle(fontSize: 15)),
+              Text(value, style: const TextStyle(fontFamily: 'EkusheInter', fontSize: 15)),
             ],
           ),
         ),
@@ -225,17 +225,17 @@ class _MemberDetailSheetState extends State<MemberDetailSheet> {
   }
 
   String _formatDob(dynamic dob) {
-    if (dob == null || dob.toString().isEmpty) return 'Not set';
+    if (dob == null || dob.toString().isEmpty) return 'নির্ধারিত নয়';
     return dob.toString();
   }
 
   String _formatLastActive(dynamic ts) {
-    if (ts == null) return 'Unknown';
+    if (ts == null) return 'অজানা';
     try {
       final dt = ts is Timestamp ? ts.toDate() : DateTime.parse(ts.toString());
       return timeAgo(dt);
     } catch (_) {
-      return 'Unknown';
+      return 'অজানা';
     }
   }
 }

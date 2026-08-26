@@ -52,7 +52,6 @@ dependencies:
   # Navigation
   go_router: ^17.5.0
 
-  google_fonts: ^8.2.1
   lucide_icons_flutter: ^3.1.15
 
   # Image upload & display
@@ -101,6 +100,7 @@ flutter:
   assets:
     - assets/splash/
     - assets/icon/
+    - assets/font/
     # Runtime config — populated from .env (gitignored). See .env.example
     - .env
 
@@ -127,8 +127,10 @@ flutter:
   #       - asset: fonts/TrajanPro_Bold.ttf
   #         weight: 700
   #
-  # For details regarding fonts from package dependencies,
-  # see https://flutter.dev/to/font-from-package
+  fonts:
+    - family: EkusheInter
+      fonts:
+        - asset: assets/font/ekushe_inter.ttf
 
 
 # ─── Flutter Native Splash ─────────────────────────────────────────────

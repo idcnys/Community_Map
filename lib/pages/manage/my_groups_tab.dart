@@ -7,6 +7,7 @@ import '../../services/group_service.dart';
 import '../../services/group_chat_service.dart';
 import '../../models/group_model.dart';
 import 'group_detail_page.dart';
+import 'create_group_page.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class MyGroupsTab extends ConsumerWidget {
@@ -23,7 +24,7 @@ class MyGroupsTab extends ConsumerWidget {
         Expanded(
           child: groupsAsync.when(
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Center(child: Text('Error: $e')),
+            error: (e, _) => Center(child: Text('ত্রুটি: $e')),
             data: (groups) {
               final invites = invitesAsync.value ?? [];
 
@@ -34,11 +35,11 @@ class MyGroupsTab extends ConsumerWidget {
                     children: [
                       Icon(LucideIcons.users, size: 64, color: theme.colorScheme.onSurfaceVariant.withAlpha(150)),
                       const SizedBox(height: 12),
-                      Text('No groups yet', style: theme.textTheme.titleMedium),
+                      Text('এখনো কোনো গ্রুপ নেই', style: theme.textTheme.titleMedium),
                       const SizedBox(height: 4),
                       Text(
-                        'Join or create a group to get started.',
-                        style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+                        'শুরু করতে একটি গ্রুপে যোগ দিন বা তৈরি করুন।',
+                        style: TextStyle(fontFamily: 'EkusheInter', color: theme.colorScheme.onSurfaceVariant),
                       ),
                     ],
                   ),
@@ -62,7 +63,7 @@ class MyGroupsTab extends ConsumerWidget {
                           Icon(LucideIcons.mailOpen, size: 16, color: theme.colorScheme.primary),
                           const SizedBox(width: 6),
                           Text(
-                            'Invites (${invites.length})',
+                            'আমন্ত্রণ (${invites.length})',
                             style: theme.textTheme.titleSmall?.copyWith(
                               fontWeight: FontWeight.w600,
                               color: theme.colorScheme.primary,
@@ -81,7 +82,7 @@ class MyGroupsTab extends ConsumerWidget {
                           Icon(LucideIcons.users, size: 16, color: theme.colorScheme.onSurfaceVariant),
                           const SizedBox(width: 6),
                           Text(
-                            'My Groups (${groups.length})',
+                            'আমার গ্রুপ (${groups.length})',
                             style: theme.textTheme.titleSmall?.copyWith(
                               fontWeight: FontWeight.w600,
                               color: theme.colorScheme.onSurfaceVariant,
@@ -103,9 +104,11 @@ class MyGroupsTab extends ConsumerWidget {
           child: SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
-              onPressed: () => _showCreateGroupDialog(context, ref),
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const CreateGroupPage()),
+              ),
               icon: const Icon(LucideIcons.plus),
-              label: const Text('Create New Group'),
+              label: const Text('নতুন গ্রুপ তৈরি করুন'),
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 14),
               ),
@@ -113,81 +116,6 @@ class MyGroupsTab extends ConsumerWidget {
           ),
         ),
       ],
-    );
-  }
-
-  void _showCreateGroupDialog(BuildContext context, WidgetRef ref) {
-    final nameCtrl = TextEditingController();
-    final descCtrl = TextEditingController();
-    final formKey = GlobalKey<FormState>();
-    bool isPrivate = false;
-
-    showDialog(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setModalState) => AlertDialog(
-          title: const Text('Create Group'),
-          content: Form(
-            key: formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextFormField(
-                  controller: nameCtrl,
-                  decoration: const InputDecoration(labelText: 'Group Name'),
-                  validator: (v) => (v == null || v.trim().length < 3)
-                      ? 'Name must be at least 3 characters'
-                      : null,
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: descCtrl,
-                  maxLines: 2,
-                  decoration: const InputDecoration(labelText: 'Description'),
-                ),
-                const SizedBox(height: 8),
-                SwitchListTile(
-                  title: const Text('Private Group'),
-                  subtitle: Text(
-                    isPrivate
-                        ? 'Invite-only • Hidden from discover'
-                        : 'Anyone can find and request to join',
-                    style: const TextStyle(fontSize: 12),
-                  ),
-                  value: isPrivate,
-                  onChanged: (v) => setModalState(() => isPrivate = v),
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: () async {
-                if (!formKey.currentState!.validate()) return;
-                Navigator.of(ctx).pop();
-
-                final error = await ref.read(groupServiceProvider).createGroup(
-                  name: nameCtrl.text.trim(),
-                  description: descCtrl.text.trim(),
-                  isPrivate: isPrivate,
-                );
-
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(error ?? 'Group created!')),
-                  );
-                }
-              },
-              child: const Text('Create'),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
@@ -211,7 +139,7 @@ class _GroupTile extends StatelessWidget {
         leading: const Icon(LucideIcons.users),
         title: Text(group.name),
         subtitle: Text(
-          '${group.memberCount} members${isAdmin ? ' • Admin' : ''}${group.isPrivate ? ' • 🔒 Private' : ''}',
+          '${group.memberCount} জন সদস্য${isAdmin ? ' • অ্যাডমিন' : ''}${group.isPrivate ? ' • 🔒 প্রাইভেট' : ''}',
         ),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
@@ -278,7 +206,7 @@ class _GroupTile extends StatelessWidget {
                   if (value == 'leave') _leaveGroup(context, group.id);
                 },
                 itemBuilder: (_) => [
-                  const PopupMenuItem(value: 'leave', child: Text('Leave Group')),
+                  const PopupMenuItem(value: 'leave', child: Text('গ্রুপ ছাড়ুন')),
                 ],
               ),
           ],
@@ -340,7 +268,7 @@ class _InviteTile extends ConsumerWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                       Text(
-                        'Invited by ${group.createdByName}',
+                        '${group.createdByName} আমন্ত্রণ করেছেন',
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
@@ -370,7 +298,7 @@ class _InviteTile extends ConsumerWidget {
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 10),
                     ),
-                    child: const Text('Decline'),
+                    child: const Text('প্রত্যাখ্যান'),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -380,7 +308,7 @@ class _InviteTile extends ConsumerWidget {
                     style: FilledButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 10),
                     ),
-                    child: const Text('Accept'),
+                    child: const Text('গ্রহণ'),
                   ),
                 ),
               ],
@@ -395,7 +323,7 @@ class _InviteTile extends ConsumerWidget {
     final error = await ref.read(groupServiceProvider).acceptInvite(group.id);
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error ?? 'Joined ${group.name}!')),
+        SnackBar(content: Text(error ?? '${group.name}-এ যোগ দিয়েছেন!')),
       );
     }
   }
@@ -404,7 +332,7 @@ class _InviteTile extends ConsumerWidget {
     final error = await ref.read(groupServiceProvider).declineInvite(group.id);
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error ?? 'Invite declined')),
+        SnackBar(content: Text(error ?? 'আমন্ত্রণ প্রত্যাখ্যাত')),
       );
     }
   }

@@ -34,7 +34,7 @@ class _DiscoverGroupsTabState extends ConsumerState<DiscoverGroupsTab> {
           child: TextField(
             controller: _searchCtrl,
             decoration: InputDecoration(
-              hintText: 'Search groups...',
+              hintText: 'গ্রুপ খুঁজুন...',
               prefixIcon: const Icon(LucideIcons.search),
               filled: true,
               fillColor: theme.colorScheme.surfaceContainerHighest,
@@ -58,7 +58,7 @@ class _DiscoverGroupsTabState extends ConsumerState<DiscoverGroupsTab> {
         Expanded(
           child: groupsAsync.when(
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Center(child: Text('Error: $e')),
+            error: (e, _) => Center(child: Text('ত্রুটি: $e')),
             data: (allGroups) {
               final discoverGroups = allGroups
                   .where((g) => !g.members.contains(uid))
@@ -67,8 +67,8 @@ class _DiscoverGroupsTabState extends ConsumerState<DiscoverGroupsTab> {
               if (discoverGroups.isEmpty) {
                 return Center(
                   child: Text(
-                    'No groups to discover.',
-                    style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+                    'খুঁজে দেখার মতো কোনো গ্রুপ নেই।',
+                    style: TextStyle(fontFamily: 'EkusheInter', color: theme.colorScheme.onSurfaceVariant),
                   ),
                 );
               }
@@ -87,7 +87,7 @@ class _DiscoverGroupsTabState extends ConsumerState<DiscoverGroupsTab> {
                     final hasRequested = group.pendingRequests.contains(uid);
                     final adminName = group.createdByName.isNotEmpty
                         ? group.createdByName
-                        : 'Unknown';
+                        : 'অজ্ঞাত';
 
                     return Card(
                       margin: const EdgeInsets.only(bottom: 10),
@@ -129,17 +129,17 @@ class _DiscoverGroupsTabState extends ConsumerState<DiscoverGroupsTab> {
                                         onPressed: () => _cancelRequest(group.id),
                                         style: OutlinedButton.styleFrom(
                                           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                                          textStyle: const TextStyle(fontSize: 13),
+                                          textStyle: const TextStyle(fontFamily: 'EkusheInter', fontSize: 13),
                                         ),
-                                        child: const Text('Requested'),
+                                        child: const Text('অনুরোধ পাঠানো হয়েছে'),
                                       )
                                     : FilledButton(
                                         onPressed: () => _sendRequest(group.id),
                                         style: FilledButton.styleFrom(
                                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                          textStyle: const TextStyle(fontSize: 13),
+                                          textStyle: const TextStyle(fontFamily: 'EkusheInter', fontSize: 13),
                                         ),
-                                        child: const Text('Join'),
+                                        child: const Text('যোগ দিন'),
                                       ),
                               ],
                             ),
@@ -171,7 +171,7 @@ class _DiscoverGroupsTabState extends ConsumerState<DiscoverGroupsTab> {
                                 Icon(LucideIcons.users, size: 13, color: theme.colorScheme.onSurfaceVariant),
                                 const SizedBox(width: 4),
                                 Text(
-                                  '${group.memberCount} members',
+                                  '${group.memberCount} জন সদস্য',
                                   style: theme.textTheme.bodySmall?.copyWith(
                                     color: theme.colorScheme.onSurfaceVariant,
                                   ),

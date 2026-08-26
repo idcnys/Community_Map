@@ -124,16 +124,16 @@ class ReportPostModel with AuthorOwned {
 /// Report type options for the dropdown
 class ReportTypes {
   static const List<String> options = [
-    'Theft',
-    'Robbery',
-    'Threat',
-    'Fire',
-    'Accident',
-    'Vandalism',
-    'Suspicious Activity',
-    'Domestic Violence',
-    'Missing Person',
-    'Other',
+    'চুরি',
+    'ডাকাতি',
+    'হুমকি',
+    'আগুন',
+    'দুর্ঘটনা',
+    'ধ্বংসযজ্ঞ',
+    'সন্দেহজনক কার্যকলাপ',
+    'পারিবারিক সহিংসতা',
+    'নিখোঁজ ব্যক্তি',
+    'অন্যান্য',
   ];
 
   static const String urgentType = 'Urgent Emergency';

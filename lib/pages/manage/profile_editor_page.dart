@@ -70,12 +70,12 @@ class _ProfileEditorPageState extends State<ProfileEditorPage> {
           children: [
             ListTile(
               leading: const Icon(LucideIcons.camera),
-              title: const Text('Camera'),
+              title: const Text('ক্যামেরা'),
               onTap: () => Navigator.of(ctx).pop('camera'),
             ),
             ListTile(
               leading: const Icon(LucideIcons.image),
-              title: const Text('Gallery'),
+              title: const Text('গ্যালারি'),
               onTap: () => Navigator.of(ctx).pop('gallery'),
             ),
           ],
@@ -120,11 +120,11 @@ class _ProfileEditorPageState extends State<ProfileEditorPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Edit Profile'),
+        title: const Text('প্রোফাইল সম্পাদনা'),
         actions: [
           IconButton(
             icon: const Icon(LucideIcons.logOut),
-            tooltip: 'Logout',
+            tooltip: 'লগ আউট',
             onPressed: _logout,
           ),
         ],
@@ -165,7 +165,7 @@ class _ProfileEditorPageState extends State<ProfileEditorPage> {
                                   _nameCtrl.text.isNotEmpty
                                       ? _nameCtrl.text[0].toUpperCase()
                                       : '?',
-                                  style: const TextStyle(fontSize: 36, fontWeight: FontWeight.bold),
+                                  style: const TextStyle(fontFamily: 'EkusheInter', fontSize: 36, fontWeight: FontWeight.bold),
                                 )
                               : null,
                         ),
@@ -193,19 +193,19 @@ class _ProfileEditorPageState extends State<ProfileEditorPage> {
                 const SizedBox(height: 4),
                 Center(
                   child: Text(
-                    'Tap to change photo',
-                    style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
+                    'ছবি পরিবর্তন করতে ট্যাপ করুন',
+                    style: TextStyle(fontFamily: 'EkusheInter', fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
                   ),
                 ),
                 const SizedBox(height: 24),
                 TextFormField(
                   controller: _nameCtrl,
                   decoration: const InputDecoration(
-                    labelText: 'Full Name',
+                    labelText: 'পুরো নাম',
                     prefixIcon: Icon(LucideIcons.user),
                   ),
                   validator: (v) => (v == null || v.trim().length < 3)
-                      ? 'Name must be at least 3 characters'
+                      ? 'নাম কমপক্ষে ৩ অক্ষরের হতে হবে'
                       : null,
                 ),
                 const SizedBox(height: 16),
@@ -213,7 +213,7 @@ class _ProfileEditorPageState extends State<ProfileEditorPage> {
                   controller: _bioCtrl,
                   maxLines: 2,
                   decoration: const InputDecoration(
-                    labelText: 'Bio',
+                    labelText: 'বায়ো',
                     prefixIcon: Icon(LucideIcons.info),
                   ),
                 ),
@@ -222,7 +222,7 @@ class _ProfileEditorPageState extends State<ProfileEditorPage> {
                   controller: _phoneCtrl,
                   keyboardType: TextInputType.phone,
                   decoration: const InputDecoration(
-                    labelText: 'Phone',
+                    labelText: 'ফোন',
                     prefixIcon: Icon(LucideIcons.phone),
                   ),
                 ),
@@ -230,7 +230,7 @@ class _ProfileEditorPageState extends State<ProfileEditorPage> {
                 TextFormField(
                   controller: _locationCtrl,
                   decoration: const InputDecoration(
-                    labelText: 'Location',
+                    labelText: 'লোকেশন',
                     prefixIcon: Icon(LucideIcons.mapPin),
                   ),
                 ),
@@ -242,15 +242,15 @@ class _ProfileEditorPageState extends State<ProfileEditorPage> {
                   enabled: _dobEditable,
                   onTap: _selectDob,
                   decoration: InputDecoration(
-                    labelText: 'Date of Birth',
+                    labelText: 'জন্মতারিখ',
                     hintText: 'DD/MM/YYYY',
                     prefixIcon: const Icon(LucideIcons.cake),
                     suffixIcon: _dobEditable
                         ? const Icon(LucideIcons.chevronDown)
                         : null,
                     helperText: _dobEditable
-                        ? 'Tap to set — can only be set once'
-                        : 'Cannot be changed',
+                        ? 'সেট করতে ট্যাপ করুন — শুধুমাত্র একবার সেট করা যাবে'
+                        : 'পরিবর্তন করা যাবে না',
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -258,11 +258,11 @@ class _ProfileEditorPageState extends State<ProfileEditorPage> {
                 DropdownButtonFormField<String>(
                   value: _bloodGroup.isEmpty ? null : _bloodGroup,
                   decoration: const InputDecoration(
-                    labelText: 'Blood Group',
+                    labelText: 'রক্তের গ্রুপ',
                     prefixIcon: Icon(LucideIcons.droplets),
                   ),
                   items: const [
-                    DropdownMenuItem(value: '', child: Text('Select')),
+                    DropdownMenuItem(value: '', child: Text('নির্বাচন করুন')),
                     DropdownMenuItem(value: 'A+', child: Text('A+')),
                     DropdownMenuItem(value: 'A-', child: Text('A-')),
                     DropdownMenuItem(value: 'B+', child: Text('B+')),
@@ -279,8 +279,8 @@ class _ProfileEditorPageState extends State<ProfileEditorPage> {
                 TextFormField(
                   controller: _hobbyCtrl,
                   decoration: const InputDecoration(
-                    labelText: 'Hobby',
-                    hintText: 'e.g. Reading, Photography, Cycling',
+                    labelText: 'শখ',
+                    hintText: 'যেমন: পড়া, ফটোগ্রাফি, সাইক্লিং',
                     prefixIcon: Icon(LucideIcons.heart),
                   ),
                 ),
@@ -293,7 +293,7 @@ class _ProfileEditorPageState extends State<ProfileEditorPage> {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(LucideIcons.save),
-                  label: Text(_uploadingImage ? 'Uploading photo...' : (_saving ? 'Saving...' : 'Save Changes')),
+                  label: Text(_uploadingImage ? 'ছবি আপলোড হচ্ছে...' : (_saving ? 'সংরক্ষণ হচ্ছে...' : 'পরিবর্তন সংরক্ষণ করুন')),
                   style: FilledButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
@@ -320,7 +320,7 @@ class _ProfileEditorPageState extends State<ProfileEditorPage> {
         folder: 'cmap/profiles',
         onError: (err) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Avatar upload failed: $err'), backgroundColor: Colors.red),
+            SnackBar(content: Text('ছবি আপলোড ব্যর্থ হয়েছে: $err'), backgroundColor: Colors.red),
           );
         },
       );
@@ -350,7 +350,7 @@ class _ProfileEditorPageState extends State<ProfileEditorPage> {
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Profile updated successfully')),
+        const SnackBar(content: Text('প্রোফাইল সফলভাবে আপডেট হয়েছে')),
       );
       Navigator.of(context).pop();
     }

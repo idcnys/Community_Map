@@ -92,9 +92,9 @@ class _CommunityPostCardState extends ConsumerState<CommunityPostCard> {
                       Expanded(
                         child: RichText(
                           text: TextSpan(
-                            style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
+                            style: TextStyle(fontFamily: 'EkusheInter', fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
                             children: [
-                              TextSpan(text: '${widget.post.authorName} reposted from '),
+                              TextSpan(text: '${widget.post.authorName} রিপোস্ট করেছেন '),
                               TextSpan(
                                 text: widget.post.originalAuthorName,
                                 style: TextStyle(
@@ -164,7 +164,7 @@ class _CommunityPostCardState extends ConsumerState<CommunityPostCard> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
-                      'Public',
+                      'সর্বজনীন',
                       style: TextStyle(
                         fontSize: 11,
                         color: theme.colorScheme.onPrimaryContainer,
@@ -277,7 +277,7 @@ class _CommunityPostCardState extends ConsumerState<CommunityPostCard> {
                         const SizedBox(width: 4),
                         Text(
                           '${livePost.viewCount}',
-                          style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontWeight: FontWeight.w500),
+                          style: TextStyle(fontFamily: 'EkusheInter', color: theme.colorScheme.onSurfaceVariant, fontWeight: FontWeight.w500),
                         ),
                       ],
                     ),
@@ -287,7 +287,7 @@ class _CommunityPostCardState extends ConsumerState<CommunityPostCard> {
                     IconButton(
                       icon: Icon(LucideIcons.flag,
                           size: 20, color: theme.colorScheme.onSurfaceVariant),
-                      tooltip: 'Report',
+                      tooltip: 'রিপোর্ট',
                       onPressed: () => _showReportDialog(context),
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
@@ -323,12 +323,12 @@ class _CommunityPostCardState extends ConsumerState<CommunityPostCard> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete Post'),
-        content: const Text('Are you sure you want to delete this post?'),
+        title: const Text('পোস্ট মুছুন'),
+        content: const Text('আপনি কি নিশ্চিত যে এই পোস্টটি মুছতে চান?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
+            child: const Text('বাতিল'),
           ),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: Colors.red),
@@ -338,7 +338,7 @@ class _CommunityPostCardState extends ConsumerState<CommunityPostCard> {
               await service.deletePost(widget.post.id);
               ref.read(paginatedFeedProvider.notifier).removePost(widget.post.id);
             },
-            child: const Text('Delete'),
+            child: const Text('মুছুন'),
           ),
         ],
       ),
@@ -356,7 +356,7 @@ class _CommunityPostCardState extends ConsumerState<CommunityPostCard> {
           children: [
             Icon(LucideIcons.flag, color: Theme.of(ctx).colorScheme.error, size: 18),
             const SizedBox(width: 6),
-            Expanded(child: Text('Report Post', style: Theme.of(ctx).textTheme.titleMedium)),
+            Expanded(child: Text('পোস্ট রিপোর্ট করুন', style: Theme.of(ctx).textTheme.titleMedium)),
             IconButton(
               icon: const Icon(LucideIcons.x, size: 18),
               onPressed: () => Navigator.of(ctx).pop(),
@@ -370,7 +370,7 @@ class _CommunityPostCardState extends ConsumerState<CommunityPostCard> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Why are you reporting this post?',
+              'আপনি কেন এই পোস্টটি রিপোর্ট করছেন?',
               style: TextStyle(color: Theme.of(ctx).colorScheme.onSurfaceVariant, fontSize: 13),
             ),
             const SizedBox(height: 6),
@@ -379,7 +379,7 @@ class _CommunityPostCardState extends ConsumerState<CommunityPostCard> {
               visualDensity: VisualDensity.compact,
               contentPadding: EdgeInsets.zero,
               minVerticalPadding: 4,
-              title: Text(cause, style: const TextStyle(fontSize: 13)),
+              title: Text(cause, style: const TextStyle(fontFamily: 'EkusheInter', fontSize: 13)),
               onTap: () async {
                 Navigator.of(ctx).pop();
                 final error = await service.reportPost(widget.post.id, cause);
@@ -395,7 +395,7 @@ class _CommunityPostCardState extends ConsumerState<CommunityPostCard> {
                   ref.read(paginatedFeedProvider.notifier).removePost(widget.post.id);
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text('Post reported. It will be hidden from your feed.'),
+                      content: Text('পোস্ট রিপোর্ট করা হয়েছে। এটি আপনার ফিড থেকে লুকানো থাকবে।'),
                       duration: Duration(seconds: 2),
                     ),
                   );
@@ -424,13 +424,13 @@ class _CommunityPostCardState extends ConsumerState<CommunityPostCard> {
             ),
             const SizedBox(width: 6),
             Text(
-              post.pollType == 'single' ? 'Single choice' : 'Multiple choice',
-              style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
+              post.pollType == 'single' ? 'একক নির্বাচন' : 'একাধিক নির্বাচন',
+              style: TextStyle(fontFamily: 'EkusheInter', fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
             ),
             const Spacer(),
             Text(
-              '$totalVotes vote${totalVotes == 1 ? '' : 's'}',
-              style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
+              '$totalVotes ভোট',
+              style: TextStyle(fontFamily: 'EkusheInter', fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
             ),
           ],
         ),
@@ -481,7 +481,7 @@ class _CommunityPostCardState extends ConsumerState<CommunityPostCard> {
                       ),
                       Text(
                         '$voteCount',
-                        style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
+                        style: TextStyle(fontFamily: 'EkusheInter', fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
                       ),
                     ],
                   ),
@@ -553,7 +553,7 @@ class _CommunityPostCardState extends ConsumerState<CommunityPostCard> {
             const SizedBox(width: 6),
             Text(
               '$count',
-              style: TextStyle(color: color, fontWeight: FontWeight.w500),
+              style: TextStyle(fontFamily: 'EkusheInter', color: color, fontWeight: FontWeight.w500),
             ),
           ],
         ),
@@ -577,13 +577,13 @@ class _CommunityPostCardState extends ConsumerState<CommunityPostCard> {
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: Text(
-                  'Repost to...',
+                  'রিপোস্ট করুন...',
                   style: Theme.of(ctx).textTheme.titleMedium,
                 ),
               ),
               ListTile(
                 leading: const Icon(LucideIcons.globe),
-                title: const Text('Public'),
+                title: const Text('সর্বজনীন'),
                 onTap: () async {
                   Navigator.of(ctx).pop();
                   final service = ref.read(postServiceProvider);

@@ -54,7 +54,7 @@ class _VoiceRecordButtonState extends State<VoiceRecordButton>
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Microphone permission required'),
+              content: Text('মাইক্রোফোনের অনুমতি প্রয়োজন'),
               backgroundColor: Colors.red,
             ),
           );
@@ -87,7 +87,7 @@ class _VoiceRecordButtonState extends State<VoiceRecordButton>
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to start recording: $e')),
+          SnackBar(content: Text('রেকর্ডিং শুরু করা যায়নি: $e')),
         );
       }
     }
@@ -152,7 +152,7 @@ class _VoiceRecordButtonState extends State<VoiceRecordButton>
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                'Voice note attached',
+                'ভয়েস নোট সংযুক্ত আছে',
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.colorScheme.primary,
                   fontWeight: FontWeight.w500,
@@ -203,7 +203,7 @@ class _VoiceRecordButtonState extends State<VoiceRecordButton>
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  'Recording...',
+                  'রেকর্ডিং হচ্ছে...',
                   style: theme.textTheme.titleSmall?.copyWith(
                     color: theme.colorScheme.error,
                     fontWeight: FontWeight.w600,
@@ -219,7 +219,6 @@ class _VoiceRecordButtonState extends State<VoiceRecordButton>
                   child: Text(
                     _formatTime(_elapsedSeconds),
                     style: theme.textTheme.bodySmall?.copyWith(
-                      fontFamily: 'monospace',
                       fontWeight: FontWeight.bold,
                       color: theme.colorScheme.error,
                     ),
@@ -229,7 +228,7 @@ class _VoiceRecordButtonState extends State<VoiceRecordButton>
             ),
             const SizedBox(height: 8),
             Text(
-              'Max ${widget.maxDurationSeconds}s',
+              'সর্বোচ্চ ${widget.maxDurationSeconds} সেকেন্ড',
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -241,7 +240,7 @@ class _VoiceRecordButtonState extends State<VoiceRecordButton>
                 OutlinedButton.icon(
                   onPressed: _cancelRecording,
                   icon: const Icon(LucideIcons.x, size: 16),
-                  label: const Text('Cancel'),
+                  label: const Text('বাতিল'),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: theme.colorScheme.error,
                     side: BorderSide(color: theme.colorScheme.error.withAlpha(100)),
@@ -251,7 +250,7 @@ class _VoiceRecordButtonState extends State<VoiceRecordButton>
                 FilledButton.icon(
                   onPressed: _stopRecording,
                   icon: const Icon(LucideIcons.square, size: 16),
-                  label: const Text('Stop'),
+                  label: const Text('থামান'),
                   style: FilledButton.styleFrom(
                     backgroundColor: theme.colorScheme.error,
                     foregroundColor: Colors.white,
@@ -283,14 +282,14 @@ class _VoiceRecordButtonState extends State<VoiceRecordButton>
             Icon(LucideIcons.mic, size: 20, color: theme.colorScheme.primary),
             const SizedBox(width: 10),
             Text(
-              'Tap to Record Voice',
+              'ভয়েস রেকর্ড করতে ট্যাপ করুন',
               style: theme.textTheme.bodyMedium?.copyWith(
                 fontWeight: FontWeight.w500,
               ),
             ),
             const SizedBox(width: 8),
             Text(
-              '(max ${widget.maxDurationSeconds}s)',
+              '(সর্বোচ্চ ${widget.maxDurationSeconds} সেকেন্ড)',
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),

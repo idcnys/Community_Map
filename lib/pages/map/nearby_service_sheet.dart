@@ -133,7 +133,7 @@ class NearbyServiceSheet extends StatelessWidget {
                         }
                       : null,
                   icon: const Icon(LucideIcons.route, size: 18),
-                  label: const Text('Route'),
+                  label: const Text('রুট'),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: color,
                     side: BorderSide(color: color),
@@ -147,7 +147,7 @@ class NearbyServiceSheet extends StatelessWidget {
                 child: FilledButton.icon(
                   onPressed: () => _openInMaps(context),
                   icon: const Icon(LucideIcons.navigation, size: 18),
-                  label: const Text('Navigate'),
+                  label: const Text('নেভিগেট'),
                   style: FilledButton.styleFrom(
                     backgroundColor: color,
                     foregroundColor: Colors.white,
@@ -201,8 +201,8 @@ class NearbyServiceSheet extends StatelessWidget {
       place.longitude,
     );
     final label = distMeters < 1000
-        ? '${distMeters.round()} m away'
-        : '${(distMeters / 1000).toStringAsFixed(1)} km away';
+        ? '${distMeters.round()} মিটার দূরে'
+        : '${(distMeters / 1000).toStringAsFixed(1)} কিমি দূরে';
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),

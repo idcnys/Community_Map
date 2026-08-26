@@ -38,7 +38,7 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Verification email sent! Check your inbox.'),
+            content: Text('যাচাই ইমেইল পাঠানো হয়েছে! আপনার ইনবক্স দেখুন।'),
             backgroundColor: Colors.green,
           ),
         );
@@ -47,7 +47,7 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Failed to send email. Please try again later.'),
+            content: Text('ইমেইল পাঠানো যায়নি। পরে আবার চেষ্টা করুন।'),
             backgroundColor: Colors.red,
           ),
         );
@@ -95,7 +95,7 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Email not verified yet. Please check your inbox.'),
+              content: Text('ইমেইল এখনো যাচাই হয়নি। আপনার ইনবক্স দেখুন।'),
               backgroundColor: Colors.orange,
             ),
           );
@@ -105,7 +105,7 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Could not check verification status: $e'),
+            content: Text('যাচাইয়ের অবস্থা পরীক্ষা করা যায়নি: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -123,11 +123,11 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final email = FirebaseAuth.instance.currentUser?.email ?? 'your email';
+    final email = FirebaseAuth.instance.currentUser?.email ?? 'আপনার ইমেইল';
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Verify Email'),
+        title: const Text('ইমেইল যাচাই করুন'),
         centerTitle: true,
       ),
       body: SafeArea(
@@ -145,7 +145,7 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
                 ),
                 const SizedBox(height: 24),
                 Text(
-                  'Verify your email',
+                  'আপনার ইমেইল যাচাই করুন',
                   textAlign: TextAlign.center,
                   style: theme.textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.bold,
@@ -153,9 +153,9 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'We\'ve sent a verification link to:\n$email\n\n'
-                  'Please check your inbox (and spam folder) and click the '
-                  'link to activate your account.',
+                  'আমরা একটি যাচাই লিংক পাঠিয়েছি:\n$email\n\n'
+                  'অনুগ্রহ করে আপনার ইনবক্স (এবং স্প্যাম ফোল্ডার) দেখুন এবং '
+                  'অ্যাকাউন্ট সক্রিয় করতে লিংকে ক্লিক করুন।',
                   textAlign: TextAlign.center,
                   style: theme.textTheme.bodyLarge?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
@@ -180,8 +180,8 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
                         )
                       : const Icon(LucideIcons.checkCircle),
                   label: Text(
-                    _isChecking ? 'Checking...' : "I've verified my email",
-                    style: const TextStyle(fontSize: 16),
+                    _isChecking ? 'পরীক্ষা করা হচ্ছে...' : 'আমি আমার ইমেইল যাচাই করেছি',
+                    style: const TextStyle(fontFamily: 'EkusheInter', fontSize: 16),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -205,16 +205,16 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
                       : const Icon(LucideIcons.refreshCw),
                   label: Text(
                     _canResend
-                        ? 'Resend verification email'
-                        : 'Resend in ${_countdown}s',
-                    style: const TextStyle(fontSize: 16),
+                        ? 'যাচাই ইমেইল আবার পাঠান'
+                        : '${_countdown} সেকেন্ড পরে আবার পাঠান',
+                    style: const TextStyle(fontFamily: 'EkusheInter', fontSize: 16),
                   ),
                 ),
                 const SizedBox(height: 24),
 
                 TextButton(
                   onPressed: _signOutAndGoLogin,
-                  child: const Text('Back to Login'),
+                  child: const Text('লগইনে ফিরে যান'),
                 ),
               ],
             ),

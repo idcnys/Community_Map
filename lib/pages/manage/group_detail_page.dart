@@ -32,7 +32,7 @@ class _GroupDetailPageState extends ConsumerState<GroupDetailPage> {
     try {
       final doc = await _firestore.collection('users').doc(uid).get();
       final data = doc.data();
-      final name = (data?['fullName'] as String?) ?? 'Unknown User';
+      final name = (data?['fullName'] as String?) ?? 'অজ্ঞাত ব্যবহারকারী';
       final imageUrl = (data?['imageUrl'] as String?) ?? '';
       final ts = data?['lastActive'] as Timestamp?;
       final lastActive = ts?.toDate();
@@ -41,7 +41,7 @@ class _GroupDetailPageState extends ConsumerState<GroupDetailPage> {
       _lastActiveCache[uid] = lastActive;
       return {'name': name, 'avatar': imageUrl, 'lastActive': lastActive};
     } catch (_) {
-      return {'name': 'Unknown User', 'avatar': '', 'lastActive': null};
+      return {'name': 'অজ্ঞাত ব্যবহারকারী', 'avatar': '', 'lastActive': null};
     }
   }
 
@@ -51,7 +51,7 @@ class _GroupDetailPageState extends ConsumerState<GroupDetailPage> {
     final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Group Details')),
+      appBar: AppBar(title: const Text('গ্রুপের বিবরণ')),
       body: StreamBuilder<GroupModel?>(
         stream: ref.read(groupServiceProvider).getGroupById(widget.groupId),
         builder: (context, snapshot) {
@@ -61,7 +61,7 @@ class _GroupDetailPageState extends ConsumerState<GroupDetailPage> {
 
           final group = snapshot.data;
           if (group == null) {
-            return const Center(child: Text('Group not found.'));
+            return const Center(child: Text('গ্রুপ পাওয়া যায়নি।'));
           }
 
           final isAdmin = group.createdBy == uid;
@@ -84,27 +84,27 @@ class _GroupDetailPageState extends ConsumerState<GroupDetailPage> {
                           if (isAdmin)
                             IconButton(
                               icon: const Icon(LucideIcons.pencil, size: 18),
-                              tooltip: 'Edit group',
+                              tooltip: 'গ্রুপ সম্পাদনা',
                               onPressed: () => _showEditDialog(group),
                             ),
                         ],
                       ),
                       if (group.description.isNotEmpty) ...[
                         const SizedBox(height: 4),
-                        Text(group.description, style: TextStyle(color: theme.colorScheme.onSurface)),
+                        Text(group.description, style: TextStyle(fontFamily: 'EkusheInter', color: theme.colorScheme.onSurface)),
                       ],
                       const SizedBox(height: 8),
                       Row(
                         children: [
                           Text(
-                            '${group.memberCount} members \u2022 Created by ${group.createdByName}',
-                            style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 13),
+                            '${group.memberCount} জন সদস্য • তৈরি করেছেন ${group.createdByName}',
+                            style: TextStyle(fontFamily: 'EkusheInter', color: theme.colorScheme.onSurfaceVariant, fontSize: 13),
                           ),
                           if (group.isPrivate) ...[
                             const SizedBox(width: 8),
                             Icon(LucideIcons.lock, size: 12, color: theme.colorScheme.onSurfaceVariant),
                             const SizedBox(width: 2),
-                            Text('Private', style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 12)),
+                            Text('প্রাইভেট', style: TextStyle(fontFamily: 'EkusheInter', color: theme.colorScheme.onSurfaceVariant, fontSize: 12)),
                           ],
                         ],
                       ),
@@ -122,7 +122,7 @@ class _GroupDetailPageState extends ConsumerState<GroupDetailPage> {
                   ));
                 },
                 icon: const Icon(LucideIcons.messageCircle, size: 18),
-                label: const Text('Group Chat'),
+                label: const Text('গ্রুপ চ্যাট'),
                 style: FilledButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14)),
               ),
               const SizedBox(height: 10),
@@ -134,7 +134,7 @@ class _GroupDetailPageState extends ConsumerState<GroupDetailPage> {
                     builder: (_) => GroupInvitePage(group: group),
                   )),
                   icon: const Icon(LucideIcons.userPlus, size: 18),
-                  label: const Text('Invite Members'),
+                  label: const Text('সদস্য আমন্ত্রণ'),
                   style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14)),
                 ),
               const SizedBox(height: 16),
@@ -142,7 +142,7 @@ class _GroupDetailPageState extends ConsumerState<GroupDetailPage> {
               // Pending invites (admin of private group)
               if (isAdmin && group.isPrivate && group.invites.isNotEmpty) ...[
                 Text(
-                  'Pending Invites (${group.invites.length})',
+                  'অপেক্ষমাণ আমন্ত্রণ (${group.invites.length})',
                   style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
@@ -154,13 +154,13 @@ class _GroupDetailPageState extends ConsumerState<GroupDetailPage> {
                       title: FutureBuilder<Map<String, dynamic>>(
                         future: _resolveMemberInfo(inviteUid),
                         builder: (ctx, infoSnap) => Text(
-                          (infoSnap.data?['name'] as String?) ?? 'Loading...',
+                          (infoSnap.data?['name'] as String?) ?? 'লোড হচ্ছে…',
                         ),
                       ),
-                      subtitle: const Text('Invite pending'),
+                      subtitle: const Text('আমন্ত্রণ অপেক্ষমাণ'),
                       trailing: IconButton(
                         icon: Icon(LucideIcons.x, color: theme.colorScheme.error),
-                        tooltip: 'Cancel invite',
+                        tooltip: 'আমন্ত্রণ বাতিল করুন',
                         onPressed: () => _cancelInvite(inviteUid),
                       ),
                     ),
@@ -172,7 +172,7 @@ class _GroupDetailPageState extends ConsumerState<GroupDetailPage> {
               // Pending requests (admin only, public groups)
               if (isAdmin && group.pendingRequests.isNotEmpty) ...[
                 Text(
-                  'Pending Requests (${group.pendingRequests.length})',
+                  'অপেক্ষমাণ অনুরোধ (${group.pendingRequests.length})',
                   style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
@@ -184,21 +184,21 @@ class _GroupDetailPageState extends ConsumerState<GroupDetailPage> {
                       title: FutureBuilder<Map<String, dynamic>>(
                         future: _resolveMemberInfo(requestUid),
                         builder: (ctx, infoSnap) => Text(
-                          (infoSnap.data?['name'] as String?) ?? 'Loading...',
+                          (infoSnap.data?['name'] as String?) ?? 'লোড হচ্ছে…',
                         ),
                       ),
-                      subtitle: const Text('Wants to join'),
+                      subtitle: const Text('যোগ দিতে চায়'),
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           IconButton(
                             icon: Icon(LucideIcons.checkCircle, color: theme.colorScheme.primary),
-                            tooltip: 'Approve',
+                            tooltip: 'অনুমোদন',
                             onPressed: () => _approve(context, widget.groupId, requestUid),
                           ),
                           IconButton(
                             icon: Icon(LucideIcons.xCircle, color: theme.colorScheme.error),
-                            tooltip: 'Reject',
+                            tooltip: 'প্রত্যাখ্যান',
                             onPressed: () => _reject(context, widget.groupId, requestUid),
                           ),
                         ],
@@ -211,7 +211,7 @@ class _GroupDetailPageState extends ConsumerState<GroupDetailPage> {
 
               // Members list
               Text(
-                'Members (${group.members.length})',
+                'সদস্য (${group.members.length})',
                 style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
@@ -223,12 +223,12 @@ class _GroupDetailPageState extends ConsumerState<GroupDetailPage> {
                     future: _resolveMemberInfo(memberUid),
                     builder: (ctx, infoSnap) {
                       final info = infoSnap.data;
-                      final name = (info?['name'] as String?) ?? 'Loading...';
+                      final name = (info?['name'] as String?) ?? 'লোড হচ্ছে…';
                       final avatarUrl = (info?['avatar'] as String?) ?? '';
                       final lastActive = info?['lastActive'] as DateTime?;
                       final activeText = lastActive != null
-                          ? 'Active ${timeAgo(lastActive)}'
-                          : 'No activity recorded';
+                          ? 'সক্রিয় ${timeAgo(lastActive)}'
+                          : 'কোনো কার্যকলাপ নেই';
 
                       return ListTile(
                         leading: CircleAvatar(
@@ -251,8 +251,8 @@ class _GroupDetailPageState extends ConsumerState<GroupDetailPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              isOwner ? 'Group Admin' : 'Member',
-                              style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
+                              isOwner ? 'গ্রুপ অ্যাডমিন' : 'সদস্য',
+                              style: TextStyle(fontFamily: 'EkusheInter', fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
                             ),
                             Text(
                               activeText,
@@ -265,7 +265,7 @@ class _GroupDetailPageState extends ConsumerState<GroupDetailPage> {
                           children: [
                             if (isOwner)
                               Chip(
-                                label: const Text('Admin'),
+                                label: const Text('অ্যাডমিন'),
                                 visualDensity: VisualDensity.compact,
                               ),
                             if (isAdmin && memberUid != uid)
@@ -283,7 +283,7 @@ class _GroupDetailPageState extends ConsumerState<GroupDetailPage> {
                                       children: [
                                         Icon(LucideIcons.userMinus, size: 18, color: theme.colorScheme.error),
                                         const SizedBox(width: 8),
-                                        Text('Remove', style: TextStyle(color: theme.colorScheme.error)),
+                                        Text('সরান', style: TextStyle(fontFamily: 'EkusheInter', color: theme.colorScheme.error)),
                                       ],
                                     ),
                                   ),
@@ -310,14 +310,14 @@ class _GroupDetailPageState extends ConsumerState<GroupDetailPage> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Edit Group'),
+        title: const Text('গ্রুপ সম্পাদনা'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: nameController,
               decoration: const InputDecoration(
-                labelText: 'Group Name',
+                labelText: 'গ্রুপের নাম',
                 border: OutlineInputBorder(),
               ),
             ),
@@ -325,7 +325,7 @@ class _GroupDetailPageState extends ConsumerState<GroupDetailPage> {
             TextField(
               controller: descController,
               decoration: const InputDecoration(
-                labelText: 'Description',
+                labelText: 'বিবরণ',
                 border: OutlineInputBorder(),
               ),
               maxLines: 3,
@@ -335,7 +335,7 @@ class _GroupDetailPageState extends ConsumerState<GroupDetailPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
+            child: const Text('বাতিল'),
           ),
           FilledButton(
             onPressed: () async {
@@ -349,11 +349,11 @@ class _GroupDetailPageState extends ConsumerState<GroupDetailPage> {
               );
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(error ?? 'Group updated')),
+                  SnackBar(content: Text(error ?? 'গ্রুপ আপডেট হয়েছে')),
                 );
               }
             },
-            child: const Text('Save'),
+            child: const Text('সংরক্ষণ'),
           ),
         ],
       ),
@@ -364,12 +364,12 @@ class _GroupDetailPageState extends ConsumerState<GroupDetailPage> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Remove Member'),
-        content: Text('Remove "$memberName" from this group?'),
+        title: const Text('সদস্য সরান'),
+        content: Text('এই গ্রুপ থেকে "$memberName"-কে সরাবেন?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
+            child: const Text('বাতিল'),
           ),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: Theme.of(ctx).colorScheme.error),
@@ -377,7 +377,7 @@ class _GroupDetailPageState extends ConsumerState<GroupDetailPage> {
               Navigator.of(ctx).pop();
               _removeMember(memberUid);
             },
-            child: const Text('Remove'),
+            child: const Text('সরান'),
           ),
         ],
       ),
@@ -388,7 +388,7 @@ class _GroupDetailPageState extends ConsumerState<GroupDetailPage> {
     final error = await ref.read(groupServiceProvider).removeMember(widget.groupId, memberUid);
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error ?? 'Member removed')),
+        SnackBar(content: Text(error ?? 'সদস্য সরানো হয়েছে')),
       );
     }
   }
@@ -397,7 +397,7 @@ class _GroupDetailPageState extends ConsumerState<GroupDetailPage> {
     final error = await ref.read(groupServiceProvider).approveMember(groupId, userId);
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error ?? 'Member approved')),
+        SnackBar(content: Text(error ?? 'সদস্য অনুমোদিত')),
       );
     }
   }
@@ -406,7 +406,7 @@ class _GroupDetailPageState extends ConsumerState<GroupDetailPage> {
     final error = await ref.read(groupServiceProvider).rejectMember(groupId, userId);
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error ?? 'Request rejected')),
+        SnackBar(content: Text(error ?? 'অনুরোধ প্রত্যাখ্যাত')),
       );
     }
   }
@@ -415,7 +415,7 @@ class _GroupDetailPageState extends ConsumerState<GroupDetailPage> {
     final error = await ref.read(groupServiceProvider).cancelInvite(widget.groupId, userId);
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error ?? 'Invite cancelled')),
+        SnackBar(content: Text(error ?? 'আমন্ত্রণ বাতিল হয়েছে')),
       );
     }
   }

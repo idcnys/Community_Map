@@ -28,7 +28,7 @@ class _ManagePostsPageState extends ConsumerState<ManagePostsPage> {
     final myUid = FirebaseAuth.instance.currentUser?.uid ?? '';
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Manage My Posts')),
+      appBar: AppBar(title: const Text('আমার পোস্ট পরিচালনা')),
       body: StreamBuilder<List<CommunityPostModel>>(
         stream: ref.read(postServiceProvider).getMyPosts(),
         builder: (context, snapshot) {
@@ -45,7 +45,7 @@ class _ManagePostsPageState extends ConsumerState<ManagePostsPage> {
                 children: [
                   Icon(LucideIcons.fileText, size: 64, color: theme.colorScheme.onSurfaceVariant.withAlpha(150)),
                   const SizedBox(height: 12),
-                  Text('No posts yet', style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
+                  Text('এখনো কোনো পোস্ট নেই', style: TextStyle(fontFamily: 'EkusheInter', color: theme.colorScheme.onSurfaceVariant)),
                 ],
               ),
             );
@@ -67,7 +67,7 @@ class _ManagePostsPageState extends ConsumerState<ManagePostsPage> {
                     post.title,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontWeight: FontWeight.w600),
+                    style: const TextStyle(fontFamily: 'EkusheInter', fontWeight: FontWeight.w600),
                   ),
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -79,7 +79,7 @@ class _ManagePostsPageState extends ConsumerState<ManagePostsPage> {
                       ),
                       Text(
                         timeAgo(post.createdAt ?? DateTime.now()),
-                        style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurfaceVariant),
+                        style: TextStyle(fontFamily: 'EkusheInter', fontSize: 11, color: theme.colorScheme.onSurfaceVariant),
                       ),
                     ],
                   ),
@@ -88,7 +88,7 @@ class _ManagePostsPageState extends ConsumerState<ManagePostsPage> {
                     children: [
                       IconButton(
                         icon: Icon(LucideIcons.eye, size: 20, color: theme.colorScheme.onSurfaceVariant),
-                        tooltip: 'View comments',
+                        tooltip: 'মন্তব্য দেখুন',
                         onPressed: () => Navigator.of(context).push(
                           MaterialPageRoute(
                             builder: (_) => CommentsPage(
@@ -168,17 +168,17 @@ class _ManagePostsPageState extends ConsumerState<ManagePostsPage> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text('Edit Post', style: Theme.of(ctx).textTheme.titleLarge),
+                    Text('পোস্ট সম্পাদনা', style: Theme.of(ctx).textTheme.titleLarge),
                     const SizedBox(height: 16),
                     TextField(
                       controller: titleCtrl,
-                      decoration: const InputDecoration(labelText: 'Title'),
+                      decoration: const InputDecoration(labelText: 'শিরোনাম'),
                     ),
                     const SizedBox(height: 12),
                     TextField(
                       controller: descCtrl,
                       maxLines: 3,
-                      decoration: const InputDecoration(labelText: 'Description'),
+                      decoration: const InputDecoration(labelText: 'বিবরণ'),
                     ),
                     const SizedBox(height: 12),
                     // ── Image section ──
@@ -217,12 +217,12 @@ class _ManagePostsPageState extends ConsumerState<ManagePostsPage> {
                                         children: [
                                           ListTile(
                                             leading: const Icon(LucideIcons.camera),
-                                            title: const Text('Camera'),
+                                            title: const Text('ক্যামেরা'),
                                             onTap: () => Navigator.of(c).pop('camera'),
                                           ),
                                           ListTile(
                                             leading: const Icon(LucideIcons.image),
-                                            title: const Text('Gallery'),
+                                            title: const Text('গ্যালারি'),
                                             onTap: () => Navigator.of(c).pop('gallery'),
                                           ),
                                         ],
@@ -247,8 +247,8 @@ class _ManagePostsPageState extends ConsumerState<ManagePostsPage> {
                                 },
                           icon: const Icon(LucideIcons.imagePlus, size: 18),
                           label: Text(newImageFile != null || (!imageRemoved && currentImageUrl != null)
-                              ? 'Change Image'
-                              : 'Add Image'),
+                              ? 'ছবি পরিবর্তন করুন'
+                              : 'ছবি যোগ করুন'),
                         ),
                         if (uploading) ...[
                           const SizedBox(width: 12),
@@ -275,7 +275,7 @@ class _ManagePostsPageState extends ConsumerState<ManagePostsPage> {
                                     onError: (e) {
                                       if (mounted) {
                                         ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(content: Text('Image upload failed: $e')),
+                                          SnackBar(content: Text('ছবি আপলোড ব্যর্থ: $e')),
                                         );
                                       }
                                     },
@@ -292,14 +292,14 @@ class _ManagePostsPageState extends ConsumerState<ManagePostsPage> {
                                 );
                                 if (mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Post updated')),
+                                    const SnackBar(content: Text('পোস্ট আপডেট হয়েছে')),
                                   );
                                 }
                               } finally {
                                 setModalState(() => uploading = false);
                               }
                             },
-                      child: Text(uploading ? 'Saving…' : 'Save Changes'),
+                      child: Text(uploading ? 'সংরক্ষণ হচ্ছে…' : 'পরিবর্তন সংরক্ষণ করুন'),
                     ),
                   ],
                 ),
@@ -315,12 +315,12 @@ class _ManagePostsPageState extends ConsumerState<ManagePostsPage> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete Post'),
-        content: Text('Delete "${post.title}"? This cannot be undone.'),
+        title: const Text('পোস্ট মুছুন'),
+        content: Text('"${post.title}" মুছবেন? এটি পূর্বাবস্থায় ফেরানো যাবে না।'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
+            child: const Text('বাতিল'),
           ),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: Colors.red),
@@ -330,11 +330,11 @@ class _ManagePostsPageState extends ConsumerState<ManagePostsPage> {
               ref.read(paginatedFeedProvider.notifier).removePost(post.id);
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Post deleted')),
+                  const SnackBar(content: Text('পোস্ট মুছে গেছে')),
                 );
               }
             },
-            child: const Text('Delete'),
+            child: const Text('মুছুন'),
           ),
         ],
       ),

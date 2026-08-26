@@ -50,7 +50,7 @@ class ReportPostService {
       _notifications.notifyAllUsers(
         reportId: docRef.id,
         type: 'new_report',
-        message: '$currentName reported: $reportType',
+        message: '$currentName একটি $reportType রিপোর্ট করেছেন',
       );
 
       return null;
@@ -84,7 +84,7 @@ class ReportPostService {
       _notifications.notifyAllUsers(
         reportId: docRef.id,
         type: 'new_report',
-        message: '$currentName reported an URGENT emergency!',
+        message: '$currentName একটি জরুরি অবস্থা রিপোর্ট করেছেন!',
       );
 
       return null;
@@ -224,7 +224,7 @@ class ReportPostService {
             targetUserId: reportAuthorId,
             type: 'comment',
             postId: reportId,
-            message: '$currentName commented on your report',
+            message: '$currentName আপনার রিপোর্টে মন্তব্য করেছেন',
           );
         }
       } catch (e) { debugPrint('[] error: $e'); }

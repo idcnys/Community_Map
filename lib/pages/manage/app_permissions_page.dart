@@ -27,26 +27,26 @@ class AppPermissionsPage extends StatefulWidget {
 class _AppPermissionsPageState extends State<AppPermissionsPage> {
   static const _permissions = [
     _PermEntry(
-      label: 'Location',
-      description: 'Used for nearby places, reports, and navigation.',
+      label: 'লোকেশন',
+      description: 'কাছাকাছি স্থান, রিপোর্ট এবং নেভিগেশনের জন্য ব্যবহৃত হয়।',
       icon: LucideIcons.mapPin,
       permission: Permission.locationWhenInUse,
     ),
     _PermEntry(
-      label: 'Microphone',
-      description: 'Used for voice messages and audio recording.',
+      label: 'মাইক্রোফোন',
+      description: 'ভয়েস মেসেজ এবং অডিও রেকর্ডিংয়ের জন্য ব্যবহৃত হয়।',
       icon: LucideIcons.mic,
       permission: Permission.microphone,
     ),
     _PermEntry(
-      label: 'Notifications',
-      description: 'Used for alerts, mentions, and group updates.',
+      label: 'বিজ্ঞপ্তি',
+      description: 'সতর্কতা, উল্লেখ এবং গ্রুপ আপডেটের জন্য ব্যবহৃত হয়।',
       icon: LucideIcons.bell,
       permission: Permission.notification,
     ),
     _PermEntry(
-      label: 'Install Packages',
-      description: 'Required to install in-app updates.',
+      label: 'প্যাকেজ ইনস্টল',
+      description: 'অ্যাপের ভেতরে আপডেট ইনস্টল করতে প্রয়োজন।',
       icon: LucideIcons.packageOpen,
       permission: Permission.requestInstallPackages,
     ),
@@ -108,12 +108,12 @@ class _AppPermissionsPageState extends State<AppPermissionsPage> {
   }
 
   String _statusLabel(PermissionStatus status) {
-    if (status.isGranted) return 'Granted';
-    if (status.isPermanentlyDenied) return 'Denied permanently';
-    if (status.isDenied) return 'Not granted';
-    if (status.isRestricted) return 'Restricted';
-    if (status.isLimited) return 'Limited';
-    return 'Unknown';
+    if (status.isGranted) return 'অনুমোদিত';
+    if (status.isPermanentlyDenied) return 'স্থায়ীভাবে অস্বীকৃত';
+    if (status.isDenied) return 'অনুমতি দেওয়া হয়নি';
+    if (status.isRestricted) return 'সীমাবদ্ধ';
+    if (status.isLimited) return 'আংশিক';
+    return 'অজানা';
   }
 
   Color _statusColor(PermissionStatus status, ThemeData theme) {
@@ -132,7 +132,7 @@ class _AppPermissionsPageState extends State<AppPermissionsPage> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('App Permissions')),
+      appBar: AppBar(title: const Text('অ্যাপের অনুমতি')),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
@@ -205,8 +205,8 @@ class _AppPermissionsPageState extends State<AppPermissionsPage> {
                             ),
                             child: Text(
                               status.isPermanentlyDenied
-                                  ? 'Open Settings'
-                                  : 'Grant',
+                                  ? 'সেটিংস খুলুন'
+                                  : 'অনুমতি দিন',
                             ),
                           )
                         : null,

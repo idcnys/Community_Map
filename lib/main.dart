@@ -68,8 +68,8 @@ class _MyAppState extends State<MyApp> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                notification.title ?? 'Notification',
-                style: const TextStyle(fontWeight: FontWeight.bold),
+                notification.title ?? 'বিজ্ঞপ্তি',
+                style: const TextStyle(fontFamily: 'EkusheInter', fontWeight: FontWeight.bold),
               ),
               if (notification.body != null)
                 Text(notification.body!, maxLines: 2, overflow: TextOverflow.ellipsis),
@@ -124,7 +124,7 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      title: 'Community App',
+      title: 'কমিউনিটি অ্যাপ',
       debugShowCheckedModeBanner: false,
       routerConfig: router,
       theme: AppTheme.buildTheme(Brightness.light),

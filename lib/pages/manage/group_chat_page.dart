@@ -289,7 +289,7 @@ class _GroupChatPageState extends State<GroupChatPage> {
         onError: (err) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Image upload failed: $err'), backgroundColor: Colors.red),
+              SnackBar(content: Text('ছবি আপলোড ব্যর্থ হয়েছে: $err'), backgroundColor: Colors.red),
             );
           }
         },
@@ -325,19 +325,19 @@ class _GroupChatPageState extends State<GroupChatPage> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(widget.groupName, style: const TextStyle(fontSize: 16)),
-            Text('Group Chat', style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurfaceVariant)),
+            Text(widget.groupName, style: const TextStyle(fontFamily: 'EkusheInter', fontSize: 16)),
+            Text('গ্রুপ চ্যাট', style: TextStyle(fontFamily: 'EkusheInter', fontSize: 11, color: theme.colorScheme.onSurfaceVariant)),
           ],
         ),
         actions: [
           IconButton(
             icon: const Icon(LucideIcons.mapPin),
-            tooltip: 'Share my location',
+            tooltip: 'আমার অবস্থান শেয়ার করুন',
             onPressed: () async {
               final pos = await _shareMyLocation();
               if (pos && mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Location shared to group')),
+                  const SnackBar(content: Text('অবস্থান গ্রুপে শেয়ার করা হয়েছে')),
                 );
               }
             },
@@ -362,7 +362,7 @@ class _GroupChatPageState extends State<GroupChatPage> {
                       children: [
                         Icon(LucideIcons.messageCircle, size: 48, color: theme.colorScheme.onSurfaceVariant.withAlpha(120)),
                         const SizedBox(height: 8),
-                        Text('No messages yet. Say hi!', style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
+                        Text('এখনো কোনো বার্তা নেই। শুভেচ্ছা জানান!', style: TextStyle(fontFamily: 'EkusheInter', color: theme.colorScheme.onSurfaceVariant)),
                       ],
                     ),
                   );
@@ -432,11 +432,11 @@ class _GroupChatPageState extends State<GroupChatPage> {
                       child: imageUrl.isEmpty
                           ? Text(
                               name.isNotEmpty ? name[0].toUpperCase() : '?',
-                              style: TextStyle(fontSize: 12, color: theme.colorScheme.onSecondaryContainer),
+                              style: TextStyle(fontFamily: 'EkusheInter', fontSize: 12, color: theme.colorScheme.onSecondaryContainer),
                             )
                           : null,
                     ),
-                    title: Text(name, style: const TextStyle(fontSize: 14)),
+                    title: Text(name, style: const TextStyle(fontFamily: 'EkusheInter', fontSize: 14)),
                     onTap: () => _insertMention(member),
                   );
                 },
@@ -497,14 +497,14 @@ class _GroupChatPageState extends State<GroupChatPage> {
                     onPressed: _uploadingImage ? null : _pickImage,
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-                    tooltip: 'Attach image',
+                    tooltip: 'ছবি সংযুক্ত করুন',
                   ),
                   const SizedBox(width: 4),
                   Expanded(
                     child: TextField(
                       controller: _msgCtrl,
                       decoration: InputDecoration(
-                        hintText: 'Type a message...',
+                        hintText: 'একটি মেসেজ লিখুন...',
                         isDense: true,
                         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                         border: OutlineInputBorder(
@@ -604,7 +604,7 @@ class _MessageBubble extends StatelessWidget {
                   ? CachedNetworkImageProvider(senderAvatarUrl)
                   : null,
               child: senderAvatarUrl.isEmpty
-                  ? Text(initial, style: TextStyle(fontSize: 11, color: theme.colorScheme.onSecondaryContainer))
+                  ? Text(initial, style: TextStyle(fontFamily: 'EkusheInter', fontSize: 11, color: theme.colorScheme.onSecondaryContainer))
                   : null,
             ),
             const SizedBox(width: 6),
@@ -661,7 +661,7 @@ class _MessageBubble extends StatelessWidget {
                         children: [
                           if (!isMine)
                             Text(
-                              msg['senderName'] ?? 'Unknown',
+                              msg['senderName'] ?? 'অজ্ঞাত',
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w600,

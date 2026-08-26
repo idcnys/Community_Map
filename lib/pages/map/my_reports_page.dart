@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
+import '../../core/utils/time_ago.dart';
 import '../../models/report_post_model.dart';
 import '../../models/community_post_model.dart';
 import '../../providers/service_providers.dart';
@@ -17,7 +17,7 @@ class MyReportsPage extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Reports'),
+        title: const Text('আমার রিপোর্টসমূহ'),
         centerTitle: true,
       ),
       body: StreamBuilder<List<ReportPostModel>>(
@@ -38,7 +38,7 @@ class MyReportsPage extends ConsumerWidget {
                       size: 64, color: theme.colorScheme.outline),
                   const SizedBox(height: 16),
                   Text(
-                    'No reports yet',
+                    'এখনো কোনো রিপোর্ট নেই',
                     style: TextStyle(
                       fontSize: 16,
                       color: theme.colorScheme.onSurfaceVariant,
@@ -127,7 +127,7 @@ class _ReportCardState extends State<_ReportCard> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
-                      'SOLVED',
+                      'সমাধান হয়েছে',
                       style: TextStyle(
                         color: Colors.green.shade700,
                         fontWeight: FontWeight.bold,
@@ -144,7 +144,7 @@ class _ReportCardState extends State<_ReportCard> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
-                      'URGENT',
+                      'জরুরি',
                       style: TextStyle(
                         color: theme.colorScheme.error,
                         fontWeight: FontWeight.bold,
@@ -178,7 +178,7 @@ class _ReportCardState extends State<_ReportCard> {
                     size: 14, color: theme.colorScheme.onSurfaceVariant),
                 const SizedBox(width: 4),
                 Text(
-                  DateFormat('MMM d, h:mm a').format(report.createdAt),
+                  formatShortDate(report.createdAt),
                   style: TextStyle(
                       fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
                 ),
@@ -204,7 +204,7 @@ class _ReportCardState extends State<_ReportCard> {
                     Icon(LucideIcons.thumbsUp,
                         size: 14, color: theme.colorScheme.primary),
                     const SizedBox(width: 4),
-                    Text('${report.appropriateCount} appropriate',
+                    Text('${report.appropriateCount} যথাযথ',
                         style: TextStyle(
                             fontSize: 12,
                             color: theme.colorScheme.onSurfaceVariant)),
@@ -212,7 +212,7 @@ class _ReportCardState extends State<_ReportCard> {
                     Icon(LucideIcons.flag,
                         size: 14, color: theme.colorScheme.error),
                     const SizedBox(width: 4),
-                    Text('${report.spamCount} spam',
+                    Text('${report.spamCount} স্প্যাম',
                         style: TextStyle(
                             fontSize: 12,
                             color: theme.colorScheme.onSurfaceVariant)),
@@ -241,7 +241,7 @@ class _ReportCardState extends State<_ReportCard> {
                                 CircularProgressIndicator(strokeWidth: 2),
                           )
                         : const Icon(LucideIcons.checkCircle, size: 16),
-                    label: const Text('Solved'),
+                    label: const Text('সমাধান'),
                     style: TextButton.styleFrom(
                       foregroundColor: Colors.green.shade700,
                     ),
@@ -252,7 +252,7 @@ class _ReportCardState extends State<_ReportCard> {
                 TextButton.icon(
                   onPressed: report.isSolved ? null : () => _editDescription(context),
                   icon: const Icon(LucideIcons.pencil, size: 16),
-                  label: const Text('Edit'),
+                  label: const Text('সম্পাদনা'),
                   style: TextButton.styleFrom(
                     foregroundColor: theme.colorScheme.primary,
                     disabledForegroundColor: theme.colorScheme.onSurfaceVariant.withAlpha(80),
@@ -263,7 +263,7 @@ class _ReportCardState extends State<_ReportCard> {
                 TextButton.icon(
                   onPressed: report.isSolved ? null : () => _confirmDelete(context),
                   icon: const Icon(LucideIcons.trash2, size: 16),
-                  label: const Text('Delete'),
+                  label: const Text('মুছুন'),
                   style: TextButton.styleFrom(
                     foregroundColor: theme.colorScheme.error,
                     disabledForegroundColor: theme.colorScheme.onSurfaceVariant.withAlpha(80),
@@ -298,8 +298,8 @@ class _ReportCardState extends State<_ReportCard> {
                     const SizedBox(width: 6),
                     Text(
                       count > 0
-                          ? '$count comment${count > 1 ? 's' : ''}'
-                          : 'No comments',
+                          ? '$count মন্তব্য'
+                          : 'কোনো মন্তব্য নেই',
                       style: TextStyle(
                         fontSize: 13,
                         color: theme.colorScheme.onSurfaceVariant,
@@ -357,7 +357,7 @@ class _ReportCardState extends State<_ReportCard> {
                                     ),
                                     const Spacer(),
                                     Text(
-                                      DateFormat('MMM d, h:mm a').format(c.createdAt ?? DateTime.now()),
+                                      formatShortDate(c.createdAt ?? DateTime.now()),
                                       style: TextStyle(
                                         fontSize: 11,
                                         color: theme.colorScheme.onSurfaceVariant,
@@ -368,7 +368,7 @@ class _ReportCardState extends State<_ReportCard> {
                                 const SizedBox(height: 4),
                                 Text(
                                   c.content,
-                                  style: const TextStyle(fontSize: 14, height: 1.3),
+                                  style: const TextStyle(fontFamily: 'EkusheInter', fontSize: 14, height: 1.3),
                                 ),
                               ],
                             ),
@@ -386,13 +386,13 @@ class _ReportCardState extends State<_ReportCard> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Mark as Solved'),
+        title: const Text('সমাধান হয়েছে হিসেবে চিহ্নিত করুন'),
         content: const Text(
-            'Mark this report as solved? It will be archived and no longer visible on the active map.'),
+            'এই রিপোর্টটিকে সমাধান হয়েছে হিসেবে চিহ্নিত করবেন? এটি আর্কাইভ হবে এবং সক্রিয় মানচিত্রে আর দেখা যাবে না।'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
+            child: const Text('বাতিল'),
           ),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: Colors.green),
@@ -404,13 +404,13 @@ class _ReportCardState extends State<_ReportCard> {
                 setState(() => _solving = false);
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text(error ?? 'Report marked as solved'),
+                    content: Text(error ?? 'রিপোর্ট সমাধান হয়েছে হিসেবে চিহ্নিত'),
                     backgroundColor: error != null ? Colors.red : null,
                   ),
                 );
               }
             },
-            child: const Text('Mark Solved'),
+            child: const Text('সমাধান চিহ্নিত করুন'),
           ),
         ],
       ),
@@ -423,12 +423,12 @@ class _ReportCardState extends State<_ReportCard> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Edit Description'),
+        title: const Text('বিবরণ সম্পাদনা করুন'),
         content: TextField(
           controller: controller,
           maxLines: 4,
           decoration: const InputDecoration(
-            hintText: 'Describe the incident...',
+            hintText: 'ঘটনাটি বর্ণনা করুন...',
             border: OutlineInputBorder(),
           ),
           autofocus: true,
@@ -436,7 +436,7 @@ class _ReportCardState extends State<_ReportCard> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
+            child: const Text('বাতিল'),
           ),
           FilledButton(
             onPressed: () async {
@@ -450,7 +450,7 @@ class _ReportCardState extends State<_ReportCard> {
                 );
               }
             },
-            child: const Text('Save'),
+            child: const Text('সংরক্ষণ'),
           ),
         ],
       ),
@@ -461,13 +461,13 @@ class _ReportCardState extends State<_ReportCard> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete Report'),
+        title: const Text('রিপোর্ট মুছুন'),
         content: const Text(
-            'Are you sure you want to delete this report? This cannot be undone.'),
+            'আপনি কি নিশ্চিত যে এই রিপোর্টটি মুছতে চান? এটি পূর্বাবস্থায় ফেরানো যাবে না।'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
+            child: const Text('বাতিল'),
           ),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: Colors.red),
@@ -477,13 +477,13 @@ class _ReportCardState extends State<_ReportCard> {
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text(error ?? 'Report deleted'),
+                    content: Text(error ?? 'রিপোর্ট মুছে ফেলা হয়েছে'),
                     backgroundColor: error != null ? Colors.red : null,
                   ),
                 );
               }
             },
-            child: const Text('Delete'),
+            child: const Text('মুছুন'),
           ),
         ],
       ),

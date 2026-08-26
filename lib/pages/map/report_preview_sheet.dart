@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import '../../models/report_post_model.dart';
 import '../../core/utils/time_ago.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -94,7 +93,7 @@ class ReportPreviewSheet extends StatelessWidget {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
-                      'SOLVED',
+                      'সমাধান হয়েছে',
                       style: TextStyle(
                         color: Colors.green.shade700,
                         fontWeight: FontWeight.bold,
@@ -111,7 +110,7 @@ class ReportPreviewSheet extends StatelessWidget {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
-                      'URGENT',
+                      'জরুরি',
                       style: TextStyle(
                         color: theme.colorScheme.error,
                         fontWeight: FontWeight.bold,
@@ -171,7 +170,7 @@ class ReportPreviewSheet extends StatelessWidget {
                 _statChip(theme, LucideIcons.messageCircle, ''),
                 const Spacer(),
                 Text(
-                  DateFormat('h:mm a').format(report.createdAt),
+                  formatTimeBn(report.createdAt),
                   style: TextStyle(
                     fontSize: 12,
                     color: theme.colorScheme.onSurfaceVariant,
@@ -191,7 +190,7 @@ class ReportPreviewSheet extends StatelessWidget {
                   _openFullDetail(context);
                 },
                 icon: const Icon(LucideIcons.expand, size: 18),
-                label: const Text('View Full Report'),
+                label: const Text('সম্পূর্ণ রিপোর্ট দেখুন'),
                 style: FilledButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 14),
                 ),

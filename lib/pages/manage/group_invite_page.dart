@@ -36,10 +36,10 @@ class _GroupInvitePageState extends ConsumerState<GroupInvitePage> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Invite Members', style: TextStyle(fontSize: 18)),
+            const Text('সদস্য আমন্ত্রণ', style: TextStyle(fontFamily: 'EkusheInter', fontSize: 18)),
             Text(
               widget.group.name,
-              style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
+              style: TextStyle(fontFamily: 'EkusheInter', fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
             ),
           ],
         ),
@@ -53,8 +53,8 @@ class _GroupInvitePageState extends ConsumerState<GroupInvitePage> {
               controller: _searchCtrl,
               autofocus: true,
               decoration: InputDecoration(
-                hintText: 'Search by name...',
-                hintStyle: const TextStyle(fontSize: 14),
+                hintText: 'নাম দিয়ে খুঁজুন...',
+                hintStyle: const TextStyle(fontFamily: 'EkusheInter', fontSize: 14),
                 prefixIcon: const Icon(LucideIcons.search, size: 18),
                 suffixIcon: _searchQuery.isNotEmpty
                     ? IconButton(
@@ -88,14 +88,14 @@ class _GroupInvitePageState extends ConsumerState<GroupInvitePage> {
                             color: theme.colorScheme.onSurfaceVariant.withAlpha(80)),
                         const SizedBox(height: 12),
                         Text(
-                          'Type a name to find users',
+                          'ব্যবহারকারী খুঁজতে নাম লিখুন',
                           style: theme.textTheme.bodyLarge?.copyWith(
                             color: theme.colorScheme.onSurfaceVariant,
                           ),
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Search is case-insensitive',
+                          'ছোট/বড় হাতের অক্ষর ভেদাভেদ নেই',
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: theme.colorScheme.onSurfaceVariant.withAlpha(150),
                           ),
@@ -119,7 +119,7 @@ class _GroupInvitePageState extends ConsumerState<GroupInvitePage> {
                                   color: theme.colorScheme.onSurfaceVariant.withAlpha(80)),
                               const SizedBox(height: 12),
                               Text(
-                                'No users match "$_searchQuery"',
+                                '"$_searchQuery"-এর সাথে কোনো ব্যবহারকারী পাওয়া যায়নি',
                                 style: theme.textTheme.bodyLarge?.copyWith(
                                   color: theme.colorScheme.onSurfaceVariant,
                                 ),
@@ -204,7 +204,7 @@ class _GroupInvitePageState extends ConsumerState<GroupInvitePage> {
           color: theme.colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(20),
         ),
-        child: Text('You', style: theme.textTheme.labelSmall),
+        child: Text('আপনি', style: theme.textTheme.labelSmall),
       );
     }
 
@@ -216,7 +216,7 @@ class _GroupInvitePageState extends ConsumerState<GroupInvitePage> {
           borderRadius: BorderRadius.circular(20),
         ),
         child: Text(
-          'Member',
+          'সদস্য',
           style: theme.textTheme.labelSmall
               ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
         ),
@@ -236,7 +236,7 @@ class _GroupInvitePageState extends ConsumerState<GroupInvitePage> {
             Icon(LucideIcons.check, size: 12, color: theme.colorScheme.primary),
             const SizedBox(width: 4),
             Text(
-              'Invited',
+              'আমন্ত্রিত',
               style: theme.textTheme.labelSmall
                   ?.copyWith(color: theme.colorScheme.primary),
             ),
@@ -253,12 +253,12 @@ class _GroupInvitePageState extends ConsumerState<GroupInvitePage> {
         }
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(error ?? 'Invite sent to $name')),
+            SnackBar(content: Text(error ?? '$name-কে আমন্ত্রণ পাঠানো হয়েছে')),
           );
         }
       },
       icon: const Icon(LucideIcons.plus, size: 14),
-      label: const Text('Invite', style: TextStyle(fontSize: 12)),
+      label: const Text('আমন্ত্রণ', style: TextStyle(fontFamily: 'EkusheInter', fontSize: 12)),
       style: FilledButton.styleFrom(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         minimumSize: Size.zero,

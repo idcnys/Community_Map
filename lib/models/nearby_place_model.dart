@@ -73,10 +73,10 @@ class NearbyPlace {
 
 /// Categories of nearby services supported.
 enum NearbyCategory {
-  hospital('Hospital', 'amenity', 'hospital'),
-  police('Police', 'amenity', 'police'),
-  fireStation('Fire Station', 'amenity', 'fire_station'),
-  pharmacy('Pharmacy', 'amenity', 'pharmacy');
+  hospital('হাসপাতাল', 'amenity', 'hospital'),
+  police('পুলিশ', 'amenity', 'police'),
+  fireStation('ফায়ার স্টেশন', 'amenity', 'fire_station'),
+  pharmacy('ফার্মেসি', 'amenity', 'pharmacy');
 
 
   final String label;
