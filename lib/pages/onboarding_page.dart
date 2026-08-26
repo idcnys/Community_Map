@@ -18,7 +18,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
   static const _slides = [
     _SlideData(
       icon: LucideIcons.map,
-      title: 'আপনার কমিউনিটি আবিষ্কার করুন',
+      title: 'আপনার কমিউনিটি অনুসন্ধান করুন',
       subtitle: 'একটি ইন্টারঅ্যাক্টিভ ম্যাপে আপনার আশেপাশের স্থানীয় গ্রুপ খুঁজুন এবং যুক্ত হোন।',
     ),
     _SlideData(
