@@ -253,7 +253,7 @@ class _MapPageState extends ConsumerState<MapPage>
             children: [
               TileLayer(
                 urlTemplate:
-                    'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+                    'https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png?key=cb1_25m8_1_cff30e2115dffab2ba1eb5e2',
                 subdomains: const ['a', 'b', 'c', 'd'],
                 userAgentPackageName: 'com.communityapp',
                 retinaMode: RetinaMode.isHighDensity(context),
