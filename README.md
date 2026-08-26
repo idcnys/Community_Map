@@ -108,7 +108,7 @@ A first-time visitor enters as a guest to explore feed/map content before creati
 
 ### 10) Ongoing Group Administration
 Group owners manage membership requests, monitor participation, and keep group communication organized through chat and moderation tools.
-
+ 
 
 <div align="left">
   
